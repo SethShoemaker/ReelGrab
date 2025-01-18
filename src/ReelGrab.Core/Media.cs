@@ -70,7 +70,7 @@ public partial class Application
         await ApplyMediaIndexConfigAsync();
     }
 
-    public Task<List<SearchResult>> SearchMediaIndexByQuery(string query)
+    public Task<List<SearchResult>> SearchMediaIndexByQueryAsync(string query)
     {
         return MediaIndex.instance.Search(query);
     }

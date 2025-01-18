@@ -24,7 +24,7 @@ public class MediaSearchModel : PageModel
     public async Task OnGetAsync()
     {
         if(HasQuery){
-            Results = await Application.instance.SearchMediaIndexByQuery(Q);
+            Results = await Application.instance.SearchMediaIndexByQueryAsync(Q);
         }
     }
 }
