@@ -4,7 +4,7 @@ using System.Web;
 
 namespace ReelGrab.Media.Databases;
 
-internal class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
+public class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
 {
     private string apiKey;
 
@@ -15,6 +15,15 @@ internal class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
         this.apiKey = apiKey;
         http = new HttpClient();
         http.BaseAddress = new Uri("http://www.omdbapi.com/");
+    }
+
+    private string displayName = "OMDb";
+
+    public string DisplayName
+    {
+        get {
+            return displayName;
+        }
     }
 
     record ApiSearchResponseItem(string Title, string Year, string imdbID, string Type, string Poster);

@@ -6,12 +6,14 @@ public record SearchResponse(List<SearchResult> Results);
 
 public record PaginatedSearchResponse(List<SearchResult> Results, int TotalCount);
 
-internal interface IMediaDatabase
+public interface IMediaDatabase
 {
+    public string DisplayName { get; }
+
     public Task<SearchResponse> SearchAsync(string query);
 }
 
-internal interface IMediaDatabasePaginated
+public interface IMediaDatabasePaginated
 {
     public Task<PaginatedSearchResponse> SearchPaginatedAsync(string query, int page);
 }

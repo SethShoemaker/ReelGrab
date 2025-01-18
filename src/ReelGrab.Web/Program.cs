@@ -4,6 +4,10 @@ Console.WriteLine("Applying migrations");
 await ReelGrab.Core.Application.instance.ApplyMigrationsAsync();
 Console.WriteLine("Migrations complete");
 
+Console.WriteLine("Applying MediaIndex configuration");
+await ReelGrab.Core.Application.instance.ApplyMediaIndexConfigAsync();
+Console.WriteLine("MediaIndex configuration completed");
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 

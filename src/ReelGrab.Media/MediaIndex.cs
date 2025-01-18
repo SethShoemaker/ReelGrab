@@ -1,17 +1,10 @@
+using System.Collections.ObjectModel;
 using ReelGrab.Media.Databases;
 
 namespace ReelGrab.Media;
 
 public class MediaIndex
 {
-    public static void AddOmdbDatabase(string apiKey)
-    {
-        if(instance.mediaDatabases.Count(mediaDatabase => mediaDatabase.GetType() == typeof(OmdbMediaDatabase)) > 0){
-            throw new InvalidOperationException("Omdb database already exists");
-        }
-        instance.mediaDatabases.Add(new OmdbMediaDatabase(apiKey));
-    }
-
     private MediaIndex(){}
 
     public static readonly MediaIndex instance = new MediaIndex();
@@ -19,6 +12,25 @@ public class MediaIndex
     private List<IMediaDatabase> mediaDatabases = [];
 
     private Exception noMediaDatabasesConfigured = new Exception("tried searching media index when no media databases were configured");
+
+    public ReadOnlyCollection<IMediaDatabase> MediaDatabases
+    {
+        get
+        {
+            return mediaDatabases.AsReadOnly();
+        }
+    }
+
+    public void AddOmdbDatabase(string apiKey)
+    {
+        RemoveOmdbDatabase();
+        mediaDatabases.Add(new OmdbMediaDatabase(apiKey));
+    }
+
+    public void RemoveOmdbDatabase()
+    {
+        mediaDatabases = mediaDatabases.Where(md => md.GetType() != typeof(OmdbMediaDatabase)).ToList();
+    }
 
     public async Task<List<SearchResult>> Search(string query)
     {
