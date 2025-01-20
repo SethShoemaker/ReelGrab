@@ -8,6 +8,7 @@ services:
     entrypoint: sleep infinity
     ports:
       - "5242:5242"
+      - "4200:4200"
     volumes:
       - "./:/app:rw"
       - "./data:/data:rw"
@@ -19,7 +20,7 @@ services:
     ports:
       - "9091:9091"
   jackett:
-      image: linuxserver/jackett
-      container_name: jackett
-      ports:
-        - "9117:9117"
+    image: linuxserver/jackett
+    container_name: jackett
+    ports:
+      - "9117:9117"
