@@ -22,7 +22,12 @@ else if (Model.HasQuery && Model.Results.Count > 0)
     <ul>
         @foreach (var result in Model.Results)
         {
-            <li>@result.Title</li>
+            <li>
+                <p>@result.Title</p>
+                @if(result.MediaType == Media.MediaType.SERIES){
+                    <a asp-page="/GetSeries" asp-route-ImdbId="@result.ImdbId">Details</a>
+                }
+            </li>
         }
     </ul>
 }

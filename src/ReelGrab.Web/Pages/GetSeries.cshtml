@@ -1,0 +1,28 @@
+﻿@page
+@model MyApp.Namespace.GetSeriesModel
+@{
+}
+
+<h1>@Model.Details.Title</h1>
+<p>
+    IMDb id: @Model.Details.ImdbId
+</p>
+@if(Model.Details.PosterUrl != null){
+    <img src="@Model.Details.PosterUrl">
+}
+<ul>
+    @foreach(var season in Model.Details.Seasons){
+        <li>
+            Season @season.Number
+            <ul>
+                @foreach(var episode in season.Episodes){
+                    <li>
+                        @episode.Number
+                        @episode.Title
+                        @episode.ImdbId
+                    </li>
+                }
+            </ul>
+        </li>
+    }
+</ul>

@@ -74,4 +74,9 @@ public partial class Application
     {
         return MediaIndex.instance.Search(query);
     }
+
+    public Task<SeriesDetails> GetSeriesDetailsAsync(string imdb)
+    {
+        return mediaIndex.GetSeriesDetailsAsync(imdb);
+    }
 }

@@ -46,4 +46,9 @@ public class MediaIndex
         }
         return results;
     }
+
+    public Task<SeriesDetails> GetSeriesDetailsAsync(string imdbId)
+    {
+        return MediaDatabases.First().GetSeriesDetailsAsync(imdbId);
+    }
 }
