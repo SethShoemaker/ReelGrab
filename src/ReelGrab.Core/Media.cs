@@ -1,4 +1,5 @@
 using ReelGrab.Media;
+using ReelGrab.Media.Databases;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -47,6 +48,13 @@ public partial class Application
 
     public async Task SetMediaIndexConfigAsync(Dictionary<MediaIndexConfigKey, string?> configs)
     {
+        // ensure no empty strings
+        foreach(var key in configs.Keys)
+        {
+            if(configs[key] != null && configs[key]!.Length == 0){
+                configs[key] = null;
+            }
+        }
         using QueryFactory db = Db();
         foreach (MediaIndexConfigKey key in configs.Keys)
         {

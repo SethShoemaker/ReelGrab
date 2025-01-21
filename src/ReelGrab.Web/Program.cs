@@ -1,3 +1,6 @@
+using ReelGrab.Core;
+using ReelGrab.Web;
+
 var builder = WebApplication.CreateBuilder(args);
 
 Console.WriteLine("Applying migrations");
@@ -12,8 +15,23 @@ Console.WriteLine("MediaIndex configuration completed");
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Everything", builder =>
+    {
+        builder.AllowAnyHeader();
+        builder.AllowAnyOrigin();
+        builder.AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("Everything");
+}
+var mediaIndexRouter = new MediaIndexRouter();
+mediaIndexRouter.Route(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -21,7 +39,7 @@ if (app.Environment.IsDevelopment())
     app.Urls.Add("http://*:5242");
     app.UseSwagger();
     app.UseSwaggerUI();
-} 
+}
 
 app.UseHttpsRedirection();
 
