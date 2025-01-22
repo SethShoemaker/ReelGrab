@@ -33,7 +33,7 @@ public class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
     public async Task<SearchResponse> SearchAsync(string query)
     {
         var body = await http.GetFromJsonAsync<ApiSearchResponse>($"?s={HttpUtility.UrlEncode(query)}&apikey={HttpUtility.UrlEncode(apiKey)}") ?? throw new Exception("OMDb: API did not return correct response");
-        var results = body.Response == "False" ? new List<SearchResult>() : body.Search!.Select(sbi => new SearchResult(SourceDisplayName: "OMDb", Title: sbi.Title, ImdbId: sbi.imdbID, sbi.Type == "series" ? MediaType.SERIES : MediaType.MOVIE)).ToList();
+        var results = body.Response == "False" ? new List<SearchResult>() : body.Search!.Select(sbi => new SearchResult(SourceDisplayName: "OMDb", Title: sbi.Title, ImdbId: sbi.imdbID, sbi.Type == "series" ? MediaType.SERIES : MediaType.MOVIE, Poster: sbi.Poster)).ToList();
         return new SearchResponse(results);
     }
 
@@ -41,21 +41,53 @@ public class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
     {
         var body = await http.GetFromJsonAsync<ApiSearchResponse>($"?s={HttpUtility.UrlEncode(query)}&page={page}&apikey={HttpUtility.UrlEncode(apiKey)}") ?? throw new Exception("OMDb: API did not return correct response");
         var totalCount = body.totalResults != null ? int.Parse(body.totalResults) : 0;
-        var results = body.Search != null ? body.Search.Select(sbi => new SearchResult(SourceDisplayName: "OMDb", Title: sbi.Title, ImdbId: sbi.imdbID, sbi.Type == "series" ? MediaType.SERIES : MediaType.MOVIE)).ToList() : new List<SearchResult>();
+        var results = body.Search != null ? body.Search.Select(sbi => new SearchResult(SourceDisplayName: "OMDb", Title: sbi.Title, ImdbId: sbi.imdbID, sbi.Type == "series" ? MediaType.SERIES : MediaType.MOVIE, Poster: sbi.Poster)).ToList() : new List<SearchResult>();
         return new PaginatedSearchResponse(results, totalCount);
     }
 
-    record ApiGetSeriesResponse(string Response, string? Error, string? Title, string? Year, string? Poster, int? totalSeasons);
+    public async Task<MediaType> GetMediaTypeByImdbIdAsync(string imdbId)
+    {
+        var body = await http.GetFromJsonAsync<ApiGetDetailsResponse>($"?i={HttpUtility.UrlEncode(imdbId)}&apikey={HttpUtility.UrlEncode(apiKey)}") ?? throw new Exception("OMDb: API did not return correct response");
+        if(body.Response != "True"){
+            throw new Exception($"error which getting series with IMDb id {imdbId}");
+        }
+        if(string.IsNullOrWhiteSpace(body.Type)){
+            throw new Exception($"error which getting series with IMDb id {imdbId}");
+        }
+        return body.Type switch
+        {
+            "series" => MediaType.SERIES,
+            "movie" => MediaType.MOVIE,
+            _ => throw new Exception($"received weird type from api: ${body.Type}"),
+        };
+    }
+
+    record ApiGetDetailsResponse(string Response, string? Error, string? Title, string? Year, string? Poster, int? totalSeasons, string? Type);
+
+    public async Task<MovieDetails> GetMovieDetailsByImdbIdAsync(string imdbId)
+    {
+        var body = await http.GetFromJsonAsync<ApiGetDetailsResponse>($"?i={HttpUtility.UrlEncode(imdbId)}&apikey={HttpUtility.UrlEncode(apiKey)}") ?? throw new Exception("OMDb: API did not return correct response");
+        if(body.Response != "True"){
+            throw new Exception($"error which getting series with IMDb id {imdbId}");
+        }
+        if(body.Type != "movie"){
+            throw new Exception($"{imdbId} has type {body.Type}, not movie");
+        }
+        return new MovieDetails(body.Title!, imdbId, body.Poster);
+    }
 
     record ApiGetSeriesSeasonResponseEpisode(string Title, string Episode, string imdbID);
 
     record ApiGetSeriesSeasonResponse(string Season, List<ApiGetSeriesSeasonResponseEpisode> Episodes);
 
-    public async Task<SeriesDetails> GetSeriesDetailsAsync(string imdbId)
+    public async Task<SeriesDetails> GetSeriesDetailsByImdbIdAsync(string imdbId)
     {
-        var body = await http.GetFromJsonAsync<ApiGetSeriesResponse>($"?i={HttpUtility.UrlEncode(imdbId)}&apikey={HttpUtility.UrlEncode(apiKey)}") ?? throw new Exception("OMDb: API did not return correct response");
+        var body = await http.GetFromJsonAsync<ApiGetDetailsResponse>($"?i={HttpUtility.UrlEncode(imdbId)}&apikey={HttpUtility.UrlEncode(apiKey)}") ?? throw new Exception("OMDb: API did not return correct response");
         if(body.Response != "True"){
             throw new Exception($"error which getting series with IMDb id {imdbId}");
+        }
+        if(body.Type != "series"){
+            throw new Exception($"{imdbId} has type {body.Type}, not series");
         }
         List<SeriesSeasonDetails> seasons = new();
         for (int i = 0; i < body.totalSeasons; i++)

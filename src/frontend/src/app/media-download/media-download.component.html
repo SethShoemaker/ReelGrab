@@ -1,0 +1,25 @@
+<div class="container-xl mt-2">
+    <ng-container *ngIf="loading; else notLoading">
+        LOADING
+    </ng-container>
+    <ng-template #notLoading>
+        <div class="row mt-4">
+            <div class="col-12 col-sm-6 col-md-4">
+                <img src="{{posterUrl}}" style="height:100%; width: 100%; object-fit: contain; background-color: black;">
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 pl-4 pt-2">
+                <h1>{{title}}</h1>
+            </div>
+        </div>
+        <div class="row" *ngIf="seasons != null">
+            <div *ngFor="let season of seasons" class="mt-2">
+                <span>{{season.Number}}</span>
+                <div *ngFor="let episode of season.episodes">
+                    <span>{{episode.number}}</span>
+                    <span>{{episode.title}}</span>
+                    <span>{{episode.imdbId}}</span>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+</div>

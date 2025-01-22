@@ -32,7 +32,7 @@ public class MediaIndex
         mediaDatabases = mediaDatabases.Where(md => md.GetType() != typeof(OmdbMediaDatabase)).ToList();
     }
 
-    public async Task<List<SearchResult>> Search(string query)
+    public async Task<List<SearchResult>> SearchAsync(string query)
     {
         if(mediaDatabases.Count == 0){
             throw noMediaDatabasesConfigured;
@@ -47,8 +47,18 @@ public class MediaIndex
         return results;
     }
 
-    public Task<SeriesDetails> GetSeriesDetailsAsync(string imdbId)
+    public Task<MediaType> GetMediaTypeByImdbIdAsync(string imdbId)
     {
-        return MediaDatabases.First().GetSeriesDetailsAsync(imdbId);
+        return MediaDatabases.First().GetMediaTypeByImdbIdAsync(imdbId);
+    }
+
+    public Task<MovieDetails> GetMovieDetailsByImdbIdAsync(string imdbId)
+    {
+        return MediaDatabases.First().GetMovieDetailsByImdbIdAsync(imdbId);
+    }
+
+    public Task<SeriesDetails> GetSeriesDetailsByImdbIdAsync(string imdbId)
+    {
+        return MediaDatabases.First().GetSeriesDetailsByImdbIdAsync(imdbId);
     }
 }

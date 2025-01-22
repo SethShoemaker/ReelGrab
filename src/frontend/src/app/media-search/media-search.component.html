@@ -1,0 +1,32 @@
+<div class="container mt-3">
+    <div class="row mt-2">
+        <div class="col-10">
+            <input type="search" name="name" id="name" [(ngModel)]="input" class="form-control">
+        </div>
+        <div class="col-2">
+            <button class="btn btn-primary" (click)="onSearch()">
+                Search
+            </button>
+        </div>
+    </div>
+    <div class="row mt-4" *ngIf="results != null">
+        <h1>Showing results for "{{activeQuery}}"</h1>
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex align-items-stretch" *ngFor="let result of results">
+                <a class="card mb-4 shadow-sm movie-card c-p" routerLink="/media_download/{{result.imdbId}}">
+                    <img src="{{result.poster ?? 'https://placehold.co/600x400'}}" class="card-img-top" alt="Placeholder image">
+                    <div class="card-body">
+                        <h6 class="card-title">{{result.title}}</h6>
+                        <span class="card-description">
+                            source: {{result.sourceDisplayName}}
+                            <br>
+                            type: {{result.mediaType}}
+                            <br>
+                            imdb: {{result.imdbId}}
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

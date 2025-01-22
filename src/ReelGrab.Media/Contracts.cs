@@ -6,11 +6,13 @@ public enum MediaType
     SERIES
 }
 
-public record SearchResult(string SourceDisplayName, string Title, string ImdbId, MediaType MediaType);
+public record SearchResult(string SourceDisplayName, string Title, string ImdbId, MediaType MediaType, string? Poster);
 
 public record SearchResponse(List<SearchResult> Results);
 
 public record PaginatedSearchResponse(List<SearchResult> Results, int TotalCount);
+
+public record MovieDetails(string Title, string ImdbId, string? PosterUrl);
 
 public record SeriesEpisodeDetails(int Number, string Title, string ImdbId);
 
@@ -24,7 +26,11 @@ public interface IMediaDatabase
 
     public Task<SearchResponse> SearchAsync(string query);
 
-    public Task<SeriesDetails> GetSeriesDetailsAsync(string imdbId);
+    public Task<MovieDetails> GetMovieDetailsByImdbIdAsync(string imdbId);
+
+    public Task<SeriesDetails> GetSeriesDetailsByImdbIdAsync(string imdbId);
+
+    public Task<MediaType> GetMediaTypeByImdbIdAsync(string imdbId);
 }
 
 public interface IMediaDatabasePaginated

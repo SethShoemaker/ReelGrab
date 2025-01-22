@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using ReelGrab.Core;
 using ReelGrab.Web;
 
@@ -23,6 +24,14 @@ builder.Services.AddCors(options =>
         builder.AllowAnyOrigin();
         builder.AllowAnyMethod();
     });
+});
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 var app = builder.Build();

@@ -1,4 +1,5 @@
 using ReelGrab.Core;
+using ReelGrab.Media;
 using ReelGrab.Web.Routers;
 
 namespace ReelGrab.Web;
@@ -34,6 +35,47 @@ public class MediaIndexRouter : Router
 
         app.MapGet($"{baseUrl}/databases", async context => {
             await context.Response.WriteAsJsonAsync(Application.instance.mediaIndex.MediaDatabases);
+        });
+
+        app.MapGet($"{baseUrl}/search", async context => {
+            string? query = context.Request.Query["query"];
+            if(string.IsNullOrWhiteSpace(query)){
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new {message = "did not provide query"});
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(await Application.instance.SearchMediaIndexAsync(query));
+        });
+
+        app.MapGet($"{baseUrl}/type", async context => {
+            string? imdbId = context.Request.Query["imdbId"];
+            if(string.IsNullOrWhiteSpace(imdbId)){
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
+                return;
+            }
+            MediaType mediaType = await Application.instance.GetMediaTypeByImdbIdAsync(imdbId);
+            await context.Response.WriteAsJsonAsync(new {type = mediaType});
+        });
+
+        app.MapGet($"{baseUrl}/movie/details", async context => {
+            string? imdbId = context.Request.Query["imdbId"];
+            if(string.IsNullOrWhiteSpace(imdbId)){
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(await Application.instance.GetMovieDetailsByImdbIdAsync(imdbId));
+        });
+
+        app.MapGet($"{baseUrl}/series/details", async context => {
+            string? imdbId = context.Request.Query["imdbId"];
+            if(string.IsNullOrWhiteSpace(imdbId)){
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(await Application.instance.GetSeriesDetailsByImdbIdAsync(imdbId));
         });
     }
 }

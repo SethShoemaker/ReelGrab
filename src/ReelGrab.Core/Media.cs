@@ -78,13 +78,23 @@ public partial class Application
         await ApplyMediaIndexConfigAsync();
     }
 
-    public Task<List<SearchResult>> SearchMediaIndexByQueryAsync(string query)
+    public Task<List<SearchResult>> SearchMediaIndexAsync(string query)
     {
-        return MediaIndex.instance.Search(query);
+        return MediaIndex.instance.SearchAsync(query);
     }
 
-    public Task<SeriesDetails> GetSeriesDetailsAsync(string imdb)
+    public Task<MediaType> GetMediaTypeByImdbIdAsync(string imdbId)
     {
-        return mediaIndex.GetSeriesDetailsAsync(imdb);
+        return mediaIndex.GetMediaTypeByImdbIdAsync(imdbId);
+    }
+
+    public Task<MovieDetails> GetMovieDetailsByImdbIdAsync(string imdbId)
+    {
+        return mediaIndex.GetMovieDetailsByImdbIdAsync(imdbId);
+    }
+
+    public Task<SeriesDetails> GetSeriesDetailsByImdbIdAsync(string imdb)
+    {
+        return mediaIndex.GetSeriesDetailsByImdbIdAsync(imdb);
     }
 }
