@@ -1,25 +1,95 @@
-<div class="container-xl mt-2">
-    <ng-container *ngIf="loading; else notLoading">
-        LOADING
-    </ng-container>
-    <ng-template #notLoading>
-        <div class="row mt-4">
-            <div class="col-12 col-sm-6 col-md-4">
-                <img src="{{posterUrl}}" style="height:100%; width: 100%; object-fit: contain; background-color: black;">
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 pl-4 pt-2">
-                <h1>{{title}}</h1>
+<div class="container mt-2">
+    <ng-container *ngIf="mediaDetailsLoading; else mediaDetailsNotLoading">
+        <div class="alert alert-primary" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
+                <strong class="ps-4">Loading Media Details...</strong>
             </div>
         </div>
-        <div class="row" *ngIf="seasons != null">
-            <div *ngFor="let season of seasons" class="mt-2">
-                <span>{{season.Number}}</span>
-                <div *ngFor="let episode of season.episodes">
-                    <span>{{episode.number}}</span>
-                    <span>{{episode.title}}</span>
-                    <span>{{episode.imdbId}}</span>
+    </ng-container>
+    <ng-template #mediaDetailsNotLoading>
+        <div class="row mt-4">
+            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-start" style="height:50vw;">
+                <img src="{{posterUrl}}">
+            </div>
+            <div class="col-12 col-sm-6 col-md-8">
+                <div class="pl-4 pt-3">
+                    <h1>{{title}}</h1>
                 </div>
             </div>
         </div>
+        <ng-container *ngIf="type == 'SERIES'">
+            <ng-container *ngIf="seasons == null; else seasonsNotNull">
+                <div class="alert alert-danger" role="alert">
+                    <div class="alert alert-danger" role="alert">
+                        Error Loading Seasons
+                    </div>
+                </div>
+            </ng-container>
+            <ng-template #seasonsNotNull>
+                <div class="row">
+                    <div *ngFor="let season of seasons"
+                        class="m-0 p-0 mb-4 border border-2"
+                        [ngClass]="{'border-primary':selectedSeriesEpisodes?.get(season.number)?.allSelected}"
+                        >
+                        <div class="border p-3 d-flex align-items-center justify-content-start c-p"
+                            [ngClass]="{'border-primary':selectedSeriesEpisodes?.get(season.number)?.allSelected}"
+                            (click)="toggleSeriesSeason(season.number)"
+                            >
+                            <input type="checkbox" [checked]="selectedSeriesEpisodes?.get(season.number)?.allSelected">
+                            <span class="ps-2">Season {{season.number}}</span>
+                        </div>
+                        <div *ngFor="let episode of season.episodes"
+                            (click)="toggleSeriesEpisode(season.number, episode.number)"
+                            class="border p-2"
+                            [ngClass]="{'border-primary':selectedSeriesEpisodes?.get(season.number)?.episodes?.get(episode.number)?.selected}"
+                            >
+                            <span class="pe-2">{{episode.number}}.</span>
+                            <input type="checkbox" [checked]="selectedSeriesEpisodes?.get(season.number)?.episodes?.get(episode.number)?.selected">
+                            <span class="ps-2">{{episode.title}} ({{episode.imdbId}})</span>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </ng-container>
     </ng-template>
+    <div class="row">
+        <ng-container *ngIf="storageLocationsLoading; else storageLocationsNotLoading">
+            <div class="alert alert-primary" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
+                    <strong class="ps-4">Loading Storage Locations...</strong>
+                </div>
+            </div>
+        </ng-container>
+        <ng-template #storageLocationsNotLoading>
+            <ng-container *ngIf="storageLocations == null; else storageLocationsNotNull">
+                <div class="alert alert-danger" role="alert">
+                    Could not retrieve storage locations
+                </div>
+            </ng-container>
+            <ng-template #storageLocationsNotNull>
+                <ng-container *ngIf="storageLocations!.length == 0; else storageLocationsNotEmpty">
+                    <div class="alert alert-danger" role="alert">
+                        No storage locations configured
+                    </div>
+                </ng-container>
+                <ng-template #storageLocationsNotEmpty>
+                    <h2 class="mt-4 mb-3">Select Storage Location</h2>
+                    <div class="d-flex flex-wrap mb-4" style="gap: 2vw;">
+                        <div *ngFor="let storageLocation of storageLocations" 
+                            (click)="selectedStorageLocationId = storageLocation.id"
+                            class="card col-3 col-lg-3 rounded border-2 c-p"
+                            [ngClass]="{'border-primary': selectedStorageLocationId == storageLocation.id}"
+                            >
+                            <img class="card-img-top px-2 py-2" style="height: 22vh; object-fit: contain;" *ngIf="storageLocation.displayType == 'LocalDisk'" [src]="'local-disk.svg'">
+                            <div class="card-body">
+                              <p class="card-text">{{ storageLocation.displayName }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+            </ng-template>
+        </ng-template>
+    </div>
 </div>

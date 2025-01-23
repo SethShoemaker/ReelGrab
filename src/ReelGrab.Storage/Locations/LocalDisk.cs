@@ -6,6 +6,10 @@ public class LocalDiskStorageLocation : IStorageLocation
 
     public string DisplayName => BasePath;
 
+    public string DisplayType => "LocalDisk";
+
+    public string Id => $"LocalDisk({BasePath})";
+
     internal LocalDiskStorageLocation(string basePath){
         BasePath = basePath;
     }
