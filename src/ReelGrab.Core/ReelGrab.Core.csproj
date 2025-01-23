@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ReelGrab.Media\ReelGrab.Media.csproj" />
+    <ProjectReference Include="..\ReelGrab.Storage\ReelGrab.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,7 +8,8 @@ namespace ReelGrab.Core;
 public partial class Application
 {
     private readonly List<Type> Migrations = [
-        typeof(CreateMediaIndexConfigTable)
+        typeof(CreateMediaIndexConfigTable),
+        typeof(CreateStorageGatewayConfigTable)
     ];
 
     private QueryFactory Db(){

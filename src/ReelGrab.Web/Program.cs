@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using ReelGrab.Core;
 using ReelGrab.Web;
+using ReelGrab.Web.Routers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,10 @@ Console.WriteLine("Migrations complete");
 Console.WriteLine("Applying MediaIndex configuration");
 await ReelGrab.Core.Application.instance.ApplyMediaIndexConfigAsync();
 Console.WriteLine("MediaIndex configuration completed");
+
+Console.WriteLine("Applying StorageGateway configuration");
+await ReelGrab.Core.Application.instance.ApplyStorageGatewayConfigAsync();
+Console.WriteLine("StorageGateway configuration completed");
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -41,6 +46,8 @@ if (app.Environment.IsDevelopment())
 }
 var mediaIndexRouter = new MediaIndexRouter();
 mediaIndexRouter.Route(app);
+var storageGatewayRouter = new StorageGatewayRouter();
+storageGatewayRouter.Route(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
