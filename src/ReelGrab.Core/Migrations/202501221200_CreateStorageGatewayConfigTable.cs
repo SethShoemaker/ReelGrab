@@ -16,7 +16,7 @@ public class CreateStorageGatewayConfigTable : Migration
     public override async Task Down(QueryFactory db)
     {
         await db.StatementAsync(
-            "DROP TABLE MediaIndexConfig;"
+            "DROP TABLE StorageGatewayConfig;"
         );
     }
 }
