@@ -1,6 +1,4 @@
 using System.Text.Json.Serialization;
-using ReelGrab.Core;
-using ReelGrab.Web;
 using ReelGrab.Web.Routers;
 
 var builder = WebApplication.CreateBuilder(args);

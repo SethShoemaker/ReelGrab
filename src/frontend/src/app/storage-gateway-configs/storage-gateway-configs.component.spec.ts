@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { StorageConfigsComponent } from './storage-location-configs.component';
+import { StorageGatewayConfigsComponent } from './storage-gateway-configs.component';
 
 describe('StorageLocationConfigsComponent', () => {
-  let component: StorageConfigsComponent;
-  let fixture: ComponentFixture<StorageConfigsComponent>;
+  let component: StorageGatewayConfigsComponent;
+  let fixture: ComponentFixture<StorageGatewayConfigsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StorageConfigsComponent]
+      imports: [StorageGatewayConfigsComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(StorageConfigsComponent);
+    fixture = TestBed.createComponent(StorageGatewayConfigsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

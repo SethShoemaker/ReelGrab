@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MediaConfigsComponent } from './media_configs.component';
+import { MediaIndexConfigsComponent } from './media-index-configs.component';
 
 describe('SettingsComponent', () => {
-  let component: MediaConfigsComponent;
-  let fixture: ComponentFixture<MediaConfigsComponent>;
+  let component: MediaIndexConfigsComponent;
+  let fixture: ComponentFixture<MediaIndexConfigsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MediaConfigsComponent]
+      imports: [MediaIndexConfigsComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MediaConfigsComponent);
+    fixture = TestBed.createComponent(MediaIndexConfigsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

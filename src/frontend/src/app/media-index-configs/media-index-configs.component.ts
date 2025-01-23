@@ -1,40 +1,43 @@
 import { KeyValuePipe, NgFor, NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
   imports: [NgIf, NgFor, KeyValuePipe],
-  templateUrl: './media_configs.component.html',
-  styleUrl: './media_configs.component.scss'
+  templateUrl: './media-index-configs.component.html',
+  styleUrl: './media-index-configs.component.scss'
 })
-export class MediaConfigsComponent implements OnInit {
-
-  constructor(private http: HttpClient, private eRef: ElementRef) { }
+export class MediaIndexConfigsComponent implements OnDestroy {
 
   configs: Map<string, string|null>|null = null;
   databases: Array<{displayName: string}>|null = null;
 
-  ngOnInit(): void {
+  reloadConfigsSub: Subscription|null = null;
+  reloadDatabasesSub: Subscription|null = null;
+  saveConfigsSub: Subscription|null = null;
+
+  constructor(private http: HttpClient, private eRef: ElementRef) {
     this.reloadConfigs()
     this.reloadDatabases()
   }
 
   reloadConfigs(){
-    let sub = this.http.get('/media_index/config').subscribe({
+    this.reloadConfigsSub?.unsubscribe();
+    this.reloadConfigsSub = this.http.get('/media_index/config').subscribe({
       next: (val: any) => {
         this.configs = val
-      },
-      complete: () => sub.unsubscribe()
+      }
     })
   }
 
   reloadDatabases(){
-    let sub = this.http.get('/media_index/databases').subscribe({
+    this.reloadDatabasesSub?.unsubscribe();
+    this.reloadDatabasesSub = this.http.get('/media_index/databases').subscribe({
       next: (val: any) => {
         this.databases = val;
-      },
-      complete: () => sub.unsubscribe()
+      }
     })
   }
 
@@ -45,7 +48,8 @@ export class MediaConfigsComponent implements OnInit {
       // @ts-ignore
       payload[inputElems[i].getAttribute("id")!] = (inputElems[i] as HTMLInputElement).value;
     }
-    let mediaIndexConfig = this.http.post('/media_index/config', payload).subscribe({
+    this.saveConfigsSub?.unsubscribe();
+    this.saveConfigsSub = this.http.post('/media_index/config', payload).subscribe({
       next: (val: any) => {
         if(val.message && val.message == "Error while decoding config"){
           alert("Error while decoding config")
@@ -53,8 +57,13 @@ export class MediaConfigsComponent implements OnInit {
         }
         this.configs = val
         this.reloadDatabases()
-      },
-      complete: () => mediaIndexConfig.unsubscribe()
+      }
     })
+  }
+
+  ngOnDestroy(): void {
+    this.reloadConfigsSub?.unsubscribe();
+    this.reloadDatabasesSub?.unsubscribe();
+    this.saveConfigsSub?.unsubscribe();
   }
 }

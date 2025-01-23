@@ -1,8 +1,7 @@
 using ReelGrab.Core;
 using ReelGrab.Media;
-using ReelGrab.Web.Routers;
 
-namespace ReelGrab.Web;
+namespace ReelGrab.Web.Routers;
 
 public class MediaIndexRouter : Router
 {

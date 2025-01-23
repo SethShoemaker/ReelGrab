@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
-import { MediaConfigsComponent } from './media_configs/media_configs.component';
+import { MediaIndexConfigsComponent } from './media-index-configs/media-index-configs.component';
 import { MediaSearchComponent } from './media-search/media-search.component';
 import { MediaDownloadComponent } from './media-download/media-download.component';
-import { StorageConfigsComponent } from './storage-configs/storage-location-configs.component';
+import { StorageGatewayConfigsComponent } from './storage-gateway-configs/storage-gateway-configs.component';
 
 export const routes: Routes = [
-    { path: 'media_configs', component: MediaConfigsComponent },
+    { path: 'media_index_configs', component: MediaIndexConfigsComponent },
     { path: 'media_search', component: MediaSearchComponent },
     { path: 'media_download/:imdbId', component: MediaDownloadComponent },
-    { path: 'storage_configs', component: StorageConfigsComponent }
+    { path: 'storage_gateway_configs', component: StorageGatewayConfigsComponent }
 ];
