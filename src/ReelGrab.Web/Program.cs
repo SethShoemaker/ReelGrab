@@ -15,6 +15,10 @@ Console.WriteLine("Applying StorageGateway configuration");
 await ReelGrab.Core.Application.instance.ApplyStorageGatewayConfigAsync();
 Console.WriteLine("StorageGateway configuration completed");
 
+Console.WriteLine("Applying StorageGateway configuration");
+await ReelGrab.Core.Application.instance.ApplyTorrentIndexConfigAsync();
+Console.WriteLine("StorageGateway configuration completed");
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -46,6 +50,8 @@ var mediaIndexRouter = new MediaIndexRouter();
 mediaIndexRouter.Route(app);
 var storageGatewayRouter = new StorageGatewayRouter();
 storageGatewayRouter.Route(app);
+var torrentIndexRouter = new TorrentIndexRouter();
+torrentIndexRouter.Route(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

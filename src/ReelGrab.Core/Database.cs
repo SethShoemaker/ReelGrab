@@ -9,7 +9,8 @@ public partial class Application
 {
     private readonly List<Type> Migrations = [
         typeof(CreateMediaIndexConfigTable),
-        typeof(CreateStorageGatewayConfigTable)
+        typeof(CreateStorageGatewayConfigTable),
+        typeof(CreateTorrentIndexConfigTable)
     ];
 
     private QueryFactory Db(){
