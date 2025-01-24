@@ -1,3 +1,4 @@
+using ReelGrab.Torents;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -22,7 +23,7 @@ public partial class Application
             }
             else
             {
-                torrentIndex.ApiUrl = row.Value;
+                torrentIndex.ApiUrl = new Uri(row.Value);
             }
         }
 

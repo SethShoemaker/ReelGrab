@@ -30,5 +30,24 @@ public class TorrentIndexRouter : Router
             await Application.instance.SetTorrentIndexConfigAsync(configs);
             await context.Response.WriteAsJsonAsync(await Application.instance.GetTorrentIndexConfigAsync());
         });
+
+        app.MapGet($"{baseUrl}/status", async context => {
+
+            bool jackettConnection;
+            string jackettConnectionMessage;
+            try {
+                await Application.instance.torrentIndex.CheckConfig();
+                jackettConnection = true;
+                jackettConnectionMessage = "Jackett Connection Successful";
+            } catch(Exception e){
+                jackettConnection = false;
+                jackettConnectionMessage = e.Message;
+            }
+
+            await context.Response.WriteAsJsonAsync(new {
+                jackettConnection,
+                jackettConnectionMessage
+            });
+        });
     }
 }

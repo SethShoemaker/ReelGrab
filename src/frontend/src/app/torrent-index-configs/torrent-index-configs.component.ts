@@ -11,12 +11,15 @@ import { Subscription } from 'rxjs';
 })
 export class TorrentIndexConfigsComponent {
   configs: Map<string, string | null> | null = null;
+  jackettConnectionMessage: string | null = null;
 
   reloadConfigsSub: Subscription | null = null;
+  reloadJackettConnectionMessageSub: Subscription | null = null;
   saveConfigsSub: Subscription | null = null;
 
   constructor(private http: HttpClient, private eRef: ElementRef) {
     this.reloadConfigs();
+    this.reloadJackettConnectionMessage();
   }
 
   reloadConfigs() {
@@ -25,6 +28,13 @@ export class TorrentIndexConfigsComponent {
       next: (val: any) => {
         this.configs = val
       }
+    })
+  }
+
+  reloadJackettConnectionMessage(){
+    this.reloadJackettConnectionMessageSub?.unsubscribe();
+    this.reloadJackettConnectionMessageSub = this.http.get('/torrent_index/status').subscribe((data: any) => {
+      this.jackettConnectionMessage = data.jackettConnectionMessage;
     })
   }
 
@@ -44,12 +54,14 @@ export class TorrentIndexConfigsComponent {
         }
         this.configs = val;
         this.reloadConfigs();
+        this.reloadJackettConnectionMessage();
       }
     })
   }
 
   ngOnDestroy(): void {
     this.reloadConfigsSub?.unsubscribe();
+    this.reloadJackettConnectionMessageSub?.unsubscribe();
     this.saveConfigsSub?.unsubscribe();
   }
 }
