@@ -1,4 +1,4 @@
-using ReelGrab.Torents;
+using ReelGrab.Torrents;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;

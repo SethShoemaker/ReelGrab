@@ -49,5 +49,23 @@ public class TorrentIndexRouter : Router
                 jackettConnectionMessage
             });
         });
+
+        app.MapGet($"{baseUrl}/search/movie", async context => {
+            string? query = context.Request.Query["query"];
+            if(string.IsNullOrWhiteSpace(query)){
+                await context.Response.WriteAsJsonAsync(new {message = "Must provide query"});
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(await Application.instance.torrentIndex.SearchMovie(query));
+        });
+
+        app.MapGet($"{baseUrl}/search/series", async context => {
+            string? query = context.Request.Query["query"];
+            if(string.IsNullOrWhiteSpace(query)){
+                await context.Response.WriteAsJsonAsync(new {message = "Must provide query"});
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(await Application.instance.torrentIndex.SearchSeries(query));
+        });
     }
 }
