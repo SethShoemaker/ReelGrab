@@ -52,6 +52,8 @@ var storageGatewayRouter = new StorageGatewayRouter();
 storageGatewayRouter.Route(app);
 var torrentIndexRouter = new TorrentIndexRouter();
 torrentIndexRouter.Route(app);
+var wantedMediaRouter = new MediaWantedRouter();
+wantedMediaRouter.Route(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

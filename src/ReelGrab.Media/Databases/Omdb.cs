@@ -62,7 +62,7 @@ public class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
         };
     }
 
-    record ApiGetDetailsResponse(string Response, string? Error, string? Title, string? Year, string? Poster, int? totalSeasons, string? Type);
+    record ApiGetDetailsResponse(string Response, string? Error, string? Title, string? Year, string? Poster, int? totalSeasons, string? Type, string? Plot);
 
     public async Task<MovieDetails> GetMovieDetailsByImdbIdAsync(string imdbId)
     {
@@ -73,7 +73,7 @@ public class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
         if(body.Type != "movie"){
             throw new Exception($"{imdbId} has type {body.Type}, not movie");
         }
-        return new MovieDetails(body.Title!, imdbId, body.Poster);
+        return new MovieDetails(body.Title!, imdbId, body.Poster, int.Parse(body.Year!), body.Plot!);
     }
 
     record ApiGetSeriesSeasonResponseEpisode(string Title, string Episode, string imdbID);
@@ -89,19 +89,24 @@ public class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
         if(body.Type != "series"){
             throw new Exception($"{imdbId} has type {body.Type}, not series");
         }
+        var years = body.Year!.Split("–", StringSplitOptions.RemoveEmptyEntries);
         List<SeriesSeasonDetails> seasons = new();
         for (int i = 0; i < body.totalSeasons; i++)
         {
             var seasonBody = await http.GetFromJsonAsync<ApiGetSeriesSeasonResponse>($"?i={HttpUtility.UrlEncode(imdbId)}&season=${i + 1}&apikey={HttpUtility.UrlEncode(apiKey)}") ?? throw new Exception("OMDb: API did not return correct response");
+            List<SeriesEpisodeDetails> episodes = new();
+            foreach (var episode in seasonBody.Episodes)
+            {
+                if (!episodes.Where(e => e.Number == int.Parse(episode.Episode)).Any())
+                {
+                    episodes.Add(new SeriesEpisodeDetails(int.Parse(episode.Episode), episode.Title, episode.imdbID));
+                }
+            }
             seasons.Add(new SeriesSeasonDetails(
                 Number: int.Parse(seasonBody.Season),
-                Episodes: seasonBody.Episodes.Select(e => new SeriesEpisodeDetails(
-                    Number: int.Parse(e.Episode),
-                    Title: e.Title,
-                    ImdbId: e.imdbID
-                )).ToList()
+                Episodes: episodes
             ));
         }
-        return new SeriesDetails(body.Title!, imdbId, body.Poster, seasons);
+        return new SeriesDetails(body.Title!, imdbId, body.Poster, seasons, int.Parse(years[0]), years.Length > 1 ? int.Parse(years[1]) : null, body.Plot!);
     }
 }
