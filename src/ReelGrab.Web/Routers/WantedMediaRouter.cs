@@ -81,6 +81,105 @@ public partial class MediaWantedRouter : Router
             await Application.instance.SetWantedSeriesEpisodesAsync(imdbId, episodeDtos);
             await context.Response.WriteAsJsonAsync(new { message = "successfully set new wanted episodes", imdbId = imdbId });
         });
+
+        app.MapGet($"{baseUrl}/movie_torrent", async context =>
+        {
+            string? imdbId = context.Request.Query["imdbId"];
+            if (string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(new { torrent = await Application.instance.GetWantedMovieTorrentAsync(imdbId) });
+        });
+
+        app.MapPost($"{baseUrl}/movie_torrent", async context =>
+        {
+            string? imdbId = context.Request.Query["imdbId"];
+            if (string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            string? torrentUrl = context.Request.Query["torrentUrl"];
+            if (string.IsNullOrWhiteSpace(torrentUrl))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide torrentUrl" });
+                return;
+            }
+            string? torrentSource = context.Request.Query["torrentSource"];
+            if (string.IsNullOrWhiteSpace(torrentSource))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide torrentSource" });
+                return;
+            }
+            string? torrentDisplayName = context.Request.Query["torrentDisplayName"];
+            if (string.IsNullOrWhiteSpace(torrentDisplayName))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide torrentDisplayName" });
+                return;
+            }
+            string? torrentFilePath = context.Request.Query["torrentFilePath"];
+            if (string.IsNullOrWhiteSpace(torrentFilePath))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide torrentFilePath" });
+                return;
+            }
+            await Application.instance.SetWantedMovieTorrentAsync(imdbId, new(torrentUrl, torrentSource, torrentDisplayName, torrentFilePath));
+            await context.Response.WriteAsJsonAsync(new { message = "successfully set movie torrent" });
+        });
+
+        app.MapGet($"{baseUrl}/series_torrents", async context => {
+            string? imdbId = context.Request.Query["imdbId"];
+            if (string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(await Application.instance.GetWantedSeriesTorrentsAsync(imdbId));
+        });
+
+        app.MapPost($"{baseUrl}/series_torrents", async context => {
+            string? imdbId = context.Request.Query["imdbId"];
+            if (string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            var torrents = await context.Request.ReadFromJsonAsync<List<Application.WantedSeriesTorrentDto>>() ?? throw new Exception("you fucked up");
+            await Application.instance.SetWantedSeriesTorrentsAsync(imdbId, torrents);
+            await context.Response.WriteAsJsonAsync(new { message = "successfully set series torrents" });
+        });
+
+        app.MapGet($"{baseUrl}/storage_locations", async context =>
+        {
+            string? imdbId = context.Request.Query["imdbId"];
+            if (string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(new { storageLocations = await Application.instance.GetWantedMediaStorageLocationsAsync(imdbId) });
+        });
+
+        app.MapPost($"{baseUrl}/storage_locations", async context =>
+        {
+            string? imdbId = context.Request.Query["imdbId"];
+            if (string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            string? storageLocations = context.Request.Query["storageLocations"];
+            if (string.IsNullOrWhiteSpace(storageLocations))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide storageLocations" });
+                return;
+            }
+            List<string> locations = storageLocations.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            await Application.instance.SetWantedMediaStorageLocationsAsync(imdbId, locations);
+            await context.Response.WriteAsJsonAsync(new { message = "successfully set new storage locations" });
+        });
     }
 
     [GeneratedRegex("^S(\\d{2})E(\\d{2})$")]

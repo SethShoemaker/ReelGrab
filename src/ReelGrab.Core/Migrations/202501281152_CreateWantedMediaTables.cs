@@ -35,7 +35,7 @@ public class CreateWantedMediaTables : Migration
                 MediaId VARCHAR(256) NOT NULL REFERENCES WantedMedia(ImdbId),
                 TorrentUrl VARCHAR(256) NOT NULL,
                 Source VARCHAR(256) NOT NULL,
-                DisplayName NOT NULL,
+                DisplayName VARCHAR(256) NOT NULL,
                 UNIQUE(MediaId, TorrentUrl),
                 UNIQUE(MediaId, DisplayName)
             );
@@ -45,17 +45,27 @@ public class CreateWantedMediaTables : Migration
             CREATE TABLE WantedMediaTorrentDownloadable(
                 MediaId VARCHAR(256) NOT NULL REFERENCES WantedMedia(ImdbId),
                 TorrentDisplayName VARCHAR(256) NOT NULL,
+                TorrentFilePath VARCHAR(256) NOT NULL,
                 DownloadableId VARCHAR(256) NOT NULL REFERENCES WantedMediaDownloadable(ImdbId),
                 CONSTRAINT fk_wantedmediatorrent
                     FOREIGN KEY (MediaId, TorrentDisplayName)
                     REFERENCES WantedMediaTorrent(MediaId, DisplayName)
             );
         ");
+
+        await db.StatementAsync(@"
+            CREATE TABLE WantedMediaStorageLocation(
+                MediaId VARCHAR(256) NOT NULL REFERENCES WantedMedia(ImdbId),
+                StorageLocation VARCHAR(256) NOT NULL,
+                PRIMARY KEY(MediaId, StorageLocation)
+            )
+        ");
     }
 
     public async override Task Down(QueryFactory db)
     {
         await db.StatementAsync(@"
+            DROP TABLE WantedMediaStorageLocation;
             DROP TABLE WantedMediaTorrentDownloadable;
             DROP TABLE WantedMediaTorrent;
             DROP TABLE WantedMediaDownloadable;

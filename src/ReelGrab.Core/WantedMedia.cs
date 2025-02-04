@@ -197,6 +197,189 @@ public partial class Application
         }
     }
 
+    public record MediaTorrent(string TorrentUrl, string Source, string DisplayName, string FilePath);
+
+    public async Task<MediaTorrent?> GetWantedMovieTorrentAsync(string imdbId)
+    {
+        using var db = Db();
+        await EnsureWantedMovieExistsAsync(imdbId, db);
+        var torrent = await db
+            .Query("WantedMediaTorrentDownloadable")
+            .Select(["WantedMediaTorrent.TorrentUrl", "WantedMediaTorrent.Source", "WantedMediaTorrent.DisplayName", "WantedMediaTorrentDownloadable.TorrentFilePath"])
+            .Where("DownloadableId", imdbId)
+            .Join("WantedMediaTorrent", j => j
+                .On("WantedMediaTorrentDownloadable.TorrentDisplayName", "WantedMediaTorrent.DisplayName")
+                .On("WantedMediaTorrentDownloadable.MediaId", "WantedMediaTorrent.MediaId")
+            )
+            .FirstOrDefaultAsync();
+        if (torrent == null)
+        {
+            return null;
+        }
+        return new(torrent.TorrentUrl, torrent.Source, torrent.DisplayName, torrent.TorrentFilePath);
+    }
+
+    public async Task SetWantedMovieTorrentAsync(string movieImdbId, MediaTorrent mediaTorrent)
+    {
+        using var db = Db();
+        await EnsureWantedMovieExistsAsync(movieImdbId, db);
+        using var transaction = db.Connection.BeginTransaction();
+        await db
+            .Query("WantedMediaTorrentDownloadable")
+            .Where("MediaId", movieImdbId)
+            .DeleteAsync();
+        await db
+            .Query("WantedMediaTorrent")
+            .Where("MediaId", movieImdbId)
+            .DeleteAsync();
+        await db
+            .Query("WantedMediaTorrent")
+            .InsertAsync(new
+            {
+                MediaId = movieImdbId,
+                mediaTorrent.TorrentUrl,
+                mediaTorrent.Source,
+                mediaTorrent.DisplayName
+            });
+        await db
+            .Query("WantedMediaTorrentDownloadable")
+            .InsertAsync(new
+            {
+                MediaId = movieImdbId,
+                TorrentDisplayName = mediaTorrent.DisplayName,
+                TorrentFilePath = mediaTorrent.FilePath,
+                DownloadableId = movieImdbId,
+            });
+        transaction.Commit();
+    }
+
+    public record GetWantedSeriesTorrentsAsyncSeason(int Number, List<GetWantedSeriesTorrentsAsyncEpisode> Episodes);
+
+    public record GetWantedSeriesTorrentsAsyncEpisode(int Number, string Title, string ImdbId, bool Wanted, MediaTorrent? MediaTorrent);
+
+    private record GetWantedSeriesTorrentsAsyncRow(string ImdbId, string DisplayName, long Wanted, long Season, long Episode, string? TorrentUrl, string? Source, string? TorrentDisplayName, string? TorrentFilePath);
+
+    public async Task<List<GetWantedSeriesTorrentsAsyncSeason>> GetWantedSeriesTorrentsAsync(string seriesImdbId)
+    {
+        using var db = Db();
+        await EnsureWantedSeriesExistsAsync(seriesImdbId, db);
+        var downloadables = await db
+            .Query("WantedMediaDownloadable")
+            .Where("WantedMediaDownloadable.MediaId", seriesImdbId)
+            .LeftJoin("WantedMediaTorrentDownloadable", j => j
+                .On("WantedMediaDownloadable.ImdbId", "WantedMediaTorrentDownloadable.DownloadableId"))
+            .LeftJoin("WantedMediaTorrent", j => j
+                .On("WantedMediaTorrentDownloadable.MediaId", "WantedMediaTorrent.MediaId")
+                .On("WantedMediaTorrentDownloadable.TorrentDisplayName", "WantedMediaTorrent.DisplayName"))
+            .Select([
+                "WantedMediaDownloadable.ImdbId",
+                "WantedMediaDownloadable.DisplayName",
+                "WantedMediaDownloadable.Wanted",
+                "WantedMediaDownloadable.Season",
+                "WantedMediaDownloadable.Episode",
+                "WantedMediaTorrent.TorrentUrl",
+                "WantedMediaTorrent.Source",
+                "WantedMediaTorrent.DisplayName as TorrentDisplayName",
+                "WantedMediaTorrentDownloadable.TorrentFilePath"])
+            .GetAsync<GetWantedSeriesTorrentsAsyncRow>();
+
+        Dictionary<string, MediaTorrent> mediaTorrents = new();
+        List<GetWantedSeriesTorrentsAsyncSeason> seasons = new();
+        foreach (var downloadable in downloadables)
+        {
+            GetWantedSeriesTorrentsAsyncSeason? season = seasons.FirstOrDefault(s => s.Number == downloadable.Season);
+            if(season == null)
+            {
+                season = new GetWantedSeriesTorrentsAsyncSeason((int)downloadable.Season, []);
+                seasons.Add(season);
+            }
+            MediaTorrent? mediaTorrent = null;
+            if(downloadable.TorrentUrl != null)
+            {
+                if(!mediaTorrents.TryGetValue(downloadable.TorrentUrl, out MediaTorrent? value))
+                {
+                    value = new(downloadable.TorrentUrl, downloadable.Source!, downloadable.TorrentDisplayName!, downloadable.TorrentFilePath!);
+                    mediaTorrents[downloadable.TorrentUrl] = value;
+                }
+                mediaTorrent = value;
+            }
+            season.Episodes.Add(new((int)downloadable.Episode, downloadable.DisplayName, downloadable.ImdbId, downloadable.Wanted == 1, mediaTorrent));
+        }
+        return seasons;
+    }
+
+    public record WantedSeriesTorrentEpisodeDto(string ImdbId, string TorrentFilePath);
+
+    public record WantedSeriesTorrentDto(string TorrentUrl, string TorrentSource, string TorrentDisplayName, List<WantedSeriesTorrentEpisodeDto> Episodes);
+
+    public async Task SetWantedSeriesTorrentsAsync(string seriesImdbId, List<WantedSeriesTorrentDto> torrents)
+    {
+        using var db = Db();
+        using var transaction = db.Connection.BeginTransaction();
+        await db
+            .Query("WantedMediaTorrentDownloadable")
+            .Where("MediaId", seriesImdbId)
+            .DeleteAsync();
+        await db
+            .Query("WantedMediaTorrent")
+            .Where("MediaId", seriesImdbId)
+            .DeleteAsync();
+        string[] torrentCols = ["MediaId", "TorrentUrl", "Source", "DisplayName"];
+        var torrentRows = torrents.Select(t => new object[] {
+            seriesImdbId,
+            t.TorrentUrl,
+            t.TorrentSource,
+            t.TorrentDisplayName
+        });
+        await db
+            .Query("WantedMediaTorrent")
+            .InsertAsync(torrentCols, torrentRows);
+        string[] torrentDownloadableCols = ["MediaId", "TorrentDisplayName", "TorrentFilePath", "DownloadableId"];
+        var torrentDownloadableRows = torrents.SelectMany(t => t.Episodes, (torrent, episode) => new object[] {
+            seriesImdbId,
+            torrent.TorrentDisplayName,
+            episode.TorrentFilePath,
+            episode.ImdbId
+        });
+        await db
+            .Query("WantedMediaTorrentDownloadable")
+            .InsertAsync(torrentDownloadableCols, torrentDownloadableRows);
+        transaction.Commit();
+    }
+
+    private record GetWantedMediaStorageLocationsAsyncWantedMediaStorageLocationRow(string StorageLocation);
+
+    public async Task<List<string>> GetWantedMediaStorageLocationsAsync(string imdbId)
+    {
+        using var db = Db();
+        await EnsureWantedMediaExistsAsync(imdbId, db);
+        return (await db
+            .Query("WantedMediaStorageLocation")
+            .Where("MediaId", imdbId)
+            .Select(["StorageLocation"])
+            .GetAsync<GetWantedMediaStorageLocationsAsyncWantedMediaStorageLocationRow>())
+            .Select(r => r.StorageLocation)
+            .ToList();
+    }
+
+    public async Task SetWantedMediaStorageLocationsAsync(string imdbId, List<string> storageLocations)
+    {
+        using var db = Db();
+        await EnsureWantedMediaExistsAsync(imdbId, db);
+        using var transaction = db.Connection.BeginTransaction();
+        await db
+            .Query("WantedMediaStorageLocation")
+            .Where("MediaId", imdbId)
+            .DeleteAsync();
+        await db
+            .Query("WantedMediaStorageLocation")
+            .InsertAsync(
+                ["MediaId", "StorageLocation"],
+                storageLocations.Select(sl => new object[] { imdbId, sl })
+            );
+        transaction.Commit();
+    }
+
     public class WantedMediaDoesNotExistException : Exception
     {
         public string ImdbId;
@@ -207,6 +390,44 @@ public partial class Application
         }
 
         public override string Message => $"{ImdbId} does not exist";
+    }
+
+    private async Task EnsureWantedMediaExistsAsync(string imdbId, QueryFactory db)
+    {
+        var row = await db
+            .Query("WantedMedia")
+            .Where("ImdbId", imdbId)
+            .FirstOrDefaultAsync();
+        if (row == null)
+        {
+            throw new WantedMediaDoesNotExistException(imdbId);
+        }
+    }
+
+    public class WantedMediaIsNotAMovieException : InvalidOperationException
+    {
+        public string MovieImdbId;
+
+        public WantedMediaIsNotAMovieException(string movieImdbId)
+        {
+            MovieImdbId = movieImdbId;
+        }
+
+        public override string Message => $"{MovieImdbId} is not a movie";
+    }
+
+    private async Task EnsureWantedMovieExistsAsync(string movieImdbId, QueryFactory db)
+    {
+        string type = await db
+            .Query("WantedMedia")
+            .Where("ImdbId", movieImdbId)
+            .Select("Type")
+            .FirstOrDefaultAsync<string>()
+            ?? throw new WantedMediaDoesNotExistException(movieImdbId);
+        if (type != MediaType.MOVIE.ToString())
+        {
+            throw new WantedMediaIsNotAMovieException(movieImdbId);
+        }
     }
 
     public class WantedMediaIsNotASeriesException : InvalidOperationException
