@@ -283,7 +283,6 @@ public partial class Application
                 "WantedMediaTorrentDownloadable.TorrentFilePath"])
             .GetAsync<GetWantedSeriesTorrentsAsyncRow>();
 
-        Dictionary<string, MediaTorrent> mediaTorrents = new();
         List<GetWantedSeriesTorrentsAsyncSeason> seasons = new();
         foreach (var downloadable in downloadables)
         {
@@ -293,16 +292,7 @@ public partial class Application
                 season = new GetWantedSeriesTorrentsAsyncSeason((int)downloadable.Season, []);
                 seasons.Add(season);
             }
-            MediaTorrent? mediaTorrent = null;
-            if(downloadable.TorrentUrl != null)
-            {
-                if(!mediaTorrents.TryGetValue(downloadable.TorrentUrl, out MediaTorrent? value))
-                {
-                    value = new(downloadable.TorrentUrl, downloadable.Source!, downloadable.TorrentDisplayName!, downloadable.TorrentFilePath!);
-                    mediaTorrents[downloadable.TorrentUrl] = value;
-                }
-                mediaTorrent = value;
-            }
+            MediaTorrent? mediaTorrent = downloadable.TorrentUrl == null ? null : new(downloadable.TorrentUrl, downloadable.Source!, downloadable.TorrentDisplayName!, downloadable.TorrentFilePath!);
             season.Episodes.Add(new((int)downloadable.Episode, downloadable.DisplayName, downloadable.ImdbId, downloadable.Wanted == 1, mediaTorrent));
         }
         return seasons;
