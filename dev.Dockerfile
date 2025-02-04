@@ -17,3 +17,5 @@ RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN npm install -g @angular/cli
 EXPOSE 4200
+
+RUN apt-get install -y transmission-cli

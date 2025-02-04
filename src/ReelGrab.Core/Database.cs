@@ -11,7 +11,8 @@ public partial class Application
         typeof(CreateMediaIndexConfigTable),
         typeof(CreateStorageGatewayConfigTable),
         typeof(CreateTorrentIndexConfigTable),
-        typeof(CreateWantedMediaTables)
+        typeof(CreateWantedMediaTables),
+        typeof(CreateTorrentClientConfigTable)
     ];
 
     private QueryFactory Db(){

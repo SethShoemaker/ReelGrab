@@ -4,6 +4,7 @@
     <ProjectReference Include="..\ReelGrab.Media\ReelGrab.Media.csproj" />
     <ProjectReference Include="..\ReelGrab.Storage\ReelGrab.Storage.csproj" />
     <ProjectReference Include="..\ReelGrab.Torrents\ReelGrab.TorrentIndex.csproj" />
+    <ProjectReference Include="..\ReelGrab.TorrentDownloader\ReelGrab.TorrentDownloader.csproj" />
   </ItemGroup>
 
   <ItemGroup>
