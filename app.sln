@@ -2,19 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab.Storage", "src\ReelGrab.Storage\ReelGrab.Storage.csproj", "{AE62E7B1-8517-B477-7A7F-6F15B034B2D2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab.TorrentDownloader", "src\ReelGrab.TorrentDownloader\ReelGrab.TorrentDownloader.csproj", "{7F00E440-EFF9-4604-D590-01B2C8E6048E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab.Core", "src\ReelGrab.Core\ReelGrab.Core.csproj", "{B6165965-9AF2-C9A6-2F86-D091E650F17C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab.Web", "src\ReelGrab.Web\ReelGrab.Web.csproj", "{5FEF9D99-AF07-7993-150A-3FAB58ACB385}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab.TorrentIndex", "src\ReelGrab.Torrents\ReelGrab.TorrentIndex.csproj", "{4AC98D0D-F763-B3C1-C434-23F0244359C8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab.Media", "src\ReelGrab.Media\ReelGrab.Media.csproj", "{4FF41966-2928-3EDC-0873-E3CB2E699759}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab", "src\ReelGrab.csproj", "{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,43 +10,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AE62E7B1-8517-B477-7A7F-6F15B034B2D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AE62E7B1-8517-B477-7A7F-6F15B034B2D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AE62E7B1-8517-B477-7A7F-6F15B034B2D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AE62E7B1-8517-B477-7A7F-6F15B034B2D2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7F00E440-EFF9-4604-D590-01B2C8E6048E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F00E440-EFF9-4604-D590-01B2C8E6048E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7F00E440-EFF9-4604-D590-01B2C8E6048E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F00E440-EFF9-4604-D590-01B2C8E6048E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B6165965-9AF2-C9A6-2F86-D091E650F17C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B6165965-9AF2-C9A6-2F86-D091E650F17C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B6165965-9AF2-C9A6-2F86-D091E650F17C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B6165965-9AF2-C9A6-2F86-D091E650F17C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5FEF9D99-AF07-7993-150A-3FAB58ACB385}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5FEF9D99-AF07-7993-150A-3FAB58ACB385}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5FEF9D99-AF07-7993-150A-3FAB58ACB385}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5FEF9D99-AF07-7993-150A-3FAB58ACB385}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4AC98D0D-F763-B3C1-C434-23F0244359C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4AC98D0D-F763-B3C1-C434-23F0244359C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4AC98D0D-F763-B3C1-C434-23F0244359C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4AC98D0D-F763-B3C1-C434-23F0244359C8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4FF41966-2928-3EDC-0873-E3CB2E699759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4FF41966-2928-3EDC-0873-E3CB2E699759}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4FF41966-2928-3EDC-0873-E3CB2E699759}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4FF41966-2928-3EDC-0873-E3CB2E699759}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{AE62E7B1-8517-B477-7A7F-6F15B034B2D2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{7F00E440-EFF9-4604-D590-01B2C8E6048E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{B6165965-9AF2-C9A6-2F86-D091E650F17C} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{5FEF9D99-AF07-7993-150A-3FAB58ACB385} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{4AC98D0D-F763-B3C1-C434-23F0244359C8} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{4FF41966-2928-3EDC-0873-E3CB2E699759} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E1981433-A015-4BFD-8D1B-64121627E10A}
+		SolutionGuid = {30D94C54-3329-4D47-A684-D328CB13DFAC}
 	EndGlobalSection
 EndGlobal
