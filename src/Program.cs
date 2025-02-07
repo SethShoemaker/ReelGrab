@@ -1,27 +1,32 @@
 using System.Text.Json.Serialization;
 using ReelGrab.Core;
+using ReelGrab.Database;
+using ReelGrab.MediaIndexes;
+using ReelGrab.Storage;
+using ReelGrab.TorrentClients;
+using ReelGrab.TorrentIndexes;
 using ReelGrab.Web.Routers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 Console.WriteLine("Applying migrations");
-await ReelGrab.Core.Application.instance.ApplyMigrationsAsync();
+await Db.ApplyMigrationsAsync();
 Console.WriteLine("Migrations complete");
 
 Console.WriteLine("Applying MediaIndex configuration");
-await ReelGrab.Core.Application.instance.ApplyMediaIndexConfigAsync();
+await MediaIndexConfig.instance.ApplyMediaIndexConfigAsync();
 Console.WriteLine("MediaIndex configuration completed");
 
 Console.WriteLine("Applying StorageGateway configuration");
-await ReelGrab.Core.Application.instance.ApplyStorageGatewayConfigAsync();
+await StorageGatewayConfig.instance.ApplyStorageGatewayConfigAsync();
 Console.WriteLine("StorageGateway configuration completed");
 
 Console.WriteLine("Applying StorageGateway configuration");
-await ReelGrab.Core.Application.instance.ApplyTorrentIndexConfigAsync();
+await TorrentIndexConfig.instance.ApplyTorrentIndexConfigAsync();
 Console.WriteLine("StorageGateway configuration completed");
 
 Console.WriteLine("Applying TorrenClient configuration");
-await ReelGrab.Core.Application.instance.ApplyTorrentClientConfigAsync();
+await TorrentClientConfig.instance.ApplyTorrentClientConfigAsync();
 Console.WriteLine("TorrenClient configuration completed");
 
 using var cts = new CancellationTokenSource();

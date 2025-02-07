@@ -1,6 +1,6 @@
 using SqlKata.Execution;
 
-namespace ReelGrab.Core.Migrations;
+namespace ReelGrab.Database.Migrations;
 
 public class CreateTorrentIndexConfigTable : Migration
 {

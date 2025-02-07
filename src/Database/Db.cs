@@ -1,13 +1,13 @@
 using Microsoft.Data.Sqlite;
-using ReelGrab.Core.Migrations;
+using ReelGrab.Database.Migrations;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 
-namespace ReelGrab.Core;
+namespace ReelGrab.Database;
 
-public partial class Application
+public class Db
 {
-    private readonly List<Type> Migrations = [
+    private static readonly List<Type> Migrations = [
         typeof(CreateMediaIndexConfigTable),
         typeof(CreateStorageGatewayConfigTable),
         typeof(CreateTorrentIndexConfigTable),
@@ -15,15 +15,15 @@ public partial class Application
         typeof(CreateTorrentClientConfigTable)
     ];
 
-    private QueryFactory Db(){
+    public static QueryFactory CreateConnection(){
         SqliteConnection connection = new("Data Source=/data/reelgrab.db");
         connection.Open();
         return new(connection, new SqliteCompiler());
     }
 
-    public async Task ApplyMigrationsAsync()
+    public static async Task ApplyMigrationsAsync()
     {
-        using QueryFactory db = Db();
+        using QueryFactory db = CreateConnection();
         await EnsureMigrationsTableExistsAsync(db);
         foreach(var type in await GetPendingMigrationTypesAsync(db)){
             Migration migration = (Migration)(Activator.CreateInstance(type) ?? throw new Exception($"could not instantiate {type.FullName}"));
@@ -34,7 +34,7 @@ public partial class Application
         }
     }
 
-    private async Task<List<Type>> GetPendingMigrationTypesAsync(QueryFactory db)
+    private static async Task<List<Type>> GetPendingMigrationTypesAsync(QueryFactory db)
     {
         string? className = await db.Query("Migrations").Select("Name").OrderByDesc("Timestamp").FirstOrDefaultAsync<string>();
         if(className == null){
@@ -46,7 +46,7 @@ public partial class Application
         return Migrations.SkipWhile(m => m.FullName != className).Skip(1).ToList();
     }
 
-    private async Task EnsureMigrationsTableExistsAsync(QueryFactory db)
+    private static async Task EnsureMigrationsTableExistsAsync(QueryFactory db)
     {
         await db.StatementAsync(
             "CREATE TABLE IF NOT EXISTS Migrations(" + 
@@ -55,7 +55,7 @@ public partial class Application
         );
     }
 
-    private Task SaveMigrationRecordAsync(string name, DateTime timestamp, QueryFactory db)
+    private static Task SaveMigrationRecordAsync(string name, DateTime timestamp, QueryFactory db)
     {
         return db.Query("Migrations").InsertAsync(new { name, timestamp });
     }

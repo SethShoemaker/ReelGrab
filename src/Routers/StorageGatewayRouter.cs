@@ -1,5 +1,4 @@
-
-using ReelGrab.Core;
+using ReelGrab.Storage;
 
 namespace ReelGrab.Web.Routers;
 
@@ -10,7 +9,7 @@ public class StorageGatewayRouter : Router
         string baseUrl = "/storage_gateway";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await Application.instance.GetStorageGatewayConfigAsync();
+            var config = await StorageGatewayConfig.instance.GetStorageGatewayConfigAsync();
             await context.Response.WriteAsJsonAsync(config);
         });
 
@@ -28,12 +27,12 @@ public class StorageGatewayRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
                 return;
             }
-            await Application.instance.SetStorageGatewayConfigAsync(configs);
-            await context.Response.WriteAsJsonAsync(await Application.instance.GetStorageGatewayConfigAsync());
+            await StorageGatewayConfig.instance.SetStorageGatewayConfigAsync(configs);
+            await context.Response.WriteAsJsonAsync(await StorageGatewayConfig.instance.GetStorageGatewayConfigAsync());
         });
 
         app.MapGet($"{baseUrl}/storage_locations", async context => {
-            await context.Response.WriteAsJsonAsync(Application.instance.storageGateway.StorageLocations);
+            await context.Response.WriteAsJsonAsync(StorageGatewayConfig.instance.storageGateway.StorageLocations);
         });
     }
 }

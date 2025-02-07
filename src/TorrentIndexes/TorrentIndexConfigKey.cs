@@ -1,4 +1,4 @@
-namespace ReelGrab.Core;
+namespace ReelGrab.TorrentIndexes;
 
 public enum TorrentIndexConfigKey
 {

@@ -1,5 +1,5 @@
-
 using ReelGrab.Core;
+using ReelGrab.TorrentClients;
 
 namespace ReelGrab.Web.Routers;
 
@@ -10,7 +10,7 @@ public class TorrentClientRouter : Router
         string baseUrl = "/torrent_client";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await Application.instance.GetTorrentClientConfigAsync();
+            var config = await TorrentClientConfig.instance.GetTorrentClientConfigAsync();
             await context.Response.WriteAsJsonAsync(config);
         });
 
@@ -28,12 +28,12 @@ public class TorrentClientRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
                 return;
             }
-            await Application.instance.SetTorrentClientConfigAsync(configs);
-            await context.Response.WriteAsJsonAsync(await Application.instance.GetTorrentClientConfigAsync());
+            await TorrentClientConfig.instance.SetTorrentClientConfigAsync(configs);
+            await context.Response.WriteAsJsonAsync(await TorrentClientConfig.instance.GetTorrentClientConfigAsync());
         });
 
         app.MapGet($"{baseUrl}/torrent_client_name", async context => {
-            await context.Response.WriteAsJsonAsync(new {name = Application.instance.GetTorrentClientName()});
+            await context.Response.WriteAsJsonAsync(new {name = TorrentClientConfig.instance.GetTorrentClientName()});
         });
     }
 }

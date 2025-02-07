@@ -1,4 +1,5 @@
 using ReelGrab.Core;
+using ReelGrab.TorrentIndexes;
 
 namespace ReelGrab.Web.Routers;
 
@@ -9,7 +10,7 @@ public class TorrentIndexRouter : Router
         string baseUrl = "/torrent_index";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await Application.instance.GetTorrentIndexConfigAsync();
+            var config = await TorrentIndexConfig.instance.GetTorrentIndexConfigAsync();
             await context.Response.WriteAsJsonAsync(config);
         });
 
@@ -27,8 +28,8 @@ public class TorrentIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
                 return;
             }
-            await Application.instance.SetTorrentIndexConfigAsync(configs);
-            await context.Response.WriteAsJsonAsync(await Application.instance.GetTorrentIndexConfigAsync());
+            await TorrentIndexConfig.instance.SetTorrentIndexConfigAsync(configs);
+            await context.Response.WriteAsJsonAsync(await TorrentIndexConfig.instance.GetTorrentIndexConfigAsync());
         });
 
         app.MapGet($"{baseUrl}/status", async context => {
@@ -36,7 +37,7 @@ public class TorrentIndexRouter : Router
             bool jackettConnection;
             string jackettConnectionMessage;
             try {
-                await Application.instance.torrentIndex.CheckConfig();
+                await TorrentIndex.instance.CheckConfig();
                 jackettConnection = true;
                 jackettConnectionMessage = "Jackett Connection Successful";
             } catch(Exception e){
@@ -56,7 +57,7 @@ public class TorrentIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Must provide query"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await Application.instance.torrentIndex.SearchMovie(query));
+            await context.Response.WriteAsJsonAsync(await TorrentIndex.instance.SearchMovie(query));
         });
 
         app.MapGet($"{baseUrl}/search/series", async context => {
@@ -65,7 +66,7 @@ public class TorrentIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Must provide query"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await Application.instance.torrentIndex.SearchSeries(query));
+            await context.Response.WriteAsJsonAsync(await TorrentIndex.instance.SearchSeries(query));
         });
     }
 }

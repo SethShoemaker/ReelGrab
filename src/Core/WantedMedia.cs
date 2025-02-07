@@ -1,3 +1,4 @@
+using ReelGrab.Database;
 using ReelGrab.MediaIndexes;
 using ReelGrab.TorrentClients;
 using SqlKata.Execution;
@@ -8,7 +9,7 @@ public partial class Application
 {
     public async Task<bool> WantedMediaExistsAsync(string imdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         return (await db.Query("WantedMedia").Where("ImdbId", imdbId).FirstOrDefaultAsync()) != null;
     }
 
@@ -18,7 +19,7 @@ public partial class Application
         {
             throw new Exception($"{imdbId} is already wanted");
         }
-        MediaType type = await mediaIndex.GetMediaTypeByImdbIdAsync(imdbId);
+        MediaType type = await MediaIndex.instance.GetMediaTypeByImdbIdAsync(imdbId);
         switch (type)
         {
             case MediaType.MOVIE:
@@ -34,9 +35,9 @@ public partial class Application
 
     public async Task AddWantedMovieAsync(string imdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         using var transaction = db.Connection.BeginTransaction();
-        MovieDetails details = await mediaIndex.GetMovieDetailsByImdbIdAsync(imdbId);
+        MovieDetails details = await MediaIndex.instance.GetMovieDetailsByImdbIdAsync(imdbId);
         await db.Query("WantedMedia").InsertAsync(new
         {
             ImdbId = imdbId,
@@ -62,9 +63,9 @@ public partial class Application
 
     public async Task AddWantedSeriesAsync(string imdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         using var transaction = db.Connection.BeginTransaction();
-        SeriesDetails details = await mediaIndex.GetSeriesDetailsByImdbIdAsync(imdbId);
+        SeriesDetails details = await MediaIndex.instance.GetSeriesDetailsByImdbIdAsync(imdbId);
         await db.Query("WantedMedia").InsertAsync(new
         {
             ImdbId = imdbId,
@@ -95,7 +96,7 @@ public partial class Application
 
     public async Task<WantedMediaDetails> GetWantedMediaDetailsAsync(string imdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         var row = await db
             .Query("WantedMedia")
             .Where("ImdbId", imdbId)
@@ -113,7 +114,7 @@ public partial class Application
 
     public async Task<List<WantedSeriesSeason>> GetWantedSeriesEpisodesAsync(string seriesImdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         await EnsureWantedSeriesExistsAsync(seriesImdbId, db);
         var rows = await db
             .Query("WantedMediaDownloadable")
@@ -138,7 +139,7 @@ public partial class Application
 
     public async Task SetWantedSeriesEpisodesAsync(string seriesImdbId, List<WantedSeriesEpisodeDto> wantedEpisodes)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         using var transaction = db.Connection.BeginTransaction();
         var row = await db.Query("WantedMedia").Where("ImdbId", seriesImdbId).Select("Type", "EndYear").FirstOrDefaultAsync() ?? throw new WantedMediaDoesNotExistException(seriesImdbId);
         if (row.Type != MediaType.SERIES.ToString())
@@ -174,9 +175,9 @@ public partial class Application
 
     public async Task RefreshWantedSeriesEpisodes(string imdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         List<object[]> rows = new();
-        SeriesDetails details = await mediaIndex.GetSeriesDetailsByImdbIdAsync(imdbId);
+        SeriesDetails details = await MediaIndex.instance.GetSeriesDetailsByImdbIdAsync(imdbId);
         foreach (var season in details.Seasons)
         {
             foreach (var episode in season.Episodes)
@@ -202,7 +203,7 @@ public partial class Application
 
     public async Task<MediaTorrent?> GetWantedMovieTorrentAsync(string imdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         await EnsureWantedMovieExistsAsync(imdbId, db);
         var torrent = await db
             .Query("WantedMediaTorrentDownloadable")
@@ -222,7 +223,7 @@ public partial class Application
 
     public async Task SetWantedMovieTorrentAsync(string movieImdbId, MediaTorrent mediaTorrent)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         await EnsureWantedMovieExistsAsync(movieImdbId, db);
         string hash = await Utils.Torrents.GetTorrentHashByUrlAsync(mediaTorrent.TorrentUrl);
         using var transaction = db.Connection.BeginTransaction();
@@ -264,7 +265,7 @@ public partial class Application
 
     public async Task<List<GetWantedSeriesTorrentsAsyncSeason>> GetWantedSeriesTorrentsAsync(string seriesImdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         await EnsureWantedSeriesExistsAsync(seriesImdbId, db);
         var downloadables = await db
             .Query("WantedMediaDownloadable")
@@ -307,7 +308,7 @@ public partial class Application
 
     public async Task SetWantedSeriesTorrentsAsync(string seriesImdbId, List<WantedSeriesTorrentDto> torrents)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         await EnsureWantedSeriesExistsAsync(seriesImdbId, db);
         using var transaction = db.Connection.BeginTransaction();
         await db
@@ -355,7 +356,7 @@ public partial class Application
 
     public async Task<List<string>> GetWantedMediaStorageLocationsAsync(string imdbId)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         await EnsureWantedMediaExistsAsync(imdbId, db);
         return (await db
             .Query("WantedMediaStorageLocation")
@@ -368,7 +369,7 @@ public partial class Application
 
     public async Task SetWantedMediaStorageLocationsAsync(string imdbId, List<string> storageLocations)
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         await EnsureWantedMediaExistsAsync(imdbId, db);
         using var transaction = db.Connection.BeginTransaction();
         await db
@@ -390,7 +391,7 @@ public partial class Application
 
     private async Task<List<TorrentFile>> GetAllTorrentFilesAsync()
     {
-        using var db = Db();
+        using var db = Db.CreateConnection();
         var rows = await db
             .Query("WantedMediaTorrentDownloadable")
             .Select(["TorrentFilePath", "WantedMediaTorrent.TorrentUrl", "WantedMediaTorrent.Hash"])
@@ -420,7 +421,7 @@ public partial class Application
             {
                 return;
             }
-            if (torrentClient == null)
+            if(TorrentClientConfig.instance.torrentClient == null)
             {
                 Console.WriteLine("no torrent client configured, sleeping");
                 await Task.Delay(1000 * 3, cancellationToken);
@@ -429,19 +430,19 @@ public partial class Application
             var torrents = await GetAllTorrentFilesAsync();
             foreach (var torrentFile in torrents)
             {
-                if (!await torrentClient.HasTorrentByHashAsync(torrentFile.Hash))
+                if (!await TorrentClientConfig.instance.torrentClient.HasTorrentByHashAsync(torrentFile.Hash))
                 {
-                    await torrentClient.ProvisionTorrentByUrlAsync(torrentFile.Url);
-                    await torrentClient.SetAllTorrentFilesAsNotWantedByHashAsync(torrentFile.Hash);
+                    await TorrentClientConfig.instance.torrentClient.ProvisionTorrentByUrlAsync(torrentFile.Url);
+                    await TorrentClientConfig.instance.torrentClient.SetAllTorrentFilesAsNotWantedByHashAsync(torrentFile.Hash);
                 }
-                List<ITorrentClient.TorrentFileInfo> files = await torrentClient.GetTorrentFilesByHashAsync(torrentFile.Hash);
+                List<ITorrentClient.TorrentFileInfo> files = await TorrentClientConfig.instance.torrentClient.GetTorrentFilesByHashAsync(torrentFile.Hash);
                 var filesToNowWant = files
                     .Where(f => !f.Wanted && torrentFile.FilePaths.Any(p => p == f.Path))
                     .Select(f => f.Number)
                     .ToList();
                 if (filesToNowWant.Count > 0)
                 {
-                    await torrentClient.SetTorrentFilesAsWantedByHashAsync(torrentFile.Hash, filesToNowWant);
+                    await TorrentClientConfig.instance.torrentClient.SetTorrentFilesAsWantedByHashAsync(torrentFile.Hash, filesToNowWant);
                 }
                 var filesToNowNotWant = files
                     .Where(f => f.Wanted && !torrentFile.FilePaths.Any(p => p == f.Path))
@@ -449,9 +450,9 @@ public partial class Application
                     .ToList();
                 if(filesToNowNotWant.Count > 0)
                 {
-                    await torrentClient.SetTorrentFilesAsNotWantedByHashAsync(torrentFile.Hash, filesToNowNotWant);
+                    await TorrentClientConfig.instance.torrentClient.SetTorrentFilesAsNotWantedByHashAsync(torrentFile.Hash, filesToNowNotWant);
                 }
-                await torrentClient.StartTorrentByHashAsync(torrentFile.Hash);
+                await TorrentClientConfig.instance.torrentClient.StartTorrentByHashAsync(torrentFile.Hash);
             }
             await Task.Delay(1000 * 3, cancellationToken);
         }

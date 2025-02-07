@@ -1,17 +1,22 @@
+using ReelGrab.Database;
 using ReelGrab.MediaIndexes;
 using SqlKata.Execution;
 
-namespace ReelGrab.Core;
+namespace ReelGrab.MediaIndexes;
 
-public partial class Application
+public class MediaIndexConfig
 {
+    public static MediaIndexConfig instance = new();
+
+    private MediaIndexConfig() { }
+
     public readonly MediaIndex mediaIndex = MediaIndex.instance;
 
     public record MediaIndexConfigRow(string Key, string Value);
 
     public async Task ApplyMediaIndexConfigAsync()
     {
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         var configs = await db.Query("MediaIndexConfig").Select("Key", "Value").GetAsync<MediaIndexConfigRow>();
 
         void applyOmdbIfAble(IEnumerable<MediaIndexConfigRow> rows)
@@ -33,7 +38,7 @@ public partial class Application
     public async Task<Dictionary<MediaIndexConfigKey, string?>> GetMediaIndexConfigAsync()
     {
         Dictionary<string, MediaIndexConfigRow> rowsDict;
-        using (var db = Db())
+        using (var db = Db.CreateConnection())
         {
             rowsDict = (await db.Query("MediaIndexConfig").Select("Key", "Value").GetAsync<MediaIndexConfigRow>()).ToDictionary(r => r.Key);
         }
@@ -48,13 +53,14 @@ public partial class Application
     public async Task SetMediaIndexConfigAsync(Dictionary<MediaIndexConfigKey, string?> configs)
     {
         // ensure no empty strings
-        foreach(var key in configs.Keys)
+        foreach (var key in configs.Keys)
         {
-            if(configs[key] != null && configs[key]!.Length == 0){
+            if (configs[key] != null && configs[key]!.Length == 0)
+            {
                 configs[key] = null;
             }
         }
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         foreach (MediaIndexConfigKey key in configs.Keys)
         {
             int count = (await db.Query("MediaIndexConfig").Where("Key", key.ToString()).AsCount().GetAsync<int>()).First();
@@ -75,25 +81,5 @@ public partial class Application
             }
         }
         await ApplyMediaIndexConfigAsync();
-    }
-
-    public Task<List<SearchResult>> SearchMediaIndexAsync(string query)
-    {
-        return MediaIndex.instance.SearchAsync(query);
-    }
-
-    public Task<MediaType> GetMediaTypeByImdbIdAsync(string imdbId)
-    {
-        return mediaIndex.GetMediaTypeByImdbIdAsync(imdbId);
-    }
-
-    public Task<MovieDetails> GetMovieDetailsByImdbIdAsync(string imdbId)
-    {
-        return mediaIndex.GetMovieDetailsByImdbIdAsync(imdbId);
-    }
-
-    public Task<SeriesDetails> GetSeriesDetailsByImdbIdAsync(string imdb)
-    {
-        return mediaIndex.GetSeriesDetailsByImdbIdAsync(imdb);
     }
 }

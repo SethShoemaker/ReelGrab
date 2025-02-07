@@ -1,17 +1,21 @@
-using ReelGrab.TorrentClients;
+using ReelGrab.Database;
 using SqlKata.Execution;
 
-namespace ReelGrab.Core;
+namespace ReelGrab.TorrentClients;
 
-public partial class Application
+public class TorrentClientConfig
 {
+    public static readonly TorrentClientConfig instance = new();
+
+    private TorrentClientConfig() { }
+
     public ITorrentClient? torrentClient = null;
 
     public record TorrentClientConfigRow(string Key, string Value);
 
     public async Task ApplyTorrentClientConfigAsync()
     {
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         var configs = await db.Query("TorrentClientConfig").Select("Key", "Value").GetAsync<TorrentClientConfigRow>();
         var chosenClient = configs.FirstOrDefault(c => c.Key == TorrentClientConfigKey.CHOSEN_CLIENT.ToString())?.Value;
         if (chosenClient == null)
@@ -43,7 +47,7 @@ public partial class Application
     public async Task<Dictionary<TorrentClientConfigKey, string?>> GetTorrentClientConfigAsync()
     {
         Dictionary<string, TorrentClientConfigRow> rowsDict;
-        using (var db = Db())
+        using (var db = Db.CreateConnection())
         {
             rowsDict = (await db.Query("TorrentClientConfig").Select("Key", "Value").GetAsync<TorrentClientConfigRow>()).ToDictionary(r => r.Key);
         }
@@ -65,7 +69,7 @@ public partial class Application
                 configs[key] = null;
             }
         }
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         foreach (TorrentClientConfigKey key in configs.Keys)
         {
             int count = (await db.Query("TorrentClientConfig").Where("Key", key.ToString()).AsCount().GetAsync<int>()).First();

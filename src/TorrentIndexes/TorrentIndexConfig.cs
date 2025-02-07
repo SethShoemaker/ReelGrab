@@ -1,17 +1,21 @@
-using ReelGrab.TorrentIndexes;
+using ReelGrab.Database;
 using SqlKata.Execution;
 
-namespace ReelGrab.Core;
+namespace ReelGrab.TorrentIndexes;
 
-public partial class Application
+public class TorrentIndexConfig
 {
+    public static readonly TorrentIndexConfig instance = new();
+
+    private TorrentIndexConfig(){}
+
     public readonly TorrentIndex torrentIndex = TorrentIndex.instance;
 
     public record TorrentIndexConfigRow(string Key, string Value);
 
     public async Task ApplyTorrentIndexConfigAsync()
     {
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         var configs = await db.Query("TorrentIndexConfig").Select("Key", "Value").GetAsync<TorrentIndexConfigRow>();
 
         void ApplyApiUrl(IEnumerable<TorrentIndexConfigRow> rows)
@@ -47,7 +51,7 @@ public partial class Application
     public async Task<Dictionary<TorrentIndexConfigKey, string?>> GetTorrentIndexConfigAsync()
     {
         Dictionary<string, TorrentIndexConfigRow> rowsDict;
-        using (var db = Db())
+        using (var db = Db.CreateConnection())
         {
             rowsDict = (await db.Query("TorrentIndexConfig").Select("Key", "Value").GetAsync<TorrentIndexConfigRow>()).ToDictionary(r => r.Key);
         }
@@ -69,7 +73,7 @@ public partial class Application
                 configs[key] = null;
             }
         }
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         foreach (TorrentIndexConfigKey key in configs.Keys)
         {
             int count = (await db.Query("TorrentIndexConfig").Where("Key", key.ToString()).AsCount().GetAsync<int>()).First();

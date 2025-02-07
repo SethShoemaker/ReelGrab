@@ -1,18 +1,22 @@
-using ReelGrab.Storage;
+using ReelGrab.Database;
 using ReelGrab.Storage.Locations;
 using SqlKata.Execution;
 
-namespace ReelGrab.Core;
+namespace ReelGrab.Storage;
 
-public partial class Application
+public class StorageGatewayConfig
 {
+    public static readonly StorageGatewayConfig instance = new();
+
+    private StorageGatewayConfig() { }
+
     public readonly StorageGateway storageGateway = StorageGateway.instance;
 
     public record StorageGatewayConfigRow(string Key, string Value);
 
     public async Task ApplyStorageGatewayConfigAsync()
     {
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         var configs = await db.Query("StorageGatewayConfig").Select("Key", "Value").GetAsync<StorageGatewayConfigRow>();
 
         void applyLocalDisksIfAble(IEnumerable<StorageGatewayConfigRow> rows)
@@ -44,7 +48,7 @@ public partial class Application
     public async Task<Dictionary<StorageGatewayConfigKey, string?>> GetStorageGatewayConfigAsync()
     {
         Dictionary<string, StorageGatewayConfigRow> rowsDict;
-        using (var db = Db())
+        using (var db = Db.CreateConnection())
         {
             rowsDict = (await db.Query("StorageGatewayConfig").Select("Key", "Value").GetAsync<StorageGatewayConfigRow>()).ToDictionary(r => r.Key);
         }
@@ -66,7 +70,7 @@ public partial class Application
                 configs[key] = null;
             }
         }
-        using QueryFactory db = Db();
+        using QueryFactory db = Db.CreateConnection();
         foreach (StorageGatewayConfigKey key in configs.Keys)
         {
             int count = (await db.Query("StorageGatewayConfig").Where("Key", key.ToString()).AsCount().GetAsync<int>()).First();

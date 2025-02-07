@@ -1,4 +1,3 @@
-using ReelGrab.Core;
 using ReelGrab.MediaIndexes;
 
 namespace ReelGrab.Web.Routers;
@@ -10,7 +9,7 @@ public class MediaIndexRouter : Router
         string baseUrl = "/media_index";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await Application.instance.GetMediaIndexConfigAsync();
+            var config = await MediaIndexConfig.instance.GetMediaIndexConfigAsync();
             await context.Response.WriteAsJsonAsync(config);
         });
 
@@ -28,12 +27,12 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
                 return;
             }
-            await Application.instance.SetMediaIndexConfigAsync(configs);
-            await context.Response.WriteAsJsonAsync(await Application.instance.GetMediaIndexConfigAsync());
+            await MediaIndexConfig.instance.SetMediaIndexConfigAsync(configs);
+            await context.Response.WriteAsJsonAsync(await MediaIndexConfig.instance.GetMediaIndexConfigAsync());
         });
 
         app.MapGet($"{baseUrl}/databases", async context => {
-            await context.Response.WriteAsJsonAsync(Application.instance.mediaIndex.MediaDatabases);
+            await context.Response.WriteAsJsonAsync(MediaIndexConfig.instance.mediaIndex.MediaDatabases);
         });
 
         app.MapGet($"{baseUrl}/search", async context => {
@@ -43,7 +42,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide query"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await Application.instance.SearchMediaIndexAsync(query));
+            await context.Response.WriteAsJsonAsync(await MediaIndex.instance.SearchAsync(query));
         });
 
         app.MapGet($"{baseUrl}/type", async context => {
@@ -53,7 +52,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
                 return;
             }
-            MediaType mediaType = await Application.instance.GetMediaTypeByImdbIdAsync(imdbId);
+            MediaType mediaType = await MediaIndex.instance.GetMediaTypeByImdbIdAsync(imdbId);
             await context.Response.WriteAsJsonAsync(new {type = mediaType});
         });
 
@@ -64,7 +63,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await Application.instance.GetMovieDetailsByImdbIdAsync(imdbId));
+            await context.Response.WriteAsJsonAsync(await MediaIndex.instance.GetMovieDetailsByImdbIdAsync(imdbId));
         });
 
         app.MapGet($"{baseUrl}/series/details", async context => {
@@ -74,7 +73,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await Application.instance.GetSeriesDetailsByImdbIdAsync(imdbId));
+            await context.Response.WriteAsJsonAsync(await MediaIndex.instance.GetSeriesDetailsByImdbIdAsync(imdbId));
         });
     }
 }
