@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ReelGrab.Core;
 using ReelGrab.Web.Routers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,14 @@ Console.WriteLine("StorageGateway configuration completed");
 Console.WriteLine("Applying TorrenClient configuration");
 await ReelGrab.Core.Application.instance.ApplyTorrentClientConfigAsync();
 Console.WriteLine("TorrenClient configuration completed");
+
+using var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (sender, eventArgs) =>
+{
+    cts.Cancel();
+    eventArgs.Cancel = true; // Prevent immediate termination
+};
+Application.instance.ProcessWantedMediaBackgroundAsync(cts.Token);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

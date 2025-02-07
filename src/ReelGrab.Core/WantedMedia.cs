@@ -1,4 +1,6 @@
 using ReelGrab.Media;
+using ReelGrab.TorrentDownloader;
+using ReelGrab.Torrents;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -223,6 +225,7 @@ public partial class Application
     {
         using var db = Db();
         await EnsureWantedMovieExistsAsync(movieImdbId, db);
+        string hash = await TorrentUtils.GetTorrentHashByUrlAsync(mediaTorrent.TorrentUrl);
         using var transaction = db.Connection.BeginTransaction();
         await db
             .Query("WantedMediaTorrentDownloadable")
@@ -239,7 +242,8 @@ public partial class Application
                 MediaId = movieImdbId,
                 mediaTorrent.TorrentUrl,
                 mediaTorrent.Source,
-                mediaTorrent.DisplayName
+                mediaTorrent.DisplayName,
+                Hash = hash
             });
         await db
             .Query("WantedMediaTorrentDownloadable")
@@ -305,6 +309,7 @@ public partial class Application
     public async Task SetWantedSeriesTorrentsAsync(string seriesImdbId, List<WantedSeriesTorrentDto> torrents)
     {
         using var db = Db();
+        await EnsureWantedSeriesExistsAsync(seriesImdbId, db);
         using var transaction = db.Connection.BeginTransaction();
         await db
             .Query("WantedMediaTorrentDownloadable")
@@ -314,12 +319,22 @@ public partial class Application
             .Query("WantedMediaTorrent")
             .Where("MediaId", seriesImdbId)
             .DeleteAsync();
-        string[] torrentCols = ["MediaId", "TorrentUrl", "Source", "DisplayName"];
+        string[] torrentCols = ["MediaId", "TorrentUrl", "Source", "DisplayName", "Hash"];
+        Dictionary<string, string> urlToHashMap = new();
+        foreach (var torrent in torrents)
+        {
+            if (!urlToHashMap.TryGetValue(torrent.TorrentUrl, out string? hash))
+            {
+                hash = await TorrentUtils.GetTorrentHashByUrlAsync(torrent.TorrentUrl);
+                urlToHashMap[torrent.TorrentUrl] = hash;
+            }
+        }
         var torrentRows = torrents.Select(t => new object[] {
             seriesImdbId,
             t.TorrentUrl,
             t.TorrentSource,
-            t.TorrentDisplayName
+            t.TorrentDisplayName,
+            urlToHashMap[t.TorrentUrl]
         });
         await db
             .Query("WantedMediaTorrent")
@@ -368,6 +383,79 @@ public partial class Application
                 storageLocations.Select(sl => new object[] { imdbId, sl })
             );
         transaction.Commit();
+    }
+
+    private record GetAllTorrentFileAsyncTorrentRow(string TorrentFilePath, string TorrentUrl, string Hash);
+
+    private record TorrentFile(string Url, string Hash, List<string> FilePaths);
+
+    private async Task<List<TorrentFile>> GetAllTorrentFilesAsync()
+    {
+        using var db = Db();
+        var rows = await db
+            .Query("WantedMediaTorrentDownloadable")
+            .Select(["TorrentFilePath", "WantedMediaTorrent.TorrentUrl", "WantedMediaTorrent.Hash"])
+            .Join("WantedMediaTorrent", j => j
+                .On("WantedMediaTorrentDownloadable.MediaId", "WantedMediaTorrent.MediaId")
+                .On("WantedMediaTorrentDownloadable.TorrentDisplayName", "WantedMediaTorrent.DisplayName"))
+            .GetAsync<GetAllTorrentFileAsyncTorrentRow>();
+        List<TorrentFile> torrentFiles = new();
+        foreach (var row in rows)
+        {
+            TorrentFile? torrentFile = torrentFiles.FirstOrDefault(tf => tf.Url == row.TorrentUrl);
+            if (torrentFile == null)
+            {
+                torrentFile = new(row.TorrentUrl, row.Hash, new());
+                torrentFiles.Add(torrentFile);
+            }
+            torrentFile.FilePaths.Add(row.TorrentFilePath);
+        }
+        return torrentFiles;
+    }
+
+    public async Task ProcessWantedMediaBackgroundAsync(CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            if (torrentClient == null)
+            {
+                Console.WriteLine("no torrent client configured, sleeping");
+                await Task.Delay(1000 * 3, cancellationToken);
+                continue;
+            }
+            var torrents = await GetAllTorrentFilesAsync();
+            foreach (var torrentFile in torrents)
+            {
+                if (!await torrentClient.HasTorrentByHashAsync(torrentFile.Hash))
+                {
+                    await torrentClient.ProvisionTorrentByUrlAsync(torrentFile.Url);
+                    await torrentClient.SetAllTorrentFilesAsNotWantedByHashAsync(torrentFile.Hash);
+                }
+                List<ITorrentClient.TorrentFileInfo> files = await torrentClient.GetTorrentFilesByHashAsync(torrentFile.Hash);
+                var filesToNowWant = files
+                    .Where(f => !f.Wanted && torrentFile.FilePaths.Any(p => p == f.Path))
+                    .Select(f => f.Number)
+                    .ToList();
+                if (filesToNowWant.Count > 0)
+                {
+                    await torrentClient.SetTorrentFilesAsWantedByHashAsync(torrentFile.Hash, filesToNowWant);
+                }
+                var filesToNowNotWant = files
+                    .Where(f => f.Wanted && !torrentFile.FilePaths.Any(p => p == f.Path))
+                    .Select(f => f.Number)
+                    .ToList();
+                if(filesToNowNotWant.Count > 0)
+                {
+                    await torrentClient.SetTorrentFilesAsNotWantedByHashAsync(torrentFile.Hash, filesToNowNotWant);
+                }
+                await torrentClient.StartTorrentByHashAsync(torrentFile.Hash);
+            }
+            await Task.Delay(1000 * 3, cancellationToken);
+        }
     }
 
     public class WantedMediaDoesNotExistException : Exception

@@ -36,8 +36,10 @@ public class CreateWantedMediaTables : Migration
                 TorrentUrl VARCHAR(256) NOT NULL,
                 Source VARCHAR(256) NOT NULL,
                 DisplayName VARCHAR(256) NOT NULL,
+                Hash VARCHAR(256) NOT NULL,
                 UNIQUE(MediaId, TorrentUrl),
-                UNIQUE(MediaId, DisplayName)
+                UNIQUE(MediaId, DisplayName),
+                UNIQUE(MediaId, Hash)
             );
         ");
 

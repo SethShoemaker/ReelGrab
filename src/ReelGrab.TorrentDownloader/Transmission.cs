@@ -26,6 +26,64 @@ public class Transmission : ITorrentClient
 
     public string Name => $"Transmission {Host}:{Port}";
 
+    public async Task ProvisionTorrentByUrlAsync(string torrentFileUrl)
+    {
+        await RunCommandAsync("transmission-remote", $"{Host}:{Port} --start-paused -a {torrentFileUrl}");
+    }
+
+    public async Task<List<ITorrentClient.TorrentFileInfo>> GetTorrentFilesByHashAsync(string torrentHash)
+    {
+        try {
+            string output = await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -f");
+            var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries)[2..];
+            List<ITorrentClient.TorrentFileInfo> files = new();
+            foreach(var line in lines)
+            {
+                int number = int.Parse(line[..line.IndexOf(':')]);
+                string path = line[34..];
+                int progress = int.Parse(string.Join("", line[4..9].Trim().Where(c => c != '%')));
+                bool get = line[18..22].Trim() switch
+                {
+                    "Yes" => true,
+                    "No" => false,
+                    _ => throw new Exception("error while parsing transmission-remote command output")
+                };
+                files.Add(new(number, path, progress, get));
+            }
+            return files;
+        } catch(Exception e){
+            Console.WriteLine(e.StackTrace);
+            throw;
+        }
+    }
+
+    public async Task<bool> HasTorrentByHashAsync(string torrentHash)
+    {
+        string output = await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -i");
+        return output.Length != 0;
+    }
+
+    public async Task SetAllTorrentFilesAsNotWantedByHashAsync(string torrentHash)
+    {
+        var fileNumbers = (await GetTorrentFilesByHashAsync(torrentHash)).Select(tf => tf.Number);
+        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
+    }
+
+    public async Task SetTorrentFilesAsNotWantedByHashAsync(string torrentHash, List<int> fileNumbers)
+    {
+        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
+    }
+
+    public async Task SetTorrentFilesAsWantedByHashAsync(string torrentHash, List<int> fileNumbers)
+    {
+        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -g {string.Join(',', fileNumbers)}");
+    }
+
+    public async Task StartTorrentByHashAsync(string torrentHash)
+    {
+        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -s");
+    }
+
     static async Task<string> RunCommandAsync(string command, string arguments)
     {
         using var process = new Process
