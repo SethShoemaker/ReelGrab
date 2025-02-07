@@ -1,5 +1,4 @@
-using ReelGrab.Media;
-using ReelGrab.Media.Databases;
+using ReelGrab.MediaIndexes;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;

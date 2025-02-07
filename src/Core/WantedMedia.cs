@@ -1,6 +1,5 @@
-using ReelGrab.Media;
-using ReelGrab.TorrentDownloader;
-using ReelGrab.Torrents;
+using ReelGrab.MediaIndexes;
+using ReelGrab.TorrentClients;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -225,7 +224,7 @@ public partial class Application
     {
         using var db = Db();
         await EnsureWantedMovieExistsAsync(movieImdbId, db);
-        string hash = await TorrentUtils.GetTorrentHashByUrlAsync(mediaTorrent.TorrentUrl);
+        string hash = await Utils.Torrents.GetTorrentHashByUrlAsync(mediaTorrent.TorrentUrl);
         using var transaction = db.Connection.BeginTransaction();
         await db
             .Query("WantedMediaTorrentDownloadable")
@@ -325,7 +324,7 @@ public partial class Application
         {
             if (!urlToHashMap.TryGetValue(torrent.TorrentUrl, out string? hash))
             {
-                hash = await TorrentUtils.GetTorrentHashByUrlAsync(torrent.TorrentUrl);
+                hash = await Utils.Torrents.GetTorrentHashByUrlAsync(torrent.TorrentUrl);
                 urlToHashMap[torrent.TorrentUrl] = hash;
             }
         }

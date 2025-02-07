@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
-using ReelGrab.Media.Databases;
+using ReelGrab.MediaIndexes.Databases;
 
-namespace ReelGrab.Media;
+namespace ReelGrab.MediaIndexes;
 
 public class MediaIndex
 {

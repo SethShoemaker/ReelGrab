@@ -1,4 +1,4 @@
-namespace ReelGrab.Torrents;
+namespace ReelGrab.TorrentIndexes;
 
 public record SearchResult(string Title, string IndexerName, string Url, Category Category, int Seeders, int Peers);
 

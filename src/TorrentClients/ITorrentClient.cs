@@ -1,4 +1,4 @@
-namespace ReelGrab.TorrentDownloader;
+namespace ReelGrab.TorrentClients;
 
 public interface ITorrentClient
 {

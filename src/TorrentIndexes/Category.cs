@@ -1,4 +1,4 @@
-namespace ReelGrab.Torrents;
+namespace ReelGrab.TorrentIndexes;
 
 public enum Category
 {

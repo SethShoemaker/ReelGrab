@@ -1,4 +1,4 @@
-namespace ReelGrab.Torrents;
+namespace ReelGrab.Utils;
 
 public class TempFile : IDisposable
 {

@@ -1,8 +1,6 @@
-
-using System.Net.Http.Json;
 using System.Web;
 
-namespace ReelGrab.Media.Databases;
+namespace ReelGrab.MediaIndexes.Databases;
 
 public class OmdbMediaDatabase: IMediaDatabase, IMediaDatabasePaginated
 {

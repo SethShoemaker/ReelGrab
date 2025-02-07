@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace ReelGrab.TorrentDownloader;
+namespace ReelGrab.TorrentClients;
 
 public class Transmission : ITorrentClient
 {    

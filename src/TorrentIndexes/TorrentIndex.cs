@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace ReelGrab.Torrents;
+namespace ReelGrab.TorrentIndexes;
 
 public partial class TorrentIndex
 {

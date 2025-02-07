@@ -1,4 +1,4 @@
-namespace ReelGrab.Media;
+namespace ReelGrab.MediaIndexes;
 
 public enum MediaType
 {

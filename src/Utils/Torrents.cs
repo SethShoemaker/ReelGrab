@@ -1,8 +1,8 @@
 using System.Diagnostics;
 
-namespace ReelGrab.Torrents;
+namespace ReelGrab.Utils;
 
-public static class TorrentUtils
+public static class Torrents
 {
     public static async Task<string> GetTorrentHashByUrlAsync(string torrentUrl)
     {
