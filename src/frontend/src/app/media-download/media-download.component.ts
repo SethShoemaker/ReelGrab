@@ -1,12 +1,13 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-media-download',
-  imports: [NgIf, NgFor, NgClass],
+  imports: [NgIf, NgFor, NgClass, FormsModule],
   templateUrl: './media-download.component.html',
   styleUrl: './media-download.component.scss'
 })
@@ -19,14 +20,21 @@ export class MediaDownloadComponent {
   posterUrl: string|null = null;
   seasons: Array<any>|null = null;
 
+  torrentsQueryInput = '';
+  torrentsLoading: boolean|null = null;
+  torrentsQuery: string|null = null;
+  torrents: Array<any>|null = null;
+
   storageLocationsLoading = true;
   storageLocations: Array<any>|null = null;
 
   selectedSeriesEpisodes: Map<number, {allSelected: boolean, episodes: Map<number, {season: number, episode: number, selected: boolean}>}>|null = null;
+  selectedTorrent: any|null = null;
   selectedStorageLocationId: string|null = null;
 
   typeSub: Subscription;
   detailsSub: Subscription | null = null;
+  torrentsSub: Subscription|null = null;
   storageLocationsSub: Subscription;
 
   constructor(private http: HttpClient, private route: ActivatedRoute) {
@@ -115,9 +123,21 @@ export class MediaDownloadComponent {
     })
   }
 
+  getTorrents(){
+    this.torrentsQuery = this.torrentsQueryInput;
+    this.torrentsLoading = true;
+    this.torrentsSub?.unsubscribe();
+    this.torrentsSub = this.http.get(`/torrent_index/search/${this.type!.toLowerCase()}?query=${this.torrentsQuery}`).subscribe((data: any) => {
+      this.torrentsLoading = false;
+      this.torrents = data.results;
+      console.log(data)
+    })
+  }
+
   ngOnDestroy(): void {
     this.detailsSub?.unsubscribe();
     this.typeSub.unsubscribe();
+    this.torrentsSub?.unsubscribe();
     this.storageLocationsSub.unsubscribe();
   }
 }

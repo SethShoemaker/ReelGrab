@@ -52,6 +52,48 @@
                 </div>
             </ng-template>
         </ng-container>
+        <div class="row mt-2">
+            <div class="col-10">
+                <input type="search" name="name" id="name" [(ngModel)]="torrentsQueryInput" class="form-control">
+            </div>
+            <div class="col-2">
+                <button class="btn btn-primary" (click)="getTorrents()">
+                    Search
+                </button>
+            </div>
+        </div>
+        <ng-container *ngIf="torrentsLoading == null; else torrentsLoadingNotNull">
+        </ng-container>
+        <ng-template #torrentsLoadingNotNull>
+            <ng-container *ngIf="torrentsLoading; else torrentsNotLoading">
+                <div class="alert alert-primary mt-2" role="alert">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
+                        <strong class="ps-4">Loading Torrents...</strong>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-template #torrentsNotLoading>
+                <table class="table table-striped mt-2">
+                    <thead>
+                        <tr class="row">
+                            <td class="col-7">Name</td>
+                            <td class="col-2">Seeders - Peers</td>
+                            <td class="col-2">Source</td>
+                            <td class="col-1" aria-hidden="true"></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let torrent of torrents" class="row">
+                            <td class="col-7">{{torrent.title}}</td>
+                            <td class="col-2">{{torrent.seeders}} - {{torrent.peers}}</td>
+                            <td class="col-2">{{torrent.indexerName}}</td>
+                            <td class="col-1"><a href="https://google.com">Download</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </ng-template>
+        </ng-template>
     </ng-template>
     <div class="row">
         <ng-container *ngIf="storageLocationsLoading; else storageLocationsNotLoading">
