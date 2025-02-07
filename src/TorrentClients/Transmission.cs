@@ -1,12 +1,10 @@
-using System.Diagnostics;
-
 namespace ReelGrab.TorrentClients;
 
 public class Transmission : ITorrentClient
 {    
     public static async Task<Transmission> CreateAsync(string host, int port)
     {
-        string output = await RunCommandAsync("transmission-remote", $"{host}:{port} -l");
+        string output = await Utils.Commands.RunAsync("transmission-remote", $"{host}:{port} -l");
         if(output.Contains("Couldn't connect to server"))
         {
             throw new Exception($"Error connecting to transmission server {host}:{port}");
@@ -28,13 +26,13 @@ public class Transmission : ITorrentClient
 
     public async Task ProvisionTorrentByUrlAsync(string torrentFileUrl)
     {
-        await RunCommandAsync("transmission-remote", $"{Host}:{Port} --start-paused -a {torrentFileUrl}");
+        await Utils.Commands.RunAsync("transmission-remote", $"{Host}:{Port} --start-paused -a {torrentFileUrl}");
     }
 
     public async Task<List<ITorrentClient.TorrentFileInfo>> GetTorrentFilesByHashAsync(string torrentHash)
     {
         try {
-            string output = await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -f");
+            string output = await Utils.Commands.RunAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -f");
             var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries)[2..];
             List<ITorrentClient.TorrentFileInfo> files = new();
             foreach(var line in lines)
@@ -59,53 +57,28 @@ public class Transmission : ITorrentClient
 
     public async Task<bool> HasTorrentByHashAsync(string torrentHash)
     {
-        string output = await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -i");
+        string output = await Utils.Commands.RunAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -i");
         return output.Length != 0;
     }
 
     public async Task SetAllTorrentFilesAsNotWantedByHashAsync(string torrentHash)
     {
         var fileNumbers = (await GetTorrentFilesByHashAsync(torrentHash)).Select(tf => tf.Number);
-        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
+        await Utils.Commands.RunAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
     }
 
     public async Task SetTorrentFilesAsNotWantedByHashAsync(string torrentHash, List<int> fileNumbers)
     {
-        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
+        await Utils.Commands.RunAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
     }
 
     public async Task SetTorrentFilesAsWantedByHashAsync(string torrentHash, List<int> fileNumbers)
     {
-        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -g {string.Join(',', fileNumbers)}");
+        await Utils.Commands.RunAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -g {string.Join(',', fileNumbers)}");
     }
 
     public async Task StartTorrentByHashAsync(string torrentHash)
     {
-        await RunCommandAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -s");
-    }
-
-    static async Task<string> RunCommandAsync(string command, string arguments)
-    {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            }
-        };
-
-        process.Start();
-        
-        string output = await process.StandardOutput.ReadToEndAsync();
-        string error = await process.StandardError.ReadToEndAsync();
-
-        await process.WaitForExitAsync();
-
-        return string.IsNullOrEmpty(error) ? output : error;
+        await Utils.Commands.RunAsync("transmission-remote", $"{Host}:{Port} -t {torrentHash} -s");
     }
 }

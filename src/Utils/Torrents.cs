@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace ReelGrab.Utils;
 
 public static class Torrents
@@ -24,31 +22,6 @@ public static class Torrents
     private static async Task<string> RunTorrentShowAsync(string torrentUrl)
     {
         using var tmpFile = await TempFile.CreateFromUrlAsync(torrentUrl);
-        return await RunCommandAsync("transmission-show", $"\"{tmpFile.Path}\"");
-    }
-
-    private static async Task<string> RunCommandAsync(string command, string arguments)
-    {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            }
-        };
-
-        process.Start();
-        
-        string output = await process.StandardOutput.ReadToEndAsync();
-        string error = await process.StandardError.ReadToEndAsync();
-
-        await process.WaitForExitAsync();
-
-        return string.IsNullOrEmpty(error) ? output : error;
+        return await Commands.RunAsync("transmission-show", $"\"{tmpFile.Path}\"");
     }
 }
