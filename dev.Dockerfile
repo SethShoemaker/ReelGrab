@@ -18,4 +18,6 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN npm install -g @angular/cli
 EXPOSE 4200
 
-RUN apt-get install -y transmission-cli
+RUN apt-get install -y transmission-cli transmission-daemon
+COPY ./files/transmission-daemon/settings.json /root/.config/transmission-daemon/settings.json
+EXPOSE 9091 51413 51413/udp
