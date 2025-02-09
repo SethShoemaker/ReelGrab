@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using ReelGrab.Core;
+using ReelGrab.Core.Processing;
 using ReelGrab.Database;
 using ReelGrab.MediaIndexes;
 using ReelGrab.Storage;
@@ -29,13 +30,18 @@ Console.WriteLine("Applying TorrenClient configuration");
 await TorrentClientConfig.instance.ApplyTorrentClientConfigAsync();
 Console.WriteLine("TorrenClient configuration completed");
 
+var syncTorrentFiles = new SyncTorrentFiles();
+var uploadCompleted = new UploadCompleted();
 using var cts = new CancellationTokenSource();
+syncTorrentFiles.StartAsync(cts.Token);
+uploadCompleted.StartAsync(cts.Token);
 Console.CancelKeyPress += (sender, eventArgs) =>
 {
     cts.Cancel();
     eventArgs.Cancel = true; // Prevent immediate termination
+    syncTorrentFiles.StopAsync(cts.Token);
+    uploadCompleted.StopAsync(cts.Token);
 };
-Application.instance.ProcessWantedMediaBackgroundAsync(cts.Token);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
