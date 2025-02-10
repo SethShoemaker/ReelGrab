@@ -5,14 +5,9 @@ namespace ReelGrab.TorrentClients;
 
 public class Transmission : ITorrentClient
 {    
-    public static async Task<Transmission> CreateAsync(string host, int port)
+    public static Task<Transmission> CreateAsync(string host, int port)
     {
-        string output = await RunTransmissionCommandAsync($"{host}:{port} -l");
-        if(!output.Contains("Done") || !output.Contains("ETA"))
-        {
-            throw new TorrentException(output);
-        }
-        return new(host, port);
+        return Task.FromResult<Transmission>(new(host, port));
     }
 
     private Transmission(string host, int port)
