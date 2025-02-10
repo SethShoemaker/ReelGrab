@@ -71,12 +71,15 @@ public class SyncTorrentFiles : BackgroundService
                     await torrentClient.SetTorrentFilesAsNotWantedByHashAsync(file.Hash, torrentFilesToNowNotWant);
                     await torrentClient.StartTorrentByHashAsync(file.Hash);
                 }
-                await Task.Delay(1000 * 3, stoppingToken);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.StackTrace);
                 Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                await Task.Delay(1000 * 3, stoppingToken);
             }
         }
     }

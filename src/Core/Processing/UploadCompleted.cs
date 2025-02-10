@@ -80,12 +80,15 @@ public class UploadCompleted : BackgroundService
                         await storageLocation.Save(file.Path, fileContents);
                     }
                 }
-                await Task.Delay(1000 * 5);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.StackTrace);
                 Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                await Task.Delay(1000 * 5);
             }
         }
     }
