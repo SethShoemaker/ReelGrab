@@ -77,6 +77,7 @@ public class UploadCompleted : BackgroundService
                     IEnumerable<IStorageLocation> storageLocations = StorageGateway.instance.StorageLocations.Where(sl => file.StorageLocations.Any(s => s == sl.Id));
                     foreach (var storageLocation in storageLocations)
                     {
+                        fileContents.Seek(0, SeekOrigin.Begin);
                         await storageLocation.Save(file.Path, fileContents);
                     }
                 }
