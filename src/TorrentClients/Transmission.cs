@@ -24,6 +24,12 @@ public class Transmission : ITorrentClient
 
     public string Name => $"Transmission {Host}:{Port}";
 
+    public async Task<bool> ConnectionGoodAsync()
+    {
+        string output = await RunTransmissionCommandAsync($"{Host}:{Port} -l");
+        return output.Contains("Done") && output.Contains("ETA");
+    }
+
     public async Task ProvisionTorrentByUrlAsync(string torrentFileUrl)
     {
         using TempFile tmpFile = await TempFile.CreateFromUrlAsync(torrentFileUrl);

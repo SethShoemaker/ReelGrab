@@ -50,6 +50,11 @@ public class SyncTorrentFiles : BackgroundService
                     await Task.Delay(1000 * 3, stoppingToken);
                     continue;
                 }
+                if (!await torrentClient.ConnectionGoodAsync())
+                {
+                    await Task.Delay(1000 * 3, stoppingToken);
+                    continue;
+                }
                 var files = await GetAllTorrentFilesAsync();
                 foreach (var file in files)
                 {

@@ -53,6 +53,11 @@ public class UploadCompleted : BackgroundService
                     await Task.Delay(1000 * 3, stoppingToken);
                     continue;
                 }
+                if (!await torrentClient.ConnectionGoodAsync())
+                {
+                    await Task.Delay(1000 * 3, stoppingToken);
+                    continue;
+                }
                 var files = await GetTorrentFiles();
                 foreach (var file in files)
                 {
