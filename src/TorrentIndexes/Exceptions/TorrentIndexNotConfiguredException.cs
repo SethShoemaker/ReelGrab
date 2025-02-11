@@ -1,0 +1,3 @@
+namespace ReelGrab.TorrentIndexes.Exceptions;
+
+public class TorrentIndexNotConfiguredException : TorrentIndexException;

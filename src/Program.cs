@@ -21,9 +21,9 @@ Console.WriteLine("Applying StorageGateway configuration");
 await StorageGatewayConfig.instance.ApplyStorageGatewayConfigAsync();
 Console.WriteLine("StorageGateway configuration completed");
 
-Console.WriteLine("Applying StorageGateway configuration");
-await TorrentIndexConfig.instance.ApplyTorrentIndexConfigAsync();
-Console.WriteLine("StorageGateway configuration completed");
+Console.WriteLine("Initializing TorrentIndex");
+await TorrentIndex.instance.InitializeConfigurationAsync();
+Console.WriteLine("Initialized TorrentIndex");
 
 var syncTorrentFiles = new SyncTorrentFiles();
 var uploadCompleted = new UploadCompleted();

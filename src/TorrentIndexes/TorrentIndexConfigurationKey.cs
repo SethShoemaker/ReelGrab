@@ -1,6 +1,6 @@
 namespace ReelGrab.TorrentIndexes;
 
-public enum TorrentIndexConfigKey
+public enum TorrentIndexConfigurationKey
 {
     API_URL,
     API_KEY

@@ -1,4 +1,3 @@
-using ReelGrab.Core;
 using ReelGrab.TorrentIndexes;
 
 namespace ReelGrab.Web.Routers;
@@ -10,14 +9,14 @@ public class TorrentIndexRouter : Router
         string baseUrl = "/torrent_index";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await TorrentIndexConfig.instance.GetTorrentIndexConfigAsync();
+            var config = await TorrentIndex.instance.GetConfigurationAsync();
             await context.Response.WriteAsJsonAsync(config);
         });
 
         app.MapPost($"{baseUrl}/config", async context => {
-            Dictionary<TorrentIndexConfigKey, string?>? configs;
+            Dictionary<TorrentIndexConfigurationKey, string?>? configs;
             try {
-                configs = await context.Request.ReadFromJsonAsync<Dictionary<TorrentIndexConfigKey, string?>>();
+                configs = await context.Request.ReadFromJsonAsync<Dictionary<TorrentIndexConfigurationKey, string?>>();
             }
             catch (System.Text.Json.JsonException)
             {
@@ -28,26 +27,14 @@ public class TorrentIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
                 return;
             }
-            await TorrentIndexConfig.instance.SetTorrentIndexConfigAsync(configs);
-            await context.Response.WriteAsJsonAsync(await TorrentIndexConfig.instance.GetTorrentIndexConfigAsync());
+            await TorrentIndex.instance.SetConfigurationAsync(configs);
+            await context.Response.WriteAsJsonAsync(await TorrentIndex.instance.GetConfigurationAsync());
         });
 
         app.MapGet($"{baseUrl}/status", async context => {
-
-            bool jackettConnection;
-            string jackettConnectionMessage;
-            try {
-                await TorrentIndex.instance.CheckConfig();
-                jackettConnection = true;
-                jackettConnectionMessage = "Jackett Connection Successful";
-            } catch(Exception e){
-                jackettConnection = false;
-                jackettConnectionMessage = e.Message;
-            }
-
+            bool jackettConnection = await TorrentIndex.instance.ConnectionGoodAsync();
             await context.Response.WriteAsJsonAsync(new {
                 jackettConnection,
-                jackettConnectionMessage
             });
         });
 
