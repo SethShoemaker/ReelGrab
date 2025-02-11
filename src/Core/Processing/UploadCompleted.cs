@@ -111,7 +111,7 @@ public class UploadCompleted : BackgroundService
             }
             finally
             {
-                await Task.Delay(1000 * 5);
+                await Task.Delay(1000 * 30, stoppingToken);
             }
         }
     }

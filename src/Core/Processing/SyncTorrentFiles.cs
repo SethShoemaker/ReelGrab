@@ -84,7 +84,7 @@ public class SyncTorrentFiles : BackgroundService
             }
             finally
             {
-                await Task.Delay(1000 * 3, stoppingToken);
+                await Task.Delay(1000 * 10, stoppingToken);
             }
         }
     }
