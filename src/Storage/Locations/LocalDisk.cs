@@ -14,8 +14,13 @@ public class LocalDiskStorageLocation : IStorageLocation
         BasePath = basePath;
     }
 
-    public Task Save(string path, Stream contents)
+    public Task SaveAsync(string path, Stream contents)
     {
         return Utils.Filesystem.WriteStreamToFileAsync(contents, Path.Join(BasePath, path));
+    }
+
+    public Task<bool> HasSavedAsync(string path)
+    {
+        return Task.FromResult(File.Exists(Path.Join(BasePath, path)));
     }
 }

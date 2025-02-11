@@ -78,12 +78,29 @@ public class UploadCompleted : BackgroundService
                     {
                         continue;
                     }
+                    List<IStorageLocation> storageLocations = StorageGateway.instance.StorageLocations
+                        .Where(sl => file.StorageLocations.Any(s => s == sl.Id))
+                        .ToList();
+                    List<IStorageLocation> newStorageLocations = new();
+                    for (int i = 0; i < storageLocations.Count; i++)
+                    {
+                        if(await storageLocations[i].HasSavedAsync(file.Path))
+                        {
+                            continue;
+                        }
+                        newStorageLocations.Add(storageLocations[i]);
+                    }
+                    storageLocations = newStorageLocations;
+                    if(storageLocations.Count == 0)
+                    {
+                        continue;
+                    }
                     using Stream fileContents = await torrentClient.GetCompletedTorrentFileContentsByHashAndFileNumberAsync(file.Hash, file.Path);
-                    IEnumerable<IStorageLocation> storageLocations = StorageGateway.instance.StorageLocations.Where(sl => file.StorageLocations.Any(s => s == sl.Id));
                     foreach (var storageLocation in storageLocations)
                     {
+                        Console.WriteLine($"saving {file.Path} to {storageLocation.DisplayName}");
                         fileContents.Seek(0, SeekOrigin.Begin);
-                        await storageLocation.Save(file.Path, fileContents);
+                        await storageLocation.SaveAsync(file.Path, fileContents);
                     }
                 }
             }
