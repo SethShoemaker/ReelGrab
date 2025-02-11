@@ -2,8 +2,6 @@ namespace ReelGrab.TorrentClients;
 
 public interface ITorrentClient
 {
-    public string Name { get; }
-
     public Task<bool> ConnectionGoodAsync();
 
     public Task<bool> HasTorrentByHashAsync(string torrentHash);

@@ -4,7 +4,6 @@ using ReelGrab.Core.Processing;
 using ReelGrab.Database;
 using ReelGrab.MediaIndexes;
 using ReelGrab.Storage;
-using ReelGrab.TorrentClients;
 using ReelGrab.TorrentIndexes;
 using ReelGrab.Web.Routers;
 
@@ -25,10 +24,6 @@ Console.WriteLine("StorageGateway configuration completed");
 Console.WriteLine("Applying StorageGateway configuration");
 await TorrentIndexConfig.instance.ApplyTorrentIndexConfigAsync();
 Console.WriteLine("StorageGateway configuration completed");
-
-Console.WriteLine("Applying TorrenClient configuration");
-await TorrentClientConfig.instance.ApplyTorrentClientConfigAsync();
-Console.WriteLine("TorrenClient configuration completed");
 
 var syncTorrentFiles = new SyncTorrentFiles();
 var uploadCompleted = new UploadCompleted();
@@ -78,8 +73,6 @@ var torrentIndexRouter = new TorrentIndexRouter();
 torrentIndexRouter.Route(app);
 var wantedMediaRouter = new MediaWantedRouter();
 wantedMediaRouter.Route(app);
-var torrentClientRouter = new TorrentClientRouter();
-torrentClientRouter.Route(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

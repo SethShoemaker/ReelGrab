@@ -44,8 +44,8 @@ public class SyncTorrentFiles : BackgroundService
                 {
                     return;
                 }
-                ITorrentClient? torrentClient = TorrentClientConfig.instance.torrentClient;
-                if (torrentClient == null)
+                var torrentClient = TorrentClient.instance;
+                if(!torrentClient.Implemented)
                 {
                     await Task.Delay(1000 * 3, stoppingToken);
                     continue;

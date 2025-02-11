@@ -1,28 +1,19 @@
 using ReelGrab.TorrentClients.Exceptions;
 using ReelGrab.Utils;
 
-namespace ReelGrab.TorrentClients;
+namespace ReelGrab.TorrentClients.Implementations;
 
-public class Transmission : ITorrentClient
-{    
-    public static Task<Transmission> CreateAsync(string host, int port)
-    {
-        return Task.FromResult<Transmission>(new(host, port));
-    }
-
-    private Transmission(string host, int port)
-    {
-        Host = host;
-        Port = port;
-    }
+public class LocalTransmission : ITorrentClientImplementation
+{
+    public LocalTransmission() { }
 
     private readonly string baseDownloadPath = "/data/transmission/downloads";
 
-    public readonly string Host;
+    public readonly string Host = "localhost";
 
-    public readonly int Port;
+    public readonly int Port = 9091;
 
-    public string Name => $"Transmission {Host}:{Port}";
+    public string DisplayName => $"Local Transmission";
 
     public async Task<bool> ConnectionGoodAsync()
     {
@@ -34,7 +25,7 @@ public class Transmission : ITorrentClient
     {
         using TempFile tmpFile = await TempFile.CreateFromUrlAsync(torrentFileUrl);
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} --start-paused -a {tmpFile.Path}");
-        if(!output.ContainsMoreThanOnce("responded: \"success\""))
+        if (!output.ContainsMoreThanOnce("responded: \"success\""))
         {
             throw new TorrentException(output);
         }
@@ -43,13 +34,13 @@ public class Transmission : ITorrentClient
     public async Task<List<ITorrentClient.TorrentFileInfo>> GetTorrentFilesByHashAsync(string torrentHash)
     {
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} -f");
-        if(output.Length == 0)
+        if (output.Length == 0)
         {
             throw new TorrentDoesNotExistException(torrentHash);
         }
         var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries)[2..];
         List<ITorrentClient.TorrentFileInfo> files = new();
-        foreach(var line in lines)
+        foreach (var line in lines)
         {
             int number = int.Parse(line[..line.IndexOf(':')]);
             string path = line[34..];
@@ -75,7 +66,7 @@ public class Transmission : ITorrentClient
     {
         var fileNumbers = (await GetTorrentFilesByHashAsync(torrentHash)).Select(tf => tf.Number);
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
-        if(output.Length == 0)
+        if (output.Length == 0)
         {
             throw new TorrentDoesNotExistException(torrentHash);
         }
@@ -83,12 +74,12 @@ public class Transmission : ITorrentClient
 
     public async Task SetTorrentFilesAsNotWantedByHashAsync(string torrentHash, List<int> fileNumbers)
     {
-        if(fileNumbers.Count == 0)
+        if (fileNumbers.Count == 0)
         {
             return;
         }
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} -G {string.Join(',', fileNumbers)}");
-        if(!output.Contains("responded: \"success\""))
+        if (!output.Contains("responded: \"success\""))
         {
             throw new TorrentException(output);
         }
@@ -96,12 +87,12 @@ public class Transmission : ITorrentClient
 
     public async Task SetTorrentFilesAsWantedByHashAsync(string torrentHash, List<int> fileNumbers)
     {
-        if(fileNumbers.Count == 0)
+        if (fileNumbers.Count == 0)
         {
             return;
         }
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} -g {string.Join(',', fileNumbers)}");
-        if(!output.Contains("responded: \"success\""))
+        if (!output.Contains("responded: \"success\""))
         {
             throw new TorrentException(output);
         }
@@ -110,7 +101,7 @@ public class Transmission : ITorrentClient
     public async Task StartTorrentByHashAsync(string torrentHash)
     {
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} -s");
-        if(!output.Contains("responded: \"success\""))
+        if (!output.Contains("responded: \"success\""))
         {
             throw new TorrentException(output);
         }
@@ -126,13 +117,13 @@ public class Transmission : ITorrentClient
     {
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} -i");
         int bef = output.IndexOf("Name: ");
-        if(bef == -1)
+        if (bef == -1)
         {
             throw new TorrentException(output);
         }
         bef += 6;
         int after = output.IndexOf('\n', bef);
-        if(after == -1)
+        if (after == -1)
         {
             throw new TorrentException(output);
         }
@@ -142,11 +133,11 @@ public class Transmission : ITorrentClient
     private static async Task<string> RunTransmissionCommandAsync(string command)
     {
         string output = await Commands.RunAsync("transmission-remote", command);
-        if(output.Contains("Couldn't resolve host name"))
+        if (output.Contains("Couldn't resolve host name"))
         {
             throw new TorrentException(output);
         }
-        if(output.Contains("Couldn't connect to server"))
+        if (output.Contains("Couldn't connect to server"))
         {
             throw new TorrentException(output);
         }
