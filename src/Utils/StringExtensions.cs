@@ -1,6 +1,6 @@
 namespace ReelGrab.Utils;
 
-public static class StringExtenstions
+public static class StringExtensions
 {
     public static bool ContainsMoreThanOnce(this string str, string value)
     {
