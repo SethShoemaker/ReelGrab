@@ -1,0 +1,32 @@
+div#container{
+    background-color: var(--color8);
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    ul{
+        margin: 0;
+        padding: calc(2vw + 2rem) 0 0 0;
+        li{
+            a{
+                display: flex;
+                flex-direction: row;
+                color: var(--color7);
+                text-decoration: none;
+                font-size: calc(0.55vw + 0.6rem);
+                padding: calc(0.2vw + 0.2rem) 0 calc(0.2vw + 0.2rem) calc(1vw + 0.3rem);
+                div.icon{
+                    padding-right: calc(0.6vw + 0.3rem);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    img{
+                        max-height: calc(0.6vw + 0.8rem);
+                    }
+                }
+                &:hover{
+                    background-color: var(--color5);
+                }
+            }
+        }
+    }
+}

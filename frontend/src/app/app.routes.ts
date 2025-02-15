@@ -1,14 +1,16 @@
 import { Routes } from '@angular/router';
-import { MediaIndexConfigsComponent } from './media-index-configs/media-index-configs.component';
-import { MediaSearchComponent } from './media-search/media-search.component';
-import { MediaDownloadComponent } from './media-download/media-download.component';
-import { StorageGatewayConfigsComponent } from './storage-gateway-configs/storage-gateway-configs.component';
-import { TorrentIndexConfigsComponent } from './torrent-index-configs/torrent-index-configs.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { MediaSearchComponent } from './components/media-search/media-search.component';
+import { StorageComponent } from './components/storage/storage.component';
+import { MediaComponent } from './components/media/media.component';
+import { TorrentsComponent } from './components/torrents/torrents.component';
+import { TorrentClientComponent } from './components/torrent-client/torrent-client.component';
 
 export const routes: Routes = [
-    { path: 'media_index_configs', component: MediaIndexConfigsComponent },
-    { path: 'media_search', component: MediaSearchComponent },
-    { path: 'media_download/:imdbId', component: MediaDownloadComponent },
-    { path: 'storage_gateway_configs', component: StorageGatewayConfigsComponent },
-    { path: 'torrent_index_configs', component: TorrentIndexConfigsComponent }
+    { path: '', component: DashboardComponent },
+    { path: 'search', component: MediaSearchComponent },
+    { path: 'storage', component: StorageComponent },
+    { path: 'media', component: MediaComponent },
+    { path: 'torrents', component: TorrentsComponent },
+    { path: 'torrent-client', component: TorrentClientComponent }
 ];

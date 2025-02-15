@@ -1,0 +1,6 @@
+div#container{
+    display: grid;
+    grid-template-columns: calc(5vw + 11rem) 1fr;
+    height: 100vh;
+    width: 100vw;
+}

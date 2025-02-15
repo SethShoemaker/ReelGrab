@@ -1,7 +1,28 @@
-/* You can add global styles to this file, and also import other style files */
+:root{
+    --color1: #262626;
+    --color2: #C3C3C6;
+    --color3: #323232;
+    --color4: #292929;
+    --color5: #373737;
+    --color6: #F0F0F0;
+    --color7: #D0D0D0;
+    --color8: #2A2A2A;
+    --page-title-font-size: calc(1vw + 1rem);
+    --page-margin-left: calc(2vw + 2rem);
+    --page-margin-top: calc(1.2vw + 1.7rem);
+}
+
+html {
+    overflow: hidden;
+    height: 100%;
+}
+
 body{
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    height: 100%;
+    background-color: var(--color1);
 }
 
 .c-p{
