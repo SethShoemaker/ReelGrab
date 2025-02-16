@@ -1,3 +1,24 @@
 <div id="container">
     <h1>Search</h1>
+    <input type="search" name="search" id="search" [formControl]="searchControl" placeholder="Star+(Wars|Trek)">
+    <div id="search-loading" *ngIf="loading; else notLoading">
+        <span style="color: var(--color6)">Loading</span>
+    </div>
+    <ng-template #notLoading>
+        <div id="search-results">
+            <div class="search-result" *ngFor="let media of searchResults">
+                <div class="image-container">
+                    <img src="{{media.poster}}">
+                </div>
+                <div class="text-container">
+                    <div class="title-container">
+                        <span>{{ media.title }}</span>
+                    </div>
+                    <div class="imdbid-container">
+                        <span>{{media.imdbId}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-template>
 </div>

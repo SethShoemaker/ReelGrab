@@ -1,4 +1,4 @@
-:root{
+:root {
     --color1: #262626;
     --color2: #C3C3C6;
     --color3: #323232;
@@ -7,7 +7,10 @@
     --color6: #F0F0F0;
     --color7: #D0D0D0;
     --color8: #2A2A2A;
-    --page-title-font-size: calc(1vw + 1rem);
+    --color9: #878787;
+    --color10: #606060;
+    --page-title-font-size: calc(0.6vw + 0.85rem);
+    --page-title-margin-left: calc(0.2vw + 0.2rem);
     --page-margin-left: calc(2vw + 2rem);
     --page-margin-top: calc(1.2vw + 1.7rem);
 }
@@ -17,14 +20,10 @@ html {
     height: 100%;
 }
 
-body{
+body {
     margin: 0;
     padding: 0;
     overflow: hidden;
     height: 100%;
     background-color: var(--color1);
-}
-
-.c-p{
-    cursor: pointer;
 }
