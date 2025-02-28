@@ -6,7 +6,7 @@
     </div>
     <ng-template #notLoading>
         <div id="search-results">
-            <div class="search-result" *ngFor="let media of searchResults">
+            <div class="search-result" *ngFor="let media of searchResults" [routerLink]="['/download', media.imdbId]">
                 <div class="image-container">
                     <img src="{{media.poster}}">
                 </div>

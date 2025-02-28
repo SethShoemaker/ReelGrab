@@ -3,10 +3,11 @@ import { ApiService } from '../../services/api/api.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, Subscription } from 'rxjs';
 import { NgFor, NgIf } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-media-search',
-  imports: [ReactiveFormsModule, NgIf, NgFor],
+  imports: [ReactiveFormsModule, NgIf, NgFor, RouterLink],
   templateUrl: './media-search.component.html',
   styleUrl: './media-search.component.scss'
 })

@@ -1,0 +1,9 @@
+div#container{
+    border-bottom: 1px solid var(--color6);
+    h2 {
+        font-size: var(--form-section-title-font-size);
+        font-weight: var(--form-section-title-font-weight);
+        color: var(--color6);
+        margin: 0 0 var(--form-section-title-margin-bottom) calc(var(--page-title-margin-left) + var(--form-section-title-margin-left));
+    }
+}

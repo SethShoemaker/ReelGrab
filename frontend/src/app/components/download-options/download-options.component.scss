@@ -1,0 +1,342 @@
+div#container {
+    box-sizing: border-box;
+    padding: var(--page-margin-top) var(--page-margin-left) 0 var(--page-margin-left);
+    height: 100vh;
+    overflow-y: scroll;
+
+    h1 {
+        font-size: var(--page-title-font-size);
+        color: var(--color6);
+        margin-left: var(--page-title-margin-left);
+    }
+
+    div#episode-selection-container {
+        margin-top: var(--form-section-part-margin-top);
+        margin-bottom: calc(3vh + 1.4rem);
+
+        div#episode-selection {
+            display: grid;
+            --columns: 7% 20% 72%;
+            grid-template-rows: var(--table-row-height) calc(var(--table-row-height) * 8);
+
+            div.head {
+                display: grid;
+                grid-template-columns: var(--columns);
+
+                div {
+                    display: flex;
+                    align-items: center;
+
+                    span {
+                        font-size: var(--table-head-font-size);
+                        font-weight: var(--table-head-font-weight);
+                    }
+                }
+            }
+
+            div.body {
+                display: grid;
+                grid-template-columns: repeat(auto);
+                overflow-y: scroll;
+
+                div.row {
+                    height: var(--table-row-height);
+                    display: grid;
+                    grid-template-columns: var(--columns);
+
+                    &:hover {
+                        background-color: var(--color11);
+                    }
+
+                    div {
+                        display: flex;
+                        align-items: center;
+
+                        &:first-of-type {
+                            display: flex;
+                            justify-content: center;
+                        }
+
+                        span {
+                            font-size: var(--table-row-font-size);
+                            font-weight: var(--table-row-font-weight);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    div#storage-location-selection-container {
+        margin-top: var(--form-section-part-margin-top);
+        margin-bottom: calc(3vh + 1.4rem);
+
+        div#storage-location-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: calc(1.4vw + 0.3rem);
+
+            div.storage-location {
+                width: calc(4vw + 7rem);
+                display: grid;
+                grid-template-rows: calc(7.6vh + 3.3rem) calc(3vh + 2.4rem);
+                border: 1px solid var(--color10);
+
+                &.selected {
+                    background-color: var(--color3);
+                    border-color: var(--color12);
+                }
+
+                &:hover {
+                    background-color: var(--color5);
+                }
+
+                div.image-container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    img {
+                        max-width: 100%;
+                        max-height: 100%;
+                    }
+                }
+
+                div.text-container {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-end;
+                    margin: 0 0 calc(0.4vw + 0.3rem) calc(0.5vw + 0.34rem);
+
+                    span {
+                        color: var(--color6);
+
+                        &:first-of-type {
+                            font-size: calc(0.25vw + 0.6rem);
+                            font-weight: 500;
+                            margin-bottom: calc(0.2vw + 0.1rem);
+                        }
+
+                        &:last-of-type {
+                            font-size: calc(0.43vw + 0.78rem);
+                            font-weight: 500;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    div#torrent-file-mapping-container {
+        margin-top: var(--form-section-part-margin-top);
+        margin-bottom: calc(3vh + 1.4rem);
+
+        div#torrent-file-mapping {
+            input[type="search"] {
+                background-color: var(--color3);
+                outline: none;
+                border: 1px solid var(--color10);
+                margin-top: calc(0.05vw + 0.05rem);
+                padding: calc(0.35vw + 0.5rem) calc(0.4vw + 0.5rem);
+                color: var(--color6);
+                border-radius: 5px;
+                width: calc(22vw + 15rem);
+
+                &::placeholder {
+                    color: var(--color9);
+                }
+            }
+
+            div#torrent-search-results-container {
+                margin-top: calc(1.3vh + 1.3rem);
+
+                div#torrent-search-results {
+                    display: grid;
+                    --columns: 7% 71% 11% 11%;
+                    grid-template-rows: var(--table-row-height) auto;
+
+                    div.head {
+                        display: grid;
+                        grid-template-columns: var(--columns);
+
+                        div {
+                            display: flex;
+                            align-items: center;
+
+                            span {
+                                font-size: var(--table-head-font-size);
+                                font-weight: var(--table-head-font-weight);
+                            }
+                        }
+                    }
+
+                    div.body {
+                        max-height: calc(var(--table-row-height) * 8);
+                        display: grid;
+                        grid-template-columns: repeat(auto);
+                        overflow-y: scroll;
+
+                        div.row {
+                            height: var(--table-row-height);
+                            display: grid;
+                            grid-template-columns: var(--columns);
+
+                            &:hover {
+                                background-color: var(--color11);
+                            }
+
+                            div {
+                                display: flex;
+                                align-items: center;
+                                overflow-x: scroll;
+
+                                &:first-of-type {
+                                    display: flex;
+                                    justify-content: center;
+
+                                    input {
+                                        margin: 0;
+                                    }
+                                }
+
+                                &:nth-of-type(2) {
+                                    margin-right: calc(0.7vw + 0.5rem);
+                                }
+
+                                span {
+                                    line-break: strict;
+                                    white-space: nowrap;
+                                    font-size: var(--table-row-font-size);
+                                    font-weight: var(--table-row-font-weight);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            div#torrent-file-fetch-results-container {
+                margin-top: var(--form-section-part-margin-top);
+
+                div#torrent-file-episode-mapping {
+                    display: grid;
+                    --columns: 62% 13% 25%;
+                    grid-template-rows: var(--table-row-height) auto;
+
+                    div.head {
+                        display: grid;
+                        grid-template-columns: var(--columns);
+
+                        div {
+                            display: flex;
+                            align-items: center;
+
+                            span {
+                                font-size: var(--table-head-font-size);
+                                font-weight: var(--table-head-font-weight);
+                            }
+                        }
+                    }
+
+                    div.body {
+                        max-height: calc(var(--table-row-height) * 8);
+                        display: grid;
+                        grid-template-columns: repeat(auto);
+                        overflow-y: scroll;
+
+                        div.row {
+                            height: var(--table-row-height);
+                            display: grid;
+                            grid-template-columns: var(--columns);
+
+                            &:hover {
+                                background-color: var(--color11);
+                            }
+
+                            div {
+                                display: flex;
+                                align-items: center;
+                                overflow-x: scroll;
+
+                                &:first-of-type {
+                                    margin: 0 calc(0.7vw + 0.5rem);
+                                }
+
+                                span {
+                                    line-break: strict;
+                                    white-space: nowrap;
+                                    font-size: var(--table-row-font-size);
+                                    font-weight: var(--table-row-font-weight);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                div#torrent-file-movie-mapping{
+                    display: grid;
+                    --columns: 13% 62% 25%;
+                    grid-template-rows: var(--table-row-height) auto;
+
+                    div.head {
+                        display: grid;
+                        grid-template-columns: var(--columns);
+
+                        div {
+                            display: flex;
+                            align-items: center;
+
+                            span {
+                                font-size: var(--table-head-font-size);
+                                font-weight: var(--table-head-font-weight);
+                            }
+                        }
+                    }
+
+                    div.body {
+                        max-height: calc(var(--table-row-height) * 8);
+                        display: grid;
+                        grid-template-columns: repeat(auto);
+                        overflow-y: scroll;
+
+                        div.row {
+                            height: var(--table-row-height);
+                            display: grid;
+                            grid-template-columns: var(--columns);
+
+                            &:hover {
+                                background-color: var(--color11);
+                            }
+
+                            div {
+                                display: flex;
+                                align-items: center;
+                                overflow-x: scroll;
+
+                                &:nth-of-type(2) {
+                                    margin-right: calc(0.7vw + 0.5rem);
+                                }
+
+                                span {
+                                    line-break: strict;
+                                    white-space: nowrap;
+                                    font-size: var(--table-row-font-size);
+                                    font-weight: var(--table-row-font-weight);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    div#download-button-container{
+        margin-top: var(--form-section-part-margin-top);
+        display: flex;
+        justify-content: flex-end;
+        button{
+            margin: 20px;
+        }
+    }
+}

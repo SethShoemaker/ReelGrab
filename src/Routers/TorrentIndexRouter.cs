@@ -1,4 +1,5 @@
 using ReelGrab.TorrentIndexes;
+using ReelGrab.Utils;
 
 namespace ReelGrab.Web.Routers;
 
@@ -54,6 +55,20 @@ public class TorrentIndexRouter : Router
                 return;
             }
             await context.Response.WriteAsJsonAsync(await TorrentIndex.instance.SearchSeries(query));
+        });
+
+        app.MapGet($"{baseUrl}/inspect", async context => {
+            string? url = context.Request.Query["url"];
+            if(string.IsNullOrWhiteSpace(url)){
+                await context.Response.WriteAsJsonAsync(new {message = "Must provide url"});
+                return;
+            }
+            if(url.StartsWith("magnet"))
+            {
+                await context.Response.WriteAsJsonAsync(await Torrents.GetTorrentFilesByMagnetAsync(url));
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(await Torrents.GetTorrentFilesByUrlAsync(url));
         });
     }
 }

@@ -14,6 +14,17 @@ public class TempFile : IDisposable
         return new(path);
     }
 
+    public static async Task<TempFile> CreateFromTorrentMagnetAsync(string torrentMagnet)
+    {
+        string path = System.IO.Path.GetTempFileName() + ".torrent";
+        string output = await Commands.RunAsync("/root/bin/imdl", $"torrent from-link \"{torrentMagnet}\" --output {path}");
+        if(output.Contains("Failed to fetch infodict from accessible peers"))
+        {
+            throw new Exception(output);
+        }
+        return new(path);
+    }
+
     private TempFile(string path)
     {
         Path = path;

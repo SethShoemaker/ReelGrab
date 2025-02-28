@@ -21,3 +21,6 @@ EXPOSE 4200
 RUN apt-get install -y transmission-cli transmission-daemon
 COPY ./files/transmission-daemon/settings.json /root/.config/transmission-daemon/settings.json
 EXPOSE 9091 51413 51413/udp
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://imdl.io/install.sh | bash
+ENV PATH=/root/bin:$PATH

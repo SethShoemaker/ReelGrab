@@ -5,6 +5,7 @@ import { StorageComponent } from './components/storage/storage.component';
 import { MediaComponent } from './components/media/media.component';
 import { TorrentsComponent } from './components/torrents/torrents.component';
 import { TorrentClientComponent } from './components/torrent-client/torrent-client.component';
+import { DownloadOptionsComponent } from './components/download-options/download-options.component';
 
 export const routes: Routes = [
     { path: '', component: DashboardComponent },
@@ -12,5 +13,6 @@ export const routes: Routes = [
     { path: 'storage', component: StorageComponent },
     { path: 'media', component: MediaComponent },
     { path: 'torrents', component: TorrentsComponent },
-    { path: 'torrent-client', component: TorrentClientComponent }
+    { path: 'torrent-client', component: TorrentClientComponent },
+    { path: 'download/:id', component: DownloadOptionsComponent }
 ];

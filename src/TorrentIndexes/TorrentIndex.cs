@@ -12,7 +12,7 @@ public class TorrentIndex : ITorrentIndex
     private TorrentIndex()
     {
         Http = new();
-        Http.Timeout = TimeSpan.FromSeconds(12);
+        Http.Timeout = TimeSpan.FromSeconds(60);
     }
 
     public Uri? ApiUrl;
