@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api/api.service';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, catchError, debounceTime, distinctUntilChanged, filter, map, Observable, of, retry, Subject, Subscription, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, debounceTime, distinctUntilChanged, filter, forkJoin, map, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { KeyValuePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { FormSectionHeaderComponent } from '../form-section-header/form-section-header.component';
 import { FormSectionPartComponent } from '../form-section-part/form-section-part.component';
@@ -16,129 +16,138 @@ import { formatSeasonEpisode } from '../../functions/formatSeasonEpisode';
   templateUrl: './download-options.component.html',
   styleUrl: './download-options.component.scss'
 })
-export class DownloadOptionsComponent {
+export class DownloadOptionsComponent implements OnInit, OnDestroy {
 
-  mediaId: string | null = null;
-  mediaType: string | null = null;
+  formErrors: Array<string> | null = null;
+
+  title!: string;
+  mediaId!: string;
+  mediaType!: string;
   loading = true;
 
-  title: string = "Loading";
-
-  seasonsLoading = false;
-  seasons: Array<any> | null = null;
-  wantedEpisodesMap: Map<string, boolean> | null = null;
-
-  storageLocationsLoading = true;
   storageLocations: Array<any> | null = null;
-  storageLocationsSub: Subscription;
 
+  downloadButtonClick$ = new Subject();
+  downloadButtonClickSub!: Subscription;
+
+  storageLocationToggle$ = new Subject<string>();
+  storageLocationToggleSub!: Subscription;
+
+  torrentSearch: ((query: string) => Observable<any>) | null = null;
   torrentSearchControl = new FormControl();
-  torrentSearchControlSub: Subscription | null = null;
-  torrentSearchLoading = false;
-  displayTorrentSearchResults = false;
+  torrentSearchControlSub!: Subscription;
+  torrentSearchLoading: boolean | null = null;
   torrentSearchResults: Array<any> = [];
   usedTorrentsMap = new Map<string, number>();
 
-  selectedTorrent$ = new BehaviorSubject<string | null>(null);
-  displaySelectedTorrentFiles = false;
-  selectedTorrentFilesLoading = false;
-  selectedTorrentUrl: string | null = null;
+  selectedTorrentUrl$ = new BehaviorSubject<string | null>(null);
+  selectedTorrentUrlSub!: Subscription;
+  selectedTorrentFilesLoading: boolean | null = null;
   selectedTorrentFiles: Array<any> | null = null;
-  selectedTorrentSub: Subscription;
 
+  // series specific variables
+  seasons: Array<any> | null = null;
+  wantedEpisodeSelectionChange$ = new Subject<{ season: number, episode: number, title: string, e: any }>();
+  wantedEpisodeSelectionChangeSub: Subscription | null = null;
+  wantedEpisodesMap: Map<string, boolean> | null = null;
   episodesToTorrentFileMap: Map<string, { url: string, path: string } | null> | null = null;
-  unmappedEpisodes: Array<string> | null = null;
   torrentFileToEpisodeMapping$: Subject<{ path: string, event: any }> | null = null;
   torrentFileToEpisodeMappingSub: Subscription | null = null;
 
-  torrentMappedToMovie: {url: string, path: string}|null = null;
-  torrentFileToMovieMapping$: Subject<string>|null = null;
-  torrentFileToMovieMappingSub: Subscription|null = null;
+  // movie specific variables
+  torrentMappedToMovie: { url: string, path: string } | null = null;
+  torrentFileToMovieMapping$: Subject<string> | null = null;
+  torrentFileToMovieMappingSub: Subscription | null = null;
 
-  getMediaTypeSub: Subscription;
-  getDetailsSub: Subscription | null = null;
+  constructor(public api: ApiService, public route: ActivatedRoute) { }
 
-  formErrors: Array<string>|null = null;
-
-  constructor(public api: ApiService, public route: ActivatedRoute) {
+  ngOnInit(): void {
     this.mediaId = this.route.snapshot.params['id'];
-    this.getMediaTypeSub = this.api.getMediaType(this.mediaId!).subscribe(type => {
-      this.mediaType = type;
-      this.loading = false;
-      let torrentSearchFun: (query: string) => Observable<any>;
-      if (this.mediaType == 'SERIES') {
-        this.seasonsLoading = true;
-        this.getDetailsSub = this.api.getSeriesDetails(this.mediaId!).subscribe(data => {
-          console.log(data);
-          this.title = data.title;
-          this.seasonsLoading = false;
-          this.seasons = data.seasons;
-          this.wantedEpisodesMap = new Map();
-          this.episodesToTorrentFileMap = new Map();
-          this.unmappedEpisodes = [];
-          this.torrentFileToEpisodeMapping$ = new Subject();
-          this.torrentFileToEpisodeMappingSub = this.torrentFileToEpisodeMapping$.subscribe(mapping => {
-            const episode = (mapping.event.target as HTMLSelectElement).value;
-            for (const [episode, torrentFile] of this.episodesToTorrentFileMap!.entries()) {
-              if (torrentFile == null) {
-                continue;
-              }
-              if (torrentFile!.url == this.selectedTorrentUrl && torrentFile!.path == mapping.path) {
-                this.episodesToTorrentFileMap!.set(episode, null);
-                this.unmappedEpisodes!.push(episode)
-                break;
-              }
+    this.setupTorrentSearching();
+    this.setupSelectedTorrentFileMapping();
+    this.setupDownloadButtonClick();
+    this.setupStorageLocationToggle();
+    forkJoin([this.loadMediaDetails(), this.loadStorageLocations()]).subscribe(() => this.loading = false)
+  }
+
+  loadMediaDetails() {
+    return this.api.getMediaType(this.mediaId!).pipe(
+      tap(type => this.mediaType = type),
+      switchMap(type => {
+        if (type == 'SERIES') {
+          return this.loadSeriesDetails()
+        }
+        if (type == 'MOVIE') {
+          return this.loadMovieDetails();
+        }
+        throw new Error();
+      })
+    )
+  }
+
+  loadSeriesDetails() {
+    return this.api.getSeriesDetails(this.mediaId!).pipe(
+      tap(details => {
+        this.title = details.title;
+        this.seasons = details.seasons;
+        this.wantedEpisodesMap = new Map();
+        this.wantedEpisodeSelectionChange$ = new Subject();
+        this.wantedEpisodeSelectionChangeSub = this.wantedEpisodeSelectionChange$.subscribe(data => {
+          const wanted = data.e.srcElement.checked;
+          const formatted = formatSeasonEpisode(data.season, data.episode, data.title);
+          const mapWanted = this.wantedEpisodesMap!.has(formatted) && this.wantedEpisodesMap!.get(formatted)
+          if (!wanted && mapWanted) {
+            this.wantedEpisodesMap!.set(formatted, false);
+            this.episodesToTorrentFileMap?.delete(formatted);
+          }
+          else if (wanted && !mapWanted) {
+            this.wantedEpisodesMap!.set(formatted, true);
+            this.episodesToTorrentFileMap!.set(formatted, null);
+          }
+        })
+        this.torrentSearch = this.api.searchSeriesTorrents.bind(this.api);
+        this.episodesToTorrentFileMap = new Map();
+        this.torrentFileToEpisodeMapping$ = new Subject();
+        this.torrentFileToEpisodeMappingSub = this.torrentFileToEpisodeMapping$.subscribe(mapping => {
+          const episode = (mapping.event.target as HTMLSelectElement).value;
+          for (const [episode, torrentFile] of this.episodesToTorrentFileMap!.entries()) {
+            if (torrentFile == null) {
+              continue;
             }
-            if (episode.length == 0) {
-              return;
+            if (torrentFile!.url == this.selectedTorrentUrl$.value && torrentFile!.path == mapping.path) {
+              this.episodesToTorrentFileMap!.set(episode, null);
+              break;
             }
-            this.episodesToTorrentFileMap!.set(episode, { url: this.selectedTorrentUrl!, path: mapping.path });
-            const i = this.unmappedEpisodes!.findIndex(e => e == episode)
-            if (i != -1) {
-              this.unmappedEpisodes!.splice(i, 1);
-            }
-          })
-          console.log(this.seasons);
-          console.log(this.episodesToTorrentFileMap);
-          torrentSearchFun = this.api.searchSeriesTorrents.bind(this.api);
-        });
-      } else if (this.mediaType == 'MOVIE') {
-        this.getDetailsSub = this.api.getMovieDetails(this.mediaId!).subscribe(data => {
-          console.log(data);
-          this.title = data.title;
-          torrentSearchFun = this.api.searchMovieTorrents.bind(this.api);
-        });
+          }
+          if (episode.length == 0) {
+            return;
+          }
+          this.episodesToTorrentFileMap!.set(episode, { url: this.selectedTorrentUrl$.value!, path: mapping.path });
+        })
+      }),
+    )
+  }
+
+  loadMovieDetails() {
+    return this.api.getMovieDetails(this.mediaId!).pipe(
+      tap(() => {
+        this.torrentSearch = this.api.searchMovieTorrents.bind(this.api)
         this.torrentFileToMovieMapping$ = new Subject();
         this.torrentFileToMovieMappingSub = this.torrentFileToMovieMapping$.subscribe(path => {
-          this.torrentMappedToMovie = {url: this.selectedTorrentUrl!, path: path};
-          for(const [url, count] of this.usedTorrentsMap){
-            if(count != 0){
+          this.torrentMappedToMovie = { url: this.selectedTorrentUrl$.value!, path: path };
+          for (const [url, count] of this.usedTorrentsMap) {
+            if (count != 0) {
               this.usedTorrentsMap.set(url, 0)
             }
           }
-          this.usedTorrentsMap.set(this.selectedTorrentUrl!, 1);
-          console.log(this.torrentMappedToMovie)
-        })
-      }
-      this.torrentSearchControlSub = this.torrentSearchControl.valueChanges.pipe(
-        filter((val) => val != null && val.length > 0),
-        debounceTime(1000),
-        distinctUntilChanged(),
-        tap(() => this.displayTorrentSearchResults = true),
-        tap(() => this.torrentSearchLoading = true),
-        tap(() => this.usedTorrentsMap = new Map()),
-        switchMap(value => torrentSearchFun(value)),
-        catchError(() => of([])),
-        tap(() => this.torrentSearchLoading = false))
-        .subscribe(data => {
-          this.torrentSearchResults = data.results;
-          for (let i = 0; i < this.torrentSearchResults.length; i++) {
-            this.usedTorrentsMap.set(this.torrentSearchResults[i].url, 0);
-          }
-          console.log(data)
+          this.usedTorrentsMap.set(this.selectedTorrentUrl$.value!, 1);
         });
-    });
-    this.storageLocationsSub = this.api.getStorageLocations()
+      })
+    )
+  }
+
+  loadStorageLocations() {
+    return this.api.getStorageLocations()
       .pipe(
         map((data: any) => {
           return data.map((sl: any) => {
@@ -150,20 +159,35 @@ export class DownloadOptionsComponent {
             sl.selected = false;
             return sl
           })
-        }
-        ))
+        }),
+        tap(data => this.storageLocations = data)
+      )
+  }
+
+  setupTorrentSearching() {
+    this.torrentSearchControlSub = this.torrentSearchControl.valueChanges.pipe(
+      filter((val) => val != null && val.length > 0),
+      debounceTime(1000),
+      distinctUntilChanged(),
+      tap(() => this.torrentSearchLoading = true),
+      tap(() => this.usedTorrentsMap = new Map()),
+      switchMap(value => this.torrentSearch!(value)),
+      catchError(() => of([])),
+      tap(() => this.torrentSearchLoading = false))
       .subscribe(data => {
-        this.storageLocationsLoading = false;
-        this.storageLocations = data
-        console.log(data)
+        this.torrentSearchResults = data.results;
+        for (let i = 0; i < this.torrentSearchResults.length; i++) {
+          this.usedTorrentsMap.set(this.torrentSearchResults[i].url, 0);
+        }
       });
-    this.selectedTorrentSub = this.selectedTorrent$.pipe(
+  }
+
+  setupSelectedTorrentFileMapping() {
+    this.selectedTorrentUrlSub = this.selectedTorrentUrl$.pipe(
       filter((val) => val != null && val.length > 0),
       debounceTime(200),
       distinctUntilChanged(),
-      tap(() => this.displaySelectedTorrentFiles = true),
       tap(() => this.selectedTorrentFilesLoading = true),
-      tap(val => this.selectedTorrentUrl = val),
       switchMap(url => this.api.inspectTorrent(url!)),
       tap(() => this.selectedTorrentFilesLoading = false)
     ).subscribe(data => {
@@ -171,61 +195,56 @@ export class DownloadOptionsComponent {
     })
   }
 
-  onEpisodeSelectionChange(season: number, episode: number, title: string, e: any) {
-    const wanted = e.srcElement.checked;
-    const formatted = formatSeasonEpisode(season, episode, title);
-    const mapWanted = this.wantedEpisodesMap!.has(formatted) && this.wantedEpisodesMap!.get(formatted)
-    if (!wanted && mapWanted) {
-      this.wantedEpisodesMap!.set(formatted, false);
-      this.episodesToTorrentFileMap?.delete(formatted);
-      const i = this.unmappedEpisodes!.findIndex(e => e == formatted);
-      if (i != -1) {
-        this.unmappedEpisodes!.splice(i, 1);
+  setupDownloadButtonClick() {
+    this.downloadButtonClickSub = this.downloadButtonClick$.subscribe(() => {
+      this.formErrors = [];
+      const storageLocationNotMapped = this.storageLocations!.findIndex(sl => sl.selected) == -1;
+      if (storageLocationNotMapped) {
+        this.formErrors.push("no storage locations mapped")
       }
-    }
-    else if (wanted && !mapWanted) {
-      this.wantedEpisodesMap!.set(formatted, true);
-      this.episodesToTorrentFileMap!.set(formatted, null);
-      this.unmappedEpisodes!.push(formatted)
-    }
-  }
-
-  onStorageLocationSelectionChange(id: string) {
-    const sl = this.storageLocations!.find(sl => sl.id == id);
-    sl.selected = !sl.selected;
-  }
-
-  onDownload(){
-    this.formErrors = [];
-    const storageLocationNotMapped = this.storageLocations!.findIndex(sl => sl.selected) == -1;
-    if(storageLocationNotMapped){
-      this.formErrors.push("no storage locations mapped")
-    }
-    if(this.mediaType == 'SERIES'){
-      const noEpisodesWanted = this.episodesToTorrentFileMap!.size == 0;
-      if(noEpisodesWanted){
-        this.formErrors.push("no episodes wanted")
-      }
-      else {
-        let noEpisodesMapped = true;
-        for(const torrent of this.episodesToTorrentFileMap!.values()){
-          if(torrent != null){
-            noEpisodesMapped = false;
-            break;
+      if (this.mediaType == 'SERIES') {
+        const noEpisodesWanted = this.episodesToTorrentFileMap!.size == 0;
+        if (noEpisodesWanted) {
+          this.formErrors.push("no episodes wanted")
+        }
+        else {
+          let noEpisodesMapped = true;
+          for (const torrent of this.episodesToTorrentFileMap!.values()) {
+            if (torrent != null) {
+              noEpisodesMapped = false;
+              break;
+            }
+          }
+          if (noEpisodesMapped) {
+            this.formErrors.push("must map at least one episode")
           }
         }
-        if(noEpisodesMapped){
-          this.formErrors.push("must map at least one episode")
+      } else if (this.mediaType == 'MOVIE') {
+        const notMapped = this.torrentMappedToMovie == null;
+        if (notMapped) {
+          this.formErrors.push("no torrent file mapped")
         }
       }
-    } else if(this.mediaType == 'MOVIE'){
-      const notMapped = this.torrentMappedToMovie == null;
-      if(notMapped){
-        this.formErrors.push("no torrent file mapped")
+      if (this.formErrors.length == 0) {
+        alert("gonna do the api stuff now")
       }
-    }
-    if(this.formErrors.length == 0){
-      alert("gonna do the api stuff now")
-    }
+    })
+  }
+
+  setupStorageLocationToggle() {
+    this.storageLocationToggleSub = this.storageLocationToggle$.subscribe(id => {
+      const sl = this.storageLocations!.find(sl => sl.id == id);
+      sl.selected = !sl.selected;
+    })
+  }
+
+  ngOnDestroy(): void {
+    this.torrentSearchControlSub.unsubscribe();
+    this.selectedTorrentUrlSub.unsubscribe();
+    this.downloadButtonClickSub.unsubscribe();
+    this.storageLocationToggleSub.unsubscribe();
+    this.wantedEpisodeSelectionChangeSub?.unsubscribe();
+    this.torrentFileToEpisodeMappingSub?.unsubscribe();
+    this.torrentFileToMovieMappingSub?.unsubscribe();
   }
 }

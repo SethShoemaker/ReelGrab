@@ -31,41 +31,27 @@
                             </div>
                         </div>
                         <div class="body">
-                            <div *ngIf="seasonsLoading; else seasonsNotLoading">
-                                <div class="row">
-                                    <div>
-
-                                    </div>
-                                    <div>
-                                        <span>Loading</span>
-                                    </div>
-                                    <div>
-                                    </div>
-                                </div>
-                            </div>
-                            <ng-template #seasonsNotLoading>
-                                <ng-container *ngFor="let season of seasons">
-                                    <ng-container *ngFor="let episode of season.episodes">
-                                        <div class="row">
-                                            <div>
-                                                <input type="checkbox"
-                                                    (change)="onEpisodeSelectionChange(season.number, episode.number, episode.title, $event)">
-                                            </div>
-                                            <div>
-                                                <span>
-                                                    S{{season.number | seasonEpisodeFormat }}E{{episode.number |
-                                                    seasonEpisodeFormat }}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <span>
-                                                    {{episode.title}}
-                                                </span>
-                                            </div>
+                            <ng-container *ngFor="let season of seasons">
+                                <ng-container *ngFor="let episode of season.episodes">
+                                    <div class="row">
+                                        <div>
+                                            <input type="checkbox"
+                                                (change)="wantedEpisodeSelectionChange$.next({season: season.number, episode: episode.number, title: episode.title, e: $event})">
                                         </div>
-                                    </ng-container>
+                                        <div>
+                                            <span>
+                                                S{{season.number | seasonEpisodeFormat }}E{{episode.number |
+                                                seasonEpisodeFormat }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                {{episode.title}}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </ng-container>
-                            </ng-template>
+                            </ng-container>
                         </div>
                     </div>
                 </app-form-section-part>
@@ -75,22 +61,17 @@
         <div id="storage-location-selection-container">
             <app-form-section-part>
                 <div id="storage-location-selection">
-                    <div *ngIf="storageLocationsLoading; else storageLocationsNotLoading">
-                        Loading
-                    </div>
-                    <ng-template #storageLocationsNotLoading>
-                        <div class="storage-location" *ngFor="let storageLocation of storageLocations"
-                            [ngClass]="{'selected' : storageLocation.selected}"
-                            (click)="onStorageLocationSelectionChange(storageLocation.id)">
-                            <div class="image-container">
-                                <img [src]="storageLocation.img" *ngIf="storageLocation.displayType == 'LocalDisk'">
-                            </div>
-                            <div class="text-container">
-                                <span>{{storageLocation.type}}</span>
-                                <span>{{storageLocation.name}}</span>
-                            </div>
+                    <div class="storage-location" *ngFor="let storageLocation of storageLocations"
+                        [ngClass]="{'selected' : storageLocation.selected}"
+                        (click)="storageLocationToggle$.next(storageLocation.id)">
+                        <div class="image-container">
+                            <img [src]="storageLocation.img" *ngIf="storageLocation.displayType == 'LocalDisk'">
                         </div>
-                    </ng-template>
+                        <div class="text-container">
+                            <span>{{storageLocation.type}}</span>
+                            <span>{{storageLocation.name}}</span>
+                        </div>
+                    </div>
                 </div>
             </app-form-section-part>
         </div>
@@ -99,7 +80,7 @@
             <app-form-section-part>
                 <div id="torrent-file-mapping">
                     <input type="search" [formControl]="torrentSearchControl" placeholder="Search Torrents">
-                    <div id="torrent-search-results-container" *ngIf="displayTorrentSearchResults">
+                    <div id="torrent-search-results-container" *ngIf="torrentSearchLoading != null">
                         <div *ngIf="torrentSearchLoading; else torrentSearchNotLoading">
                             Searching
                         </div>
@@ -126,7 +107,7 @@
                                 </div>
                                 <div class="body">
                                     <ng-container *ngFor="let torrentSearchResult of torrentSearchResults">
-                                        <div class="row" (click)="selectedTorrent$.next(torrentSearchResult.url)">
+                                        <div class="row" (click)="selectedTorrentUrl$.next(torrentSearchResult.url)">
                                             <div>
                                                 <input type="radio" readonly [disabled]="true"
                                                     [checked]="usedTorrentsMap.get(torrentSearchResult.url)! > 0">
@@ -153,7 +134,7 @@
                             </div>
                         </ng-template>
                     </div>
-                    <div id="torrent-file-fetch-results-container" *ngIf="displaySelectedTorrentFiles">
+                    <div id="torrent-file-fetch-results-container" *ngIf="selectedTorrentFilesLoading != null">
                         <div *ngIf="selectedTorrentFilesLoading; else selectedTorrentFilesNotLoading">
                             Loading
                         </div>
@@ -189,16 +170,20 @@
                                             </span>
                                         </div>
                                         <div>
-                                            <ng-container *ngIf="episodesToTorrentFileMap!.size == 0; else episodesToTorrentFileMapNotEmpty">
+                                            <ng-container
+                                                *ngIf="episodesToTorrentFileMap!.size == 0; else episodesToTorrentFileMapNotEmpty">
                                                 <span>
                                                     No Wanted Episodes
                                                 </span>
                                             </ng-container>
                                             <ng-template #episodesToTorrentFileMapNotEmpty>
-                                                <select (change)="torrentFileToEpisodeMapping$!.next({path: file.path, event: $event})">
+                                                <select
+                                                    (change)="torrentFileToEpisodeMapping$!.next({path: file.path, event: $event})">
                                                     <option value="">None</option>
-                                                    <ng-container *ngFor="let item of episodesToTorrentFileMap | keyvalue">
-                                                        <option [value]="item.key" [disabled]="item.value !== null" [selected]="item.value?.url == selectedTorrentUrl && item.value?.path == file.path">
+                                                    <ng-container
+                                                        *ngFor="let item of episodesToTorrentFileMap | keyvalue">
+                                                        <option [value]="item.key" [disabled]="item.value !== null"
+                                                            [selected]="item.value?.url == selectedTorrentUrl$.value && item.value?.path == file.path">
                                                             {{item.key}}
                                                         </option>
                                                     </ng-container>
@@ -223,9 +208,11 @@
                                     </div>
                                 </div>
                                 <div class="body">
-                                    <div class="row" *ngFor="let file of selectedTorrentFiles" (click)="torrentFileToMovieMapping$!.next(file.path)">
+                                    <div class="row" *ngFor="let file of selectedTorrentFiles"
+                                        (click)="torrentFileToMovieMapping$!.next(file.path)">
                                         <div>
-                                            <span *ngIf="torrentMappedToMovie != null && selectedTorrentUrl! == torrentMappedToMovie!.url && file.path == torrentMappedToMovie!.path">
+                                            <span
+                                                *ngIf="torrentMappedToMovie != null && selectedTorrentUrl$.value! == torrentMappedToMovie!.url && file.path == torrentMappedToMovie!.path">
                                                 Selected
                                             </span>
                                         </div>
@@ -248,7 +235,7 @@
             </app-form-section-part>
         </div>
         <div id="download-button-container">
-            <button (click)="onDownload()">Download</button>
+            <button (click)="downloadButtonClick$.next(null)">Download</button>
         </div>
     </ng-template>
 </div>
