@@ -9,10 +9,11 @@ import { SeasonEpisodeFormatPipe } from '../../pipes/season-episode-format.pipe'
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { NonBreakingSpacesPipe } from '../../pipes/non-breaking-spaces.pipe';
 import { formatSeasonEpisode } from '../../functions/formatSeasonEpisode';
+import { FilesizePipe } from '../../pipes/filesize.pipe';
 
 @Component({
   selector: 'app-download-options',
-  imports: [NgIf, NgFor, FormSectionHeaderComponent, FormSectionPartComponent, SeasonEpisodeFormatPipe, NgClass, ReactiveFormsModule, NonBreakingSpacesPipe, KeyValuePipe],
+  imports: [NgIf, NgFor, FormSectionHeaderComponent, FormSectionPartComponent, SeasonEpisodeFormatPipe, NgClass, ReactiveFormsModule, NonBreakingSpacesPipe, KeyValuePipe, FilesizePipe],
   templateUrl: './download-options.component.html',
   styleUrl: './download-options.component.scss'
 })

@@ -11,6 +11,7 @@
     --color10: #606060;
     --color11: #303030;
     --color12: #476CFF;
+    --color13: #ba4237;
     --page-title-font-size: calc(0.7vw + 0.9rem);
     --page-title-margin-left: calc(0.2vw + 0.2rem);
     --page-margin-left: calc(2vw + 2rem);
@@ -20,11 +21,11 @@
     --form-section-title-margin-left: calc(0.2vw + 0.25rem);
     --form-section-title-margin-bottom: calc(0.2vh + 0.3rem);
     --form-section-part-margin-top: calc(0.6vh + 0.5rem);
-    --form-checkbox-size: calc(0.7vh + 0.6rem);
-    --table-head-font-size: calc(0.5vw + 0.55rem);
-    --table-head-font-weight: 600;
+    --form-checkbox-size: calc(0.67vh + 0.72rem);
+    --table-head-font-size: calc(0.5vw + 0.48rem);
+    --table-head-font-weight: 500;
     --table-row-height: calc(1.2vh + 1.4rem);
-    --table-row-font-size: calc(0.48vw + 0.51rem);
+    --table-row-font-size: calc(0.48vw + 0.45rem);
     --table-row-font-weight: 350;
 }
 
@@ -67,5 +68,13 @@ body {
         height: 12px;
         border-width: 0 3px 3px 0;
         transform: rotate(45deg);
+    }
+
+    select{
+        border: 1px solid var(--color10);
+        background-color: var(--color11);
+        color: var(--color2);
+        padding: calc(0.1vw + 0.1rem) calc(0.2vw + 0.2rem);
+        outline: none;
     }
 }

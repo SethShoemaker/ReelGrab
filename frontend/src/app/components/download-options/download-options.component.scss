@@ -4,6 +4,12 @@ div#container {
     height: 100vh;
     overflow-y: scroll;
 
+    div#form-errors-container{
+        span{
+            color: var(--color13)
+        }
+    }
+
     h1 {
         font-size: var(--page-title-font-size);
         color: var(--color6);
@@ -16,7 +22,7 @@ div#container {
 
         div#episode-selection {
             display: grid;
-            --columns: 7% 20% 72%;
+            --columns: 5% 15% 80%;
             grid-template-rows: var(--table-row-height) calc(var(--table-row-height) * 8);
 
             div.head {
@@ -53,8 +59,7 @@ div#container {
                         align-items: center;
 
                         &:first-of-type {
-                            display: flex;
-                            justify-content: center;
+                            margin-left: calc(0.3vw + 0.2rem);
                         }
 
                         span {
@@ -81,14 +86,15 @@ div#container {
                 display: grid;
                 grid-template-rows: calc(7.6vh + 3.3rem) calc(3vh + 2.4rem);
                 border: 1px solid var(--color10);
+                cursor: pointer;
+                transition: background-color 0.1s ease-in-out, border-color 0.15s ease-in-out;
 
                 &.selected {
-                    background-color: var(--color3);
                     border-color: var(--color12);
                 }
 
                 &:hover {
-                    background-color: var(--color5);
+                    background-color: var(--color3);
                 }
 
                 div.image-container {
@@ -139,7 +145,6 @@ div#container {
                 margin-top: calc(0.05vw + 0.05rem);
                 padding: calc(0.35vw + 0.5rem) calc(0.4vw + 0.5rem);
                 color: var(--color6);
-                border-radius: 5px;
                 width: calc(22vw + 15rem);
 
                 &::placeholder {
@@ -152,7 +157,7 @@ div#container {
 
                 div#torrent-search-results {
                     display: grid;
-                    --columns: 7% 71% 11% 11%;
+                    --columns: 11% 67% 11% 11%;
                     grid-template-rows: var(--table-row-height) auto;
 
                     div.head {
@@ -162,6 +167,10 @@ div#container {
                         div {
                             display: flex;
                             align-items: center;
+
+                            &:first-of-type{
+                                margin-left: calc(0.2vw + 0.3rem);
+                            }
 
                             span {
                                 font-size: var(--table-head-font-size);
@@ -180,6 +189,13 @@ div#container {
                             height: var(--table-row-height);
                             display: grid;
                             grid-template-columns: var(--columns);
+                            cursor: pointer;
+                            border: 1px solid rgba($color: #000000, $alpha: 0);
+
+                            &.selected{
+                                background-color: var(--color11);
+                                border: 1px solid var(--color10);
+                            }
 
                             &:hover {
                                 background-color: var(--color11);
@@ -190,13 +206,8 @@ div#container {
                                 align-items: center;
                                 overflow-x: scroll;
 
-                                &:first-of-type {
-                                    display: flex;
-                                    justify-content: center;
-
-                                    input {
-                                        margin: 0;
-                                    }
+                                &:first-of-type{
+                                    margin-left: calc(0.2vw + 0.3rem);
                                 }
 
                                 &:nth-of-type(2) {
@@ -216,11 +227,11 @@ div#container {
             }
 
             div#torrent-file-fetch-results-container {
-                margin-top: var(--form-section-part-margin-top);
+                margin-top: calc(var(--form-section-part-margin-top) + calc(0.3vw + 0.3rem));
 
                 div#torrent-file-episode-mapping {
                     display: grid;
-                    --columns: 62% 13% 25%;
+                    --columns: 51% 13% 36%;
                     grid-template-rows: var(--table-row-height) auto;
 
                     div.head {
@@ -230,6 +241,10 @@ div#container {
                         div {
                             display: flex;
                             align-items: center;
+
+                            &:first-of-type {
+                                margin: 0 calc(0.3vw + 0.2rem);
+                            }
 
                             span {
                                 font-size: var(--table-head-font-size);
@@ -259,7 +274,7 @@ div#container {
                                 overflow-x: scroll;
 
                                 &:first-of-type {
-                                    margin: 0 calc(0.7vw + 0.5rem);
+                                    margin: 0 calc(0.55vw + 0.6rem) 0 calc(0.3vw + 0.2rem);
                                 }
 
                                 span {
@@ -275,7 +290,7 @@ div#container {
 
                 div#torrent-file-movie-mapping{
                     display: grid;
-                    --columns: 13% 62% 25%;
+                    --columns: 13% 77% 10%;
                     grid-template-rows: var(--table-row-height) auto;
 
                     div.head {
@@ -303,6 +318,13 @@ div#container {
                             height: var(--table-row-height);
                             display: grid;
                             grid-template-columns: var(--columns);
+                            cursor: pointer;
+                            border: 1px solid rgba($color: #000000, $alpha: 0);
+
+                            &.selected{
+                                background-color: var(--color11);
+                                border: 1px solid var(--color10);
+                            }
 
                             &:hover {
                                 background-color: var(--color11);
@@ -312,6 +334,10 @@ div#container {
                                 display: flex;
                                 align-items: center;
                                 overflow-x: scroll;
+
+                                &:first-of-type{
+                                    margin-left: calc(0.5vw + 0.4rem);
+                                }
 
                                 &:nth-of-type(2) {
                                     margin-right: calc(0.7vw + 0.5rem);
@@ -337,6 +363,14 @@ div#container {
         justify-content: flex-end;
         button{
             margin: 20px;
+            background-color: var(--color12);
+            padding: calc(0.2vw + 0.2rem) calc(.7vw + .7rem);
+            color: var(--color6);
+            outline: none;
+            border: none;
+            height: calc(1.2vw + 1.2rem);
+            font-size: calc(0.55vw + 0.51rem);
+            cursor: pointer;
         }
     }
 }

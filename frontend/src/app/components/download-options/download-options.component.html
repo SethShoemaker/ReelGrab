@@ -3,7 +3,7 @@
         loading
     </div>
     <ng-template #notLoading>
-        <div *ngIf="formErrors != null && formErrors.length > 0">
+        <div id="form-errors-container" *ngIf="formErrors != null && formErrors.length > 0">
             <ng-container *ngFor="let error of formErrors">
                 <span>
                     {{error}}
@@ -88,6 +88,9 @@
                             <div id="torrent-search-results">
                                 <div class="head">
                                     <div>
+                                        <span>
+                                            Usages
+                                        </span>
                                     </div>
                                     <div>
                                         <span>
@@ -107,15 +110,15 @@
                                 </div>
                                 <div class="body">
                                     <ng-container *ngFor="let torrentSearchResult of torrentSearchResults">
-                                        <div class="row" (click)="selectedTorrentUrl$.next(torrentSearchResult.url)">
+                                        <div class="row" (click)="selectedTorrentUrl$.next(torrentSearchResult.url)" [class]="{'selected': selectedTorrentUrl$.value == torrentSearchResult.url}">
                                             <div>
-                                                <input type="radio" readonly [disabled]="true"
-                                                    [checked]="usedTorrentsMap.get(torrentSearchResult.url)! > 0">
+                                                <span>
+                                                    {{usedTorrentsMap.get(torrentSearchResult.url)!}}
+                                                </span>
                                             </div>
                                             <div>
                                                 <span>
                                                     {{torrentSearchResult.title | nonBreakingSpaces}}
-                                                    {{torrentSearchResult.url}}
                                                 </span>
                                             </div>
                                             <div>
@@ -136,7 +139,7 @@
                     </div>
                     <div id="torrent-file-fetch-results-container" *ngIf="selectedTorrentFilesLoading != null">
                         <div *ngIf="selectedTorrentFilesLoading; else selectedTorrentFilesNotLoading">
-                            Loading
+                            Fetching Files
                         </div>
                         <ng-template #selectedTorrentFilesNotLoading>
                             <div id="torrent-file-episode-mapping" *ngIf="mediaType == 'SERIES'">
@@ -166,7 +169,7 @@
                                         </div>
                                         <div>
                                             <span>
-                                                {{file.bytes}}
+                                                {{file.bytes | filesize }}
                                             </span>
                                         </div>
                                         <div>
@@ -209,7 +212,8 @@
                                 </div>
                                 <div class="body">
                                     <div class="row" *ngFor="let file of selectedTorrentFiles"
-                                        (click)="torrentFileToMovieMapping$!.next(file.path)">
+                                        (click)="torrentFileToMovieMapping$!.next(file.path)"
+                                        [class]="{'selected': torrentMappedToMovie != null && selectedTorrentUrl$.value! == torrentMappedToMovie!.url && file.path == torrentMappedToMovie!.path}">
                                         <div>
                                             <span
                                                 *ngIf="torrentMappedToMovie != null && selectedTorrentUrl$.value! == torrentMappedToMovie!.url && file.path == torrentMappedToMovie!.path">
@@ -223,7 +227,7 @@
                                         </div>
                                         <div>
                                             <span>
-                                                {{ file.bytes }}
+                                                {{ file.bytes | filesize }}
                                             </span>
                                         </div>
                                     </div>
