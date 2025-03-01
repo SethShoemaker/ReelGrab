@@ -36,7 +36,7 @@
                                     <div class="row">
                                         <div>
                                             <input type="checkbox"
-                                                (change)="wantedEpisodeSelectionChange$.next({season: season.number, episode: episode.number, title: episode.title, e: $event})">
+                                                (change)="wantedEpisodeSelectionChange$!.next({season: season.number, episode: episode.number, title: episode.title, e: $event})">
                                         </div>
                                         <div>
                                             <span>

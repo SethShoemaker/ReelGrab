@@ -47,7 +47,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
 
   // series specific variables
   seasons: Array<any> | null = null;
-  wantedEpisodeSelectionChange$ = new Subject<{ season: number, episode: number, title: string, e: any }>();
+  wantedEpisodeSelectionChange$: Subject<{ season: number, episode: number, title: string, e: any }> | null = null;
   wantedEpisodeSelectionChangeSub: Subscription | null = null;
   wantedEpisodesMap: Map<string, boolean> | null = null;
   episodesToTorrentFileMap: Map<string, { url: string, path: string } | null> | null = null;
@@ -115,6 +115,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
               continue;
             }
             if (torrentFile!.url == this.selectedTorrentUrl$.value && torrentFile!.path == mapping.path) {
+              this.usedTorrentsMap.set(this.selectedTorrentUrl$.value!, this.usedTorrentsMap.get(this.selectedTorrentUrl$.value!)! - 1)
               this.episodesToTorrentFileMap!.set(episode, null);
               break;
             }
@@ -123,6 +124,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
             return;
           }
           this.episodesToTorrentFileMap!.set(episode, { url: this.selectedTorrentUrl$.value!, path: mapping.path });
+          this.usedTorrentsMap.set(this.selectedTorrentUrl$.value!, this.usedTorrentsMap.get(this.selectedTorrentUrl$.value!)! + 1)
         })
       }),
     )
@@ -130,7 +132,8 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
 
   loadMovieDetails() {
     return this.api.getMovieDetails(this.mediaId!).pipe(
-      tap(() => {
+      tap((details) => {
+        this.title = details.title
         this.torrentSearch = this.api.searchMovieTorrents.bind(this.api)
         this.torrentFileToMovieMapping$ = new Subject();
         this.torrentFileToMovieMappingSub = this.torrentFileToMovieMapping$.subscribe(path => {
@@ -170,26 +173,44 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
       debounceTime(1000),
       distinctUntilChanged(),
       tap(() => this.torrentSearchLoading = true),
-      tap(() => this.usedTorrentsMap = new Map()),
       switchMap(value => this.torrentSearch!(value)),
       catchError(() => of([])),
-      tap(() => this.torrentSearchLoading = false))
+      tap(() => this.torrentSearchLoading = false),
+      tap(() => this.selectedTorrentUrl$.next(null)))
       .subscribe(data => {
-        this.torrentSearchResults = data.results;
-        for (let i = 0; i < this.torrentSearchResults.length; i++) {
-          this.usedTorrentsMap.set(this.torrentSearchResults[i].url, 0);
+        const newTorrentSearchResults = [];
+        const newUsedTorrentsMap = new Map<string, number>();
+        for (let i = 0; i < data.results.length; i++) {
+          const res = data.results[i];
+          newTorrentSearchResults.push(res);
+          newUsedTorrentsMap.set(res.url, 0);
         }
+        for (let i = 0; i < this.torrentSearchResults.length; i++) {
+          const res = this.torrentSearchResults[i]
+          if (this.usedTorrentsMap.has(res.url) && this.usedTorrentsMap.get(res.url)! > 0) {
+            if (!newUsedTorrentsMap.has(res.url)) {
+              newTorrentSearchResults.unshift(res);
+            }
+            newUsedTorrentsMap.set(res.url, this.usedTorrentsMap.get(res.url)!)
+          }
+        }
+        this.torrentSearchResults = newTorrentSearchResults
+        this.usedTorrentsMap = newUsedTorrentsMap
       });
   }
 
   setupSelectedTorrentFileMapping() {
     this.selectedTorrentUrlSub = this.selectedTorrentUrl$.pipe(
-      filter((val) => val != null && val.length > 0),
-      debounceTime(200),
       distinctUntilChanged(),
       tap(() => this.selectedTorrentFilesLoading = true),
-      switchMap(url => this.api.inspectTorrent(url!)),
-      tap(() => this.selectedTorrentFilesLoading = false)
+      switchMap(url => (url == null || url.length < 5)
+        ? of([]).pipe(
+          tap(() => this.selectedTorrentFilesLoading = null)
+        )
+        : this.api.inspectTorrent(url).pipe(
+          tap(() => this.selectedTorrentFilesLoading = false)
+        )
+      ),
     ).subscribe(data => {
       this.selectedTorrentFiles = data
     })
