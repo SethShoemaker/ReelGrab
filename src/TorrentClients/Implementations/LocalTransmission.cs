@@ -31,6 +31,16 @@ public class LocalTransmission : ITorrentClientImplementation
         }
     }
 
+    public async Task ProvisionTorrentByMagnetAsync(string torrentMagnet)
+    {
+        using TempFile tmpFile = await TempFile.CreateFromTorrentMagnetAsync(torrentMagnet);
+        string output = await RunTransmissionCommandAsync($"{Host}:{Port} --start-paused -a {tmpFile.Path}");
+        if (!output.ContainsMoreThanOnce("responded: \"success\""))
+        {
+            throw new TorrentException(output);
+        }
+    }
+
     public async Task<List<ITorrentClient.TorrentFileInfo>> GetTorrentFilesByHashAsync(string torrentHash)
     {
         string output = await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} -f");

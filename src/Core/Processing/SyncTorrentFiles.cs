@@ -60,7 +60,14 @@ public class SyncTorrentFiles : BackgroundService
                 {
                     if (!await torrentClient.HasTorrentByHashAsync(file.Hash))
                     {
-                        await torrentClient.ProvisionTorrentByUrlAsync(file.Url);
+                        if(file.Url.StartsWith("magnet"))
+                        {
+                            await torrentClient.ProvisionTorrentByMagnetAsync(file.Url);
+                        }
+                        else
+                        {
+                            await torrentClient.ProvisionTorrentByUrlAsync(file.Url);
+                        }
                         await torrentClient.SetAllTorrentFilesAsNotWantedByHashAsync(file.Hash);
                     }
                     List<ITorrentClient.TorrentFileInfo> torrentFiles = await torrentClient.GetTorrentFilesByHashAsync(file.Hash);
