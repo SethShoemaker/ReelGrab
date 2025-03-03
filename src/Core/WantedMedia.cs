@@ -224,7 +224,7 @@ public partial class Application
     {
         using var db = Db.CreateConnection();
         await EnsureWantedMovieExistsAsync(movieImdbId, db);
-        string hash = await Utils.Torrents.GetTorrentHashByUrlAsync(mediaTorrent.TorrentUrl);
+        string hash = mediaTorrent.TorrentUrl.StartsWith("magnet") ? await Utils.Torrents.GetTorrentHashByMagnetLinkAsync(mediaTorrent.TorrentUrl) : await Utils.Torrents.GetTorrentHashByUrlAsync(mediaTorrent.TorrentUrl);
         using var transaction = db.Connection.BeginTransaction();
         await db
             .Query("WantedMediaTorrentDownloadable")
@@ -324,7 +324,7 @@ public partial class Application
         {
             if (!urlToHashMap.TryGetValue(torrent.TorrentUrl, out string? hash))
             {
-                hash = await Utils.Torrents.GetTorrentHashByUrlAsync(torrent.TorrentUrl);
+                hash = torrent.TorrentUrl.StartsWith("magnet") ? await Utils.Torrents.GetTorrentHashByMagnetLinkAsync(torrent.TorrentUrl) : await Utils.Torrents.GetTorrentHashByUrlAsync(torrent.TorrentUrl);
                 urlToHashMap[torrent.TorrentUrl] = hash;
             }
         }

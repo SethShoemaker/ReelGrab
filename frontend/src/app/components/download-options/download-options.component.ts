@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api/api.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, catchError, debounceTime, distinctUntilChanged, filter, forkJoin, map, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { KeyValuePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { FormSectionHeaderComponent } from '../form-section-header/form-section-header.component';
@@ -52,6 +52,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
   wantedEpisodeSelectionChangeSub: Subscription | null = null;
   wantedEpisodesMap: Map<string, boolean> | null = null;
   episodesToTorrentFileMap: Map<string, { url: string, path: string } | null> | null = null;
+  episodesToImdbIdMap: Map<string, string> | null = null;
   torrentFileToEpisodeMapping$: Subject<{ path: string, event: any }> | null = null;
   torrentFileToEpisodeMappingSub: Subscription | null = null;
 
@@ -60,7 +61,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
   torrentFileToMovieMapping$: Subject<string> | null = null;
   torrentFileToMovieMappingSub: Subscription | null = null;
 
-  constructor(public api: ApiService, public route: ActivatedRoute) { }
+  constructor(public api: ApiService, public route: ActivatedRoute, public router: Router) { }
 
   ngOnInit(): void {
     this.mediaId = this.route.snapshot.params['id'];
@@ -91,6 +92,14 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
       tap(details => {
         this.title = details.title;
         this.seasons = details.seasons;
+        this.episodesToImdbIdMap = new Map();
+        for (let i = 0; i < this.seasons!.length; i++) {
+          const season = this.seasons![i];
+          for (let j = 0; j < season.episodes.length; j++) {
+            const episode = season.episodes[j];
+            this.episodesToImdbIdMap.set(formatSeasonEpisode(season.number, episode.number, episode.title), episode.imdbId);
+          }
+        }
         this.wantedEpisodesMap = new Map();
         this.wantedEpisodeSelectionChange$ = new Subject();
         this.wantedEpisodeSelectionChangeSub = this.wantedEpisodeSelectionChange$.subscribe(data => {
@@ -248,7 +257,57 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
         }
       }
       if (this.formErrors.length == 0) {
-        alert("gonna do the api stuff now")
+        this.loading = true;
+        this.api.addWantedMedia(this.mediaId).pipe(
+          switchMap(() => {
+            if (this.mediaType == 'SERIES') {
+              const wantedEpisodes = Array.from(this.wantedEpisodesMap!.entries())
+                .filter(([_, wanted]) => wanted)
+                .map(([key]) => key)
+                .map(v => v.slice(0, v.indexOf(' ')))
+              return this.api.setSeriesWantedEpisodes(this.mediaId, wantedEpisodes)
+            }
+            return of(null);
+          }),
+          switchMap(() => {
+            const storageLocations = this.storageLocations!.filter(sl => sl.selected).map(sl => sl.id);
+            return this.api.setWantedMediaStorageLocations(this.mediaId, storageLocations);
+          }),
+          switchMap(() => {
+            if (this.mediaType == 'SERIES') {
+              const torrents = new Array<{ torrentUrl: string, torrentSource: string, torrentDisplayName: string, episodes: Array<{ imdbId: string, torrentFilePath: string }> }>;
+              for (const [episode, torrentFile] of this.episodesToTorrentFileMap!) {
+                if (torrentFile == null) {
+                  continue;
+                }
+                let torrent = torrents.find(t => t.torrentUrl == torrentFile.url)
+                if (torrent == undefined) {
+                  torrent = {
+                    torrentUrl: torrentFile.url,
+                    torrentSource: torrentFile.url,
+                    torrentDisplayName: torrentFile.url,
+                    episodes: new Array<any>()
+                  }
+                  torrents.push(torrent)
+                }
+                torrent.episodes.push({
+                  imdbId: this.episodesToImdbIdMap!.get(episode)!,
+                  torrentFilePath: torrentFile.path
+                })
+              }
+              return this.api.setWantedSeriesEpisodeToTorrentMapping(this.mediaId!, torrents);
+            }
+            if (this.mediaType == 'MOVIE') {
+              return this.api.setWantedMovieTorrentMapping(this.mediaId!, this.torrentMappedToMovie!.url, this.torrentMappedToMovie!.url, this.torrentMappedToMovie!.url, this.torrentMappedToMovie!.path)
+            }
+            throw new Error()
+          }),
+          tap(() => {
+            this.loading = false;
+          })
+        ).subscribe(() => {
+          this.router.navigate(['/'])
+        })
       }
     })
   }
