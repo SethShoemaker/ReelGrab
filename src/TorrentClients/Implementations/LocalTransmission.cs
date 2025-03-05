@@ -1,4 +1,5 @@
 using ReelGrab.TorrentClients.Exceptions;
+using ReelGrab.TorrentDownloaders;
 using ReelGrab.Utils;
 
 namespace ReelGrab.TorrentClients.Implementations;
@@ -23,8 +24,8 @@ public class LocalTransmission : ITorrentClientImplementation
 
     public async Task ProvisionTorrentByUrlAsync(string torrentFileUrl)
     {
-        using TempFile tmpFile = await TempFile.CreateFromUrlAsync(torrentFileUrl);
-        string output = await RunTransmissionCommandAsync($"{Host}:{Port} --start-paused -a {tmpFile.Path}");
+        string filePath = await TorrentDownloader.GetTorrentFilePathByUrlAsync(torrentFileUrl);
+        string output = await RunTransmissionCommandAsync($"{Host}:{Port} --start-paused -a {filePath}");
         if (!output.ContainsMoreThanOnce("responded: \"success\""))
         {
             throw new TorrentException(output);
@@ -33,8 +34,8 @@ public class LocalTransmission : ITorrentClientImplementation
 
     public async Task ProvisionTorrentByMagnetAsync(string torrentMagnet)
     {
-        using TempFile tmpFile = await TempFile.CreateFromTorrentMagnetAsync(torrentMagnet);
-        string output = await RunTransmissionCommandAsync($"{Host}:{Port} --start-paused -a {tmpFile.Path}");
+        string filePath = await TorrentDownloader.GetTorrentFilePathByMagnetAsync(torrentMagnet);
+        string output = await RunTransmissionCommandAsync($"{Host}:{Port} --start-paused -a {filePath}");
         if (!output.ContainsMoreThanOnce("responded: \"success\""))
         {
             throw new TorrentException(output);

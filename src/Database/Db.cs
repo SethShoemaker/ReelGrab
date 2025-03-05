@@ -11,7 +11,8 @@ public class Db
         typeof(CreateMediaIndexConfigTable),
         typeof(CreateStorageGatewayConfigTable),
         typeof(CreateTorrentIndexConfigTable),
-        typeof(CreateWantedMediaTables)
+        typeof(CreateWantedMediaTables),
+        typeof(CreateDownloadedTorrentsTable)
     ];
 
     public static QueryFactory CreateConnection(){

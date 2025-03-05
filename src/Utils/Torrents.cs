@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ReelGrab.TorrentDownloaders;
 
 namespace ReelGrab.Utils;
 
@@ -8,43 +9,26 @@ public static partial class Torrents
 
     public static async Task<List<TorrentFile>> GetTorrentFilesByMagnetAsync(string magnet)
     {
-        var tmpFile = await TempFile.CreateFromTorrentMagnetAsync(magnet);
-        string show = await Commands.RunAsync("transmission-show", $"\"{tmpFile.Path}\"");
-        int beg = show.IndexOf("FILES\n");
-        if (beg == -1)
-        {
-            throw new Exception(show);
-        }
-        beg += 7;
-        List<TorrentFile> res = new();
-        foreach (string line in show[beg..].Split('\n').Select(l => l.Trim()))
-        {
-            if (string.IsNullOrEmpty(line))
-            {
-                continue;
-            }
-            int sizeBeg = line.LastIndexOf('(');
-            int sizeEnd = line.LastIndexOf(')');
-            int unitBeg = line.LastIndexOf(' ') + 1;
-            float size = float.Parse(line[(sizeBeg + 1)..unitBeg]);
-            string unit = line[unitBeg..sizeEnd];
-            string path = line[..(sizeBeg - 1)];
-            res.Add(new(path, ConvertToBytes(size, unit)));
-        }
-        return res;
+        string filePath = await TorrentDownloader.GetTorrentFilePathByMagnetAsync(magnet);
+        return GetTorrentFilesFromShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
     }
 
     public static async Task<List<TorrentFile>> GetTorrentFilesByUrlAsync(string torrentUrl)
     {
-        string show = await RunTorrentShowAsync(torrentUrl);
-        int beg = show.IndexOf("FILES\n");
+        string filePath = await TorrentDownloader.GetTorrentFilePathByMagnetAsync(torrentUrl);
+        return GetTorrentFilesFromShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
+    }
+
+    private static List<TorrentFile> GetTorrentFilesFromShowOutput(string showOutput)
+    {
+        int beg = showOutput.IndexOf("FILES\n");
         if (beg == -1)
         {
-            throw new Exception();
+            throw new Exception(showOutput);
         }
         beg += 7;
         List<TorrentFile> res = new();
-        foreach (string line in show[beg..].Split('\n').Select(l => l.Trim()))
+        foreach (string line in showOutput[beg..].Split('\n').Select(l => l.Trim()))
         {
             if (string.IsNullOrEmpty(line))
             {
@@ -83,19 +67,24 @@ public static partial class Torrents
 
     public static async Task<string> GetTorrentHashByUrlAsync(string torrentUrl)
     {
-        string show = await RunTorrentShowAsync(torrentUrl);
-        int beg = show.IndexOf("Hash: ");
+        string filePath = await TorrentDownloader.GetTorrentFilePathByUrlAsync(torrentUrl);
+        return GetTorrentHashByShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
+    }
+
+    private static string GetTorrentHashByShowOutput(string showOutput)
+    {
+        int beg = showOutput.IndexOf("Hash: ");
         if(beg == -1)
         {
-            throw new Exception($"error getting hash for torrent {torrentUrl}");
+            throw new Exception($"error getting hash for torrent");
         }
         beg += 6;
-        int end = show.IndexOf('\n', beg);
+        int end = showOutput.IndexOf('\n', beg);
         if(end == -1)
         {
-            throw new Exception($"error getting hash for torrent {torrentUrl}");
+            throw new Exception($"error getting hash for torrent");
         }
-        return show[beg..end];
+        return showOutput[beg..end];
     }
 
     [GeneratedRegex(@"xt=urn:btih:([a-fA-F0-9]{40}|[A-Z2-7]{32})")]
@@ -109,11 +98,5 @@ public static partial class Torrents
             throw new Exception($"{magnetLink} is not a valid magnet link");
         }
         return Task.FromResult(match.Groups[1].Value);
-    }
-
-    private static async Task<string> RunTorrentShowAsync(string torrentUrl)
-    {
-        using var tmpFile = await TempFile.CreateFromUrlAsync(torrentUrl);
-        return await Commands.RunAsync("transmission-show", $"\"{tmpFile.Path}\"");
     }
 }
