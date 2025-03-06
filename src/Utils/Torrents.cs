@@ -15,7 +15,7 @@ public static partial class Torrents
 
     public static async Task<List<TorrentFile>> GetTorrentFilesByUrlAsync(string torrentUrl)
     {
-        string filePath = await TorrentDownloader.GetTorrentFilePathByMagnetAsync(torrentUrl);
+        string filePath = await TorrentDownloader.GetTorrentFilePathByUrlAsync(torrentUrl);
         return GetTorrentFilesFromShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
     }
 
