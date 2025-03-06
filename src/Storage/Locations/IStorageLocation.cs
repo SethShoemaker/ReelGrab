@@ -1,4 +1,4 @@
-namespace ReelGrab.Storage;
+namespace ReelGrab.Storage.Locations;
 
 public interface IStorageLocation
 {
