@@ -9,7 +9,7 @@ namespace ReelGrab.Core;
 
 public class UploadCompleted : BackgroundService
 {
-    private record Row(string Hash, string TorrentFilePath, string StorageLocation);
+    private record Row(string Hash, string TorrentFilePath, string StorageLocation, string DownloadableId);
 
     private async Task<IEnumerable<TorrentFile>> GetTorrentFiles()
     {
@@ -21,15 +21,16 @@ public class UploadCompleted : BackgroundService
                 .On("WantedMediaTorrentDownloadable.TorrentDisplayName", "WantedMediaTorrent.DisplayName"))
             .Join("WantedMediaStorageLocation", j => j
                 .On("WantedMediaTorrentDownloadable.MediaId", "WantedMediaStorageLocation.MediaId"))
-            .Select(["WantedMediaTorrent.Hash", "WantedMediaTorrentDownloadable.TorrentFilePath", "WantedMediaStorageLocation.StorageLocation"])
+            .Select(["WantedMediaTorrent.Hash", "WantedMediaTorrentDownloadable.TorrentFilePath", "WantedMediaStorageLocation.StorageLocation", "WantedMediaTorrentDownloadable.DownloadableId"])
             .GetAsync<Row>();
         List<TorrentFile> torrentFiles = [];
         foreach (var row in rows)
         {
-            TorrentFile? torrentFile = torrentFiles.FirstOrDefault(tf => tf.Hash == row.Hash && tf.Path == row.TorrentFilePath);
+            TorrentFile? torrentFile = torrentFiles.FirstOrDefault(tf => tf.TorrentHash == row.Hash && tf.TorrentPath == row.TorrentFilePath && tf.DownloadableId == row.DownloadableId);
             if (torrentFile == null)
             {
-                torrentFile = new(row.Hash, row.TorrentFilePath, []);
+                string fileExtension = row.TorrentFilePath[(row.TorrentFilePath.LastIndexOf('.') + 1)..];
+                torrentFile = new(row.Hash, row.TorrentFilePath, row.DownloadableId, fileExtension, []);
                 torrentFiles.Add(torrentFile);
             }
             if (torrentFile.StorageLocations.FirstOrDefault(sl => sl == row.StorageLocation) == null)
@@ -40,7 +41,7 @@ public class UploadCompleted : BackgroundService
         return torrentFiles;
     }
 
-    private record TorrentFile(string Hash, string Path, List<string> StorageLocations);
+    private record TorrentFile(string TorrentHash, string TorrentPath, string DownloadableId, string FileExtension, List<string> StorageLocations);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -65,7 +66,7 @@ public class UploadCompleted : BackgroundService
                     ITorrentClient.TorrentFileInfo? torrentFile;
                     try
                     {
-                        torrentFile = (await torrentClient.GetTorrentFilesByHashAsync(file.Hash)).FirstOrDefault(tf => tf.Path == file.Path);
+                        torrentFile = (await torrentClient.GetTorrentFilesByHashAsync(file.TorrentHash)).FirstOrDefault(tf => tf.Path == file.TorrentPath);
                     }
                     catch (TorrentDoesNotExistException)
                     {
@@ -85,7 +86,7 @@ public class UploadCompleted : BackgroundService
                     List<IStorageLocation> newStorageLocations = new();
                     for (int i = 0; i < storageLocations.Count; i++)
                     {
-                        if(await storageLocations[i].HasSavedAsync(file.Path))
+                        if(await storageLocations[i].HasSavedAsync(file.DownloadableId, file.FileExtension))
                         {
                             continue;
                         }
@@ -96,12 +97,12 @@ public class UploadCompleted : BackgroundService
                     {
                         continue;
                     }
-                    using Stream fileContents = await torrentClient.GetCompletedTorrentFileContentsByHashAndFileNumberAsync(file.Hash, file.Path);
+                    using Stream fileContents = await torrentClient.GetCompletedTorrentFileContentsByHashAndFileNumberAsync(file.TorrentHash, file.TorrentPath);
                     foreach (var storageLocation in storageLocations)
                     {
-                        Console.WriteLine($"saving {file.Path} to {storageLocation.DisplayName}");
+                        Console.WriteLine($"saving {file.DownloadableId} to {storageLocation.DisplayName}");
                         fileContents.Seek(0, SeekOrigin.Begin);
-                        await storageLocation.SaveAsync(file.Path, fileContents);
+                        await storageLocation.SaveAsync(file.DownloadableId, file.FileExtension, fileContents);
                     }
                 }
             }

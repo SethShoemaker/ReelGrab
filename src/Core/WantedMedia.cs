@@ -105,6 +105,50 @@ public partial class Application
         return new(row.ImdbId, row.DisplayName, row.Description, row.PosterUrl, Enum.Parse<MediaType>(row.Type), (int)row.StartYear, (int?)row.EndYear);
     }
 
+    public enum WantedMediaDownloadableType
+    {
+        SERIES_EPISODE,
+        FULL_MOVIE
+    }
+
+    private record GetWantedMediaDownloadableTypeAsyncWantedMediaDownloadableRow(string Type);
+
+    public async Task<WantedMediaDownloadableType> GetWantedMediaDownloadableTypeAsync(string wantedMediaDownloadableMediaId)
+    {
+        using var db = Db.CreateConnection();
+        var row = await db
+            .Query("WantedMediaDownloadable")
+            .Where("ImdbId", wantedMediaDownloadableMediaId)
+            .Select("Type")
+            .FirstOrDefaultAsync<GetWantedMediaDownloadableTypeAsyncWantedMediaDownloadableRow>();
+        if(row.Type == "SeriesEpisode")
+        {
+            return WantedMediaDownloadableType.SERIES_EPISODE;
+        }
+        if(row.Type == "FullMovie")
+        {
+            return WantedMediaDownloadableType.FULL_MOVIE;
+        }
+        throw new Exception($"unhandled wanted media downloadable type {row.Type}");
+    }
+
+    public record WantedMediaDownloadableMetadata(string MediaId, string MediaDisplayName, string DownloadableDisplayName, int DownloadableSeason, int DownloadableEpisode);
+
+    private record GetWantedMediaDownloadableMetadataAsyncRow(string ImdbId, string WantedMediaDisplayName, string DisplayName, long Season, long Episode);
+
+    public async Task<WantedMediaDownloadableMetadata> GetWantedMediaDownloadableMetadataAsync(string wantedMediaDownloadableId)
+    {
+        using var db = Db.CreateConnection();
+        var row = await db
+            .Query("WantedMediaDownloadable")
+            .Join("WantedMedia", j => j
+                .On("WantedMediaDownloadable.MediaId", "WantedMedia.ImdbId"))
+            .Where("WantedMediaDownloadable.ImdbId", wantedMediaDownloadableId)
+            .Select(["WantedMedia.ImdbId", "WantedMedia.DisplayName as WantedMediaDisplayName", "WantedMediaDownloadable.DisplayName", "WantedMediaDownloadable.Season", "WantedMediaDownloadable.Episode"])
+            .FirstOrDefaultAsync<GetWantedMediaDownloadableMetadataAsyncRow>();
+        return new(row.ImdbId, row.WantedMediaDisplayName, row.DisplayName, (int)row.Season, (int)row.Episode);
+    }
+
     public record WantedSeriesSeason(int Number, List<WantedSeriesEpisode> Episodes);
 
     public record WantedSeriesEpisode(int Number, string Title, string ImdbId, bool Wanted);

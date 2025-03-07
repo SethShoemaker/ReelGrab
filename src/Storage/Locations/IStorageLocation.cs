@@ -8,7 +8,7 @@ public interface IStorageLocation
 
     public string Id { get; }
 
-    public Task SaveAsync(string path, Stream contents);
+    public Task SaveAsync(string downloadableId, string fileExtension, Stream contents);
 
-    public Task<bool> HasSavedAsync(string path);
+    public Task<bool> HasSavedAsync(string downloadableId, string fileExtension);
 }
