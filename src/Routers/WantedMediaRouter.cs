@@ -180,6 +180,10 @@ public partial class MediaWantedRouter : Router
             await Application.instance.SetWantedMediaStorageLocationsAsync(imdbId, locations);
             await context.Response.WriteAsJsonAsync(new { message = "successfully set new storage locations" });
         });
+
+        app.MapGet($"{baseUrl}/in_progress", async context => {
+            await context.Response.WriteAsJsonAsync(await Application.instance.GetAllWantedMediaInProgressAsync());
+        });
     }
 
     [GeneratedRegex("^S(\\d{2})E(\\d{2})$")]

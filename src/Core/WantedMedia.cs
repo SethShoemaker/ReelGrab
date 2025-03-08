@@ -1,5 +1,7 @@
 using ReelGrab.Database;
 using ReelGrab.MediaIndexes;
+using ReelGrab.TorrentClients;
+using ReelGrab.TorrentClients.Exceptions;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -147,6 +149,66 @@ public partial class Application
             .Select(["WantedMedia.ImdbId", "WantedMedia.DisplayName as WantedMediaDisplayName", "WantedMediaDownloadable.DisplayName", "WantedMediaDownloadable.Season", "WantedMediaDownloadable.Episode"])
             .FirstOrDefaultAsync<GetWantedMediaDownloadableMetadataAsyncRow>();
         return new(row.ImdbId, row.WantedMediaDisplayName, row.DisplayName, (int)row.Season, (int)row.Episode);
+    }
+
+    public record GetAllWantedMediaInProgressAsyncResult(List<GetAllWantedMediaInProgressAsyncResultMedia> Media);
+
+    public record GetAllWantedMediaInProgressAsyncResultMedia(string ImdbId, string DisplayName, MediaType MediaType, List<string> StorageLocations, List<GetAllWantedMediaInProgressAsyncResultMediaDownloadable> Downloadables);
+
+    public record GetAllWantedMediaInProgressAsyncResultMediaDownloadable(string ImdbId, string DisplayName, int Season, int Episode, int Progress);
+
+    private record GetAllWantedMediaInProgressAsyncDbRow(string DownloadableId, string DownloadableDisplayName, long Season, long Episode, string MediaId, string MediaDisplayName, string MediaType, string Hash, string TorrentFilePath, string StorageLocations);
+
+    public async Task<GetAllWantedMediaInProgressAsyncResult> GetAllWantedMediaInProgressAsync()
+    {
+        using var db = Db.CreateConnection();
+
+        var rows = await db
+            .Query("WantedMediaTorrentDownloadable")
+            .Join("WantedMediaDownloadable", j => j
+                .On("WantedMediaTorrentDownloadable.DownloadableId", "WantedMediaDownloadable.ImdbId")
+                .On("WantedMediaTorrentDownloadable.MediaId", "WantedMediaDownloadable.MediaId"))
+            .Join("WantedMedia", j => j
+                .On("WantedMediaTorrentDownloadable.MediaId", "WantedMedia.ImdbId"))
+            .LeftJoin("WantedMediaStorageLocation", j => j
+                .On("WantedMediaTorrentDownloadable.MediaId", "WantedMediaStorageLocation.MediaId"))
+            .LeftJoin("WantedMediaTorrent", j => j
+                .On("WantedMediaTorrentDownloadable.MediaId", "WantedMediaTorrent.MediaId")
+                .On("WantedMediaTorrentDownloadable.TorrentDisplayName", "WantedMediaTorrent.DisplayName"))
+            .OrderBy("WantedMediaDownloadable.Season")
+            .OrderBy("WantedMediaDownloadable.Episode")
+            .GroupBy(["WantedMediaTorrentDownloadable.DownloadableId", "WantedMediaDownloadable.DisplayName", "WantedMediaDownloadable.Season", "WantedMediaDownloadable.Episode", "WantedMediaTorrentDownloadable.MediaId", "WantedMedia.DisplayName", "WantedMedia.Type", "WantedMediaTorrent.Hash", "WantedMediaTorrentDownloadable.TorrentFilePath"])
+            .SelectRaw("WantedMediaTorrentDownloadable.DownloadableId, WantedMediaDownloadable.DisplayName as DownloadableDisplayName, WantedMediaDownloadable.Season, WantedMediaDownloadable.Episode, WantedMediaTorrentDownloadable.MediaId, WantedMedia.DisplayName as MediaDisplayName, WantedMedia.Type as MediaType, WantedMediaTorrent.Hash, WantedMediaTorrentDownloadable.TorrentFilePath, GROUP_CONCAT(WantedMediaStorageLocation.StorageLocation, ',') as StorageLocations")
+            .GetAsync<GetAllWantedMediaInProgressAsyncDbRow>();
+
+        GetAllWantedMediaInProgressAsyncResult res = new([]);
+
+        Dictionary<string, List<ITorrentClient.TorrentFileInfo>?> torrentFiles = new();
+
+        foreach (var row in rows)
+        {
+            GetAllWantedMediaInProgressAsyncResultMedia? media = res.Media.FirstOrDefault(m => m.ImdbId == row.MediaId);
+            if (media == null)
+            {
+                media = new(row.MediaId, row.MediaDisplayName, Enum.Parse<MediaType>(row.MediaType), row.StorageLocations.Split(',').ToList(), []);
+                res.Media.Add(media);
+            }
+            if (!torrentFiles.TryGetValue(row.Hash, out List<ITorrentClient.TorrentFileInfo>? files))
+            {
+                try
+                {
+                    files = await TorrentClient.instance.GetTorrentFilesByHashAsync(row.Hash);
+                }
+                catch (TorrentDoesNotExistException)
+                {
+                    files = null;
+                }
+                torrentFiles[row.Hash] = files;
+            }
+            int progress = (files?.FirstOrDefault(f => f.Path == row.TorrentFilePath)?.Progress) ?? 0;
+            media.Downloadables.Add(new(row.DownloadableId, row.DownloadableDisplayName, (int)row.Season, (int)row.Episode, progress));
+        }
+        return res;
     }
 
     public record WantedSeriesSeason(int Number, List<WantedSeriesEpisode> Episodes);

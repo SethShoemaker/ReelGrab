@@ -76,4 +76,10 @@ export class ApiService {
       tap(v => console.log(v))
     )
   }
+
+  getInProgressMedia(): Observable<getInProgressMediaResponse> {
+    return this.http.get<any>(`http://localhost:5242/wanted_media/in_progress`)
+  }
 }
+
+export type getInProgressMediaResponse = {media: Array<{imdbId: string, displayName: string, mediaType: string, storageLocations: Array<string>, downloadables: Array<{imdbId: string, displayName: string, season: number, episode: number, progress: number}>}>};

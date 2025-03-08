@@ -1,3 +1,66 @@
 <div id="container">
     <h1>Dashboard</h1>
+    <app-form-section-header>In Progress</app-form-section-header>
+    <div id="in-progress-table-container">
+        <app-form-section-part>
+            <div id="in-progress-table">
+                <div class="head">
+                    <div>
+                        <span>
+                            Media
+                        </span>
+                    </div>
+                    <div>
+                        <span>
+                            Storage Locations
+                        </span>
+                    </div>
+                    <div>
+                        <span>
+                            Progress
+                        </span>
+                    </div>
+                </div>
+                <div class="body">
+                    <ng-container *ngIf="inProgressMedia$ | async as inProgressMedia">
+                        <div class="row" *ngFor="let media of inProgressMedia">
+                            <div>
+                                <span>
+                                    {{media.name}}
+                                </span>
+                            </div>
+                            <div>
+                                <span>
+                                    {{media.storageLocations}}
+                                </span>
+                            </div>
+                            <div>
+                                <span>
+                                    {{media.progress}}
+                                </span>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+        </app-form-section-part>
+    </div>
+    <app-form-section-header>Storage Locations</app-form-section-header>
+    <div id="storage-location-display-container">
+        <app-form-section-part>
+            <ng-container *ngIf="storageLocations$ | async as storageLocations">
+                <div id="storage-location-display">
+                    <div class="storage-location" *ngFor="let storageLocation of storageLocations">
+                        <div class="image-container">
+                            <img [src]="storageLocation.img" *ngIf="storageLocation.displayType == 'LocalDisk'">
+                        </div>
+                        <div class="text-container">
+                            <span>{{storageLocation.type}}</span>
+                            <span>{{storageLocation.name}}</span>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+        </app-form-section-part>
+    </div>
 </div>
