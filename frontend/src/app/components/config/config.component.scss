@@ -1,0 +1,61 @@
+div#container{
+    box-sizing: border-box;
+    padding: var(--page-margin-top) var(--page-margin-left) 0 var(--page-margin-left);
+    height: 100vh;
+    overflow-y: scroll;
+
+    h1{
+        font-size: var(--page-title-font-size);
+        color: var(--color6);
+        margin-left: var(--page-title-margin-left);
+    }
+
+    div#media-index-config-container{
+        margin-top: var(--form-section-part-margin-top);
+        margin-bottom: calc(3vh + 1.4rem);
+    }
+
+    div#torrent-index-config-container{
+        margin-top: var(--form-section-part-margin-top);
+        margin-bottom: calc(3vh + 1.4rem);
+    }
+
+    div#storage-gateway-config-container{
+        margin-top: var(--form-section-part-margin-top);
+        margin-bottom: calc(3vh + 1.4rem);
+    }
+
+    label.label{
+        font-size: var(--form-input-label-font-size);
+        font-weight: var(--form-input-label-font-weight);
+        display: block;
+        color: var(--color6);
+        padding-bottom: var(--form-input-label-padding-bottom);
+    }
+
+    input.config-input{
+        border: 1px solid var(--color10);
+        border-radius: 0;
+        margin-bottom: var(--form-input-margin-bottom);
+        display: block;
+        background-color: var(--color3);
+        color: var(--color6);
+        height: var(--form-input-height);
+        padding-left: var(--form-input-inner-padding-left);
+        width: var(--form-input-width);
+        &:focus{
+            outline: none;
+        }
+    }
+
+    button.save-button{
+        background-color: var(--color12);
+        padding: calc(0.2vw + 0.2rem) calc(.5vw + .5rem);
+        color: var(--color6);
+        outline: none;
+        border: none;
+        height: calc(1vw + 1rem);
+        font-size: calc(0.5vw + 0.47rem);
+        cursor: pointer;
+    }
+}

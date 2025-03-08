@@ -80,6 +80,42 @@ export class ApiService {
   getInProgressMedia(): Observable<getInProgressMediaResponse> {
     return this.http.get<any>(`http://localhost:5242/wanted_media/in_progress`)
   }
+
+  getMediaIndexConfig(): Observable<object> {
+    return this.http.get<object>(`http://localhost:5242/media_index/config`).pipe(
+      tap(val => console.log(val))
+    );
+  }
+
+  setMediaIndexConfig(config: object): Observable<object> {
+    return this.http.post(`http://localhost:5242/media_index/config`, config).pipe(
+      tap(val => console.log(val))
+    );
+  }
+
+  getTorrentIndexConfig(): Observable<object> {
+    return this.http.get<object>(`http://localhost:5242/torrent_index/config`).pipe(
+      tap(val => console.log(val))
+    );
+  }
+
+  setTorrentIndexConfig(config: object): Observable<object> {
+    return this.http.post(`http://localhost:5242/torrent_index/config`, config).pipe(
+      tap(val => console.log(val))
+    );
+  }
+
+  getStorageGatewayConfig(): Observable<object> {
+    return this.http.get<object>(`http://localhost:5242/storage_gateway/config`).pipe(
+      tap(val => console.log(val))
+    );
+  }
+
+  setStorageGatewayConfig(config: object): Observable<object> {
+    return this.http.post(`http://localhost:5242/storage_gateway/config`, config).pipe(
+      tap(val => console.log(val))
+    );
+  }
 }
 
 export type getInProgressMediaResponse = {media: Array<{imdbId: string, displayName: string, mediaType: string, storageLocations: Array<string>, downloadables: Array<{imdbId: string, displayName: string, season: number, episode: number, progress: number}>}>};
