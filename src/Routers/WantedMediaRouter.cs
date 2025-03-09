@@ -9,6 +9,16 @@ public partial class MediaWantedRouter : Router
     {
         string baseUrl = "/wanted_media";
 
+        app.MapGet($"{baseUrl}/check_wanted", async context => {
+            string? imdbId = context.Request.Query["imdbId"];
+            if(string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            await context.Response.WriteAsJsonAsync(new { Wanted = await Application.instance.WantedMediaExistsAsync(imdbId) });
+        });
+
         app.MapPost($"{baseUrl}", async context =>
         {
             string? imdbId = context.Request.Query["imdbId"];
@@ -80,6 +90,17 @@ public partial class MediaWantedRouter : Router
             }
             await Application.instance.SetWantedSeriesEpisodesAsync(imdbId, episodeDtos);
             await context.Response.WriteAsJsonAsync(new { message = "successfully set new wanted episodes", imdbId = imdbId });
+        });
+
+        app.MapGet($"{baseUrl}/refresh_series_episodes", async context => {
+            string? imdbId = context.Request.Query["imdbId"];
+            if(string.IsNullOrWhiteSpace(imdbId))
+            {
+                await context.Response.WriteAsJsonAsync(new { message = "did not provide imdbId" });
+                return;
+            }
+            await Application.instance.RefreshWantedSeriesEpisodes(imdbId);
+            await context.Response.WriteAsJsonAsync(new { message = "successfully refreshed series episodes" });
         });
 
         app.MapGet($"{baseUrl}/movie_torrent", async context =>

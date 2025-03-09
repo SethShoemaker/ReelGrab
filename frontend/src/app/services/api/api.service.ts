@@ -46,17 +46,42 @@ export class ApiService {
     return this.http.get(`http://localhost:5242/torrent_index/inspect?url=${encodeURIComponent(torrentUrl)}`);
   }
 
+  checkWantedMedia(imdbId: string): Observable<boolean> {
+    return this.http.get<{wanted: boolean}>(`http://localhost:5242/wanted_media/check_wanted?imdbId=${encodeURIComponent(imdbId)}`).pipe(
+      tap(val => console.log(val)),
+      map(val => val.wanted)
+    )
+  }
+
   addWantedMedia(imdbId: string): Observable<any> {
     return this.http.post(`http://localhost:5242/wanted_media?imdbId=${imdbId}`, {}).pipe(
       tap(v => console.log(v))
     );
   }
 
-  setSeriesWantedEpisodes(seriesId: string, episodes: Array<string | {season: number, episode: number}>){
+  getWantedSeriesEpisodes(seriesId: string): Observable<{seasons: Array<{number: number, episodes: Array<{number: number, title: string, imdbId: string, wanted: boolean}>}>}> {
+    return this.http.get<any>(`http://localhost:5242/wanted_media/series_episodes?imdbId=${seriesId}`).pipe(
+      tap(val => console.log(val))
+    )
+  }
+
+  setWantedSeriesEpisodes(seriesId: string, episodes: Array<string | {season: number, episode: number}>){
     episodes = episodes.map(e => typeof(e) == 'string' ? e : formatSeasonEpisodeNumber(e.season, e.episode));
     return this.http.post(`http://localhost:5242/wanted_media/series_episodes?imdbId=${seriesId}&episodes=${episodes.join(",")}`, {}).pipe(
       tap(v => console.log(v))
     );
+  }
+
+  refreshWantedSeriesEpisodes(seriesId: string): Observable<any> {
+    return this.http.get(`http://localhost:5242/wanted_media/refresh_series_episodes?imdbId=${seriesId}`).pipe(
+      tap(val => console.log(val))
+    )
+  }
+
+  getWantedMediaStorageLocations(imdbId: string): Observable<{storageLocations: Array<string>}> {
+    return this.http.get<{storageLocations: Array<string>}>(`http://localhost:5242/wanted_media/storage_locations?imdbId=${encodeURIComponent(imdbId)}`).pipe(
+      tap(val => console.log(val)),
+    )
   }
 
   setWantedMediaStorageLocations(imdbId: string, storageLocationIds: Array<string>): Observable<any> {
@@ -65,9 +90,22 @@ export class ApiService {
     );
   }
 
+  getWantedSeriesEpisodeToTorrentFileMapping(seriesId: string): Observable<{seasons: Array<{number: number, episodes: Array<{number: number, title: string, imdbId: string, wanted: boolean, mediaTorrent: {torrentUrl: string, source: string, displayName: string, filePath: string}|null}>}>}> {
+    return this.http.get<any>(`http://localhost:5242/wanted_media/series_torrents?imdbId=${seriesId}`).pipe(
+      tap(val => console.log(val)),
+      map(data => ({seasons: data}))
+    ) 
+  }
+
   setWantedSeriesEpisodeToTorrentMapping(seriesId: string, torrents: Array<{torrentUrl: string, torrentSource: string, torrentDisplayName: string, episodes: Array<{imdbId: string, torrentFilePath: string}>}>): Observable<any> {
     return this.http.post(`http://localhost:5242/wanted_media/series_torrents?imdbId=${seriesId}`, torrents).pipe(
       tap(v => console.log(v))
+    )
+  }
+
+  getWantedMovieToTorrentMapping(movieId: string): Observable<{torrent: {torrentUrl: string, source: string, dispayName: string, filePath: string}|null}> {
+    return this.http.get<{torrent: {torrentUrl: string, source: string, dispayName: string, filePath: string}|null}>(`http://localhost:5242/wanted_media/movie_torrent?imdbId=${encodeURIComponent(movieId)}`).pipe(
+      tap(val => console.log(val))
     )
   }
 

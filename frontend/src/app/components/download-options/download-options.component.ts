@@ -47,6 +47,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
   selectedTorrentFiles: Array<any> | null = null;
 
   // series specific variables
+  formatSeasonEpisode = formatSeasonEpisode
   seasons: Array<any> | null = null;
   wantedEpisodeSelectionChange$: Subject<{ season: number, episode: number, title: string, e: any }> | null = null;
   wantedEpisodeSelectionChangeSub: Subscription | null = null;
@@ -69,7 +70,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
     this.setupSelectedTorrentFileMapping();
     this.setupDownloadButtonClick();
     this.setupStorageLocationToggle();
-    forkJoin([this.loadMediaDetails(), this.loadStorageLocations()]).subscribe(() => this.loading = false)
+    forkJoin([this.loadMediaDetails(), this.loadStorageLocations()]).pipe(switchMap(this.loadPrefillData.bind(this))).subscribe(() => this.loading = false)
   }
 
   loadMediaDetails() {
@@ -177,6 +178,107 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
       )
   }
 
+  loadPrefillData() {
+    return this.api.checkWantedMedia(this.mediaId).pipe(
+      switchMap(wanted => {
+        if(!wanted){
+          return of(null)
+        }
+        if(this.mediaType == 'SERIES'){
+          return this.api.refreshWantedSeriesEpisodes(this.mediaId).pipe(
+            switchMap(() => this.api.getWantedSeriesEpisodeToTorrentFileMapping(this.mediaId)),
+            tap(data => {
+              for (let i = 0; i < data.seasons.length; i++) {
+                const season = data.seasons[i];
+                for (let j = 0; j < season.episodes.length; j++) {
+                  const episode = season.episodes[j];
+                  if(episode.wanted){
+                    this.torrentSearchLoading = false;
+                    const formatted = formatSeasonEpisode(season.number, episode.number, episode.title);
+                    this.wantedEpisodesMap!.set(formatted, true);
+                    this.episodesToTorrentFileMap!.set(formatted, {url: episode.mediaTorrent!.torrentUrl, path: episode.mediaTorrent!.filePath})
+                    if(this.usedTorrentsMap.has(episode.mediaTorrent!.torrentUrl)){
+                      this.usedTorrentsMap.set(episode.mediaTorrent!.torrentUrl, this.usedTorrentsMap.get(episode.mediaTorrent!.torrentUrl)! + 1);
+                    } else {
+                      this.usedTorrentsMap.set(episode.mediaTorrent!.torrentUrl, 1);
+                    }
+                    if(this.torrentSearchResults.findIndex(tsr => tsr.url == episode.mediaTorrent!.torrentUrl) == -1){
+                      this.torrentSearchResults.push({
+                        url: episode.mediaTorrent!.torrentUrl,
+                        title: episode.mediaTorrent!.displayName,
+                        seeders: -1,
+                        peers: -1
+                      })
+                    }
+                  }
+                }
+              }
+            }),
+            switchMap(() => this.api.getWantedMediaStorageLocations(this.mediaId)),
+            tap(data => {
+              for (let i = 0; i < data.storageLocations.length; i++) {
+                const storageLocation = data.storageLocations[i];
+                const sl = this.storageLocations!.find(sl => sl.id == storageLocation);
+                if(sl == null){
+                  this.storageLocations!.push({
+                    id: storageLocation,
+                    selected: true,
+                    displayName: storageLocation,
+                    displayType: 'ERROR',
+                    img: null,
+                    type: 'ERROR',
+                    name: storageLocation
+                  })
+                } else {
+                  sl.selected = true
+                }
+              }
+            })
+          );
+        }
+        if(this.mediaType == 'MOVIE'){
+          return this.api.getWantedMovieToTorrentMapping(this.mediaId).pipe(
+            tap(data => {
+              if(data.torrent == null){
+                return;
+              }
+              this.torrentMappedToMovie = { url: data.torrent.torrentUrl, path: data.torrent.filePath }
+              this.usedTorrentsMap.set(data.torrent.torrentUrl, 1);
+              this.torrentSearchResults.push({
+                url: data.torrent.torrentUrl,
+                title: data.torrent.dispayName,
+                seeders: -1,
+                peers: -1
+              })
+              this.torrentSearchLoading = false;
+            }),
+            switchMap(() => this.api.getWantedMediaStorageLocations(this.mediaId)),
+            tap(data => {
+              for (let i = 0; i < data.storageLocations.length; i++) {
+                const storageLocation = data.storageLocations[i];
+                const sl = this.storageLocations!.find(sl => sl.id == storageLocation);
+                if(sl == null){
+                  this.storageLocations!.push({
+                    id: storageLocation,
+                    selected: true,
+                    displayName: storageLocation,
+                    displayType: 'ERROR',
+                    img: null,
+                    type: 'ERROR',
+                    name: storageLocation
+                  })
+                } else {
+                  sl.selected = true
+                }
+              }
+            })
+          )
+        }
+        throw new Error()
+      })
+    )
+  }
+
   setupTorrentSearching() {
     this.torrentSearchControlSub = this.torrentSearchControl.valueChanges.pipe(
       filter((val) => val != null && val.length > 0),
@@ -265,7 +367,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
                 .filter(([_, wanted]) => wanted)
                 .map(([key]) => key)
                 .map(v => v.slice(0, v.indexOf(' ')))
-              return this.api.setSeriesWantedEpisodes(this.mediaId, wantedEpisodes)
+              return this.api.setWantedSeriesEpisodes(this.mediaId, wantedEpisodes)
             }
             return of(null);
           }),
