@@ -3,6 +3,7 @@ using ReelGrab.MediaIndexes;
 using ReelGrab.TorrentClients;
 using ReelGrab.TorrentClients.Exceptions;
 using SqlKata.Execution;
+using SqlKata.Extensions;
 
 namespace ReelGrab.Core;
 
@@ -162,6 +163,15 @@ public partial class Application
     public async Task<GetAllWantedMediaInProgressAsyncResult> GetAllWantedMediaInProgressAsync()
     {
         using var db = Db.CreateConnection();
+
+        bool none = (await db
+            .Query("WantedMediaDownloadable")
+            .CountAsync<int>()) == 0;
+
+        if(none)
+        {
+            return new([]);
+        }
 
         var rows = await db
             .Query("WantedMediaTorrentDownloadable")
