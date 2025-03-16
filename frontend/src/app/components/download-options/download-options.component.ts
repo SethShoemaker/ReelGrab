@@ -10,6 +10,9 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { NonBreakingSpacesPipe } from '../../pipes/non-breaking-spaces.pipe';
 import { formatSeasonEpisode } from '../../functions/formatSeasonEpisode';
 import { FilesizePipe } from '../../pipes/filesize.pipe';
+import { SnackbarService } from '../../services/snackbar/snackbar.service';
+import { Snack } from '../../services/snackbar/snack';
+import { SnackLevel } from '../../services/snackbar/snack-level';
 
 @Component({
   selector: 'app-download-options',
@@ -46,6 +49,8 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
   selectedTorrentFilesLoading: boolean | null = null;
   selectedTorrentFiles: Array<any> | null = null;
 
+  alreadyWanted = false;
+
   // series specific variables
   formatSeasonEpisode = formatSeasonEpisode
   seasons: Array<any> | null = null;
@@ -62,7 +67,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
   torrentFileToMovieMapping$: Subject<string> | null = null;
   torrentFileToMovieMappingSub: Subscription | null = null;
 
-  constructor(public api: ApiService, public route: ActivatedRoute, public router: Router) { }
+  constructor(public api: ApiService, public route: ActivatedRoute, public router: Router, public snackbarService: SnackbarService) { }
 
   ngOnInit(): void {
     this.mediaId = this.route.snapshot.params['id'];
@@ -361,6 +366,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
       if (this.formErrors.length == 0) {
         this.loading = true;
         this.api.addWantedMedia(this.mediaId).pipe(
+          tap(res => this.alreadyWanted = res.message.indexOf('already is wanted') != -1),
           switchMap(() => {
             if (this.mediaType == 'SERIES') {
               const wantedEpisodes = Array.from(this.wantedEpisodesMap!.entries())
@@ -408,6 +414,7 @@ export class DownloadOptionsComponent implements OnInit, OnDestroy {
             this.loading = false;
           })
         ).subscribe(() => {
+          this.snackbarService.snacks.next(new Snack(SnackLevel.SUCCESS, `${this.title} ${this.alreadyWanted ? "Updated" : "Added"}`))
           this.router.navigate(['/'])
         })
       }

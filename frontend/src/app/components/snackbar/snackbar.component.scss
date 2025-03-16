@@ -1,0 +1,77 @@
+div#container {
+    position: fixed;
+    --vert-padding: calc(3rem + 2vw);
+    top: var(--vert-padding);
+    bottom: var(--vert-padding);
+    right: calc(1rem + 1.2vw);
+    height: calc(100vh - (2 * var(--vert-padding)));
+    width: calc(15rem + 14vw);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+
+    div.snack {
+        background-color: var(--color14);
+        display: grid;
+        grid-template-columns: calc(1.9rem + 1.5vw) 1fr;
+        margin-top: calc(.8rem + 0.4vw);
+        padding: calc(.6rem + .5vw) 0;
+        border: 1px solid white;
+
+        &.success {
+            border-color: var(--color15);
+        }
+
+        &.info {
+            border-color: var(--color16);
+        }
+
+        &.warning {
+            border-color: var(--color17);
+        }
+
+        &.error {
+            border-color: var(--color18);
+        }
+
+        div.left {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: calc(0.1rem + 0.1vw);
+        }
+
+        div.right {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-right: calc(0.5rem + 0.1vw);
+
+            span.title {
+                font-size: calc(0.44vw + 0.71rem);
+                font-weight: 600;
+            }
+
+            span.body {
+                font-size: calc(0.35vw + 0.61rem);
+                font-weight: 400;
+                padding-top: calc(0.7rem + 0.6vw);
+            }
+
+            div.actions-container {
+                padding-top: calc(0.81rem + 0.7vw);
+
+                button.action {
+                    background-color: var(--color3);
+                    padding: calc(0.1vw + 0.1rem) calc(.4vw + .4rem);
+                    color: var(--color6);
+                    outline: none;
+                    border: 1px solid var(--color10);
+                    height: calc(1.2vw + 1.2rem);
+                    font-size: calc(0.55vw + 0.51rem);
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+<div id="container">
+    <div *ngFor="let snack of snacks"
+        class="snack"
+        [class]="snack.class"
+        >
+        <div class="left">
+            <img [src]="snack.src">
+        </div>
+        <div class="right">
+            <span class="title">{{snack.title}}</span>
+            <span *ngIf="snack.body != null && snack.body.length > 0" class="body">{{snack.body}}</span>
+            <div *ngIf="snack.actions != null && snack.actions.length > 0" class="actions-container">
+                <button *ngFor="let action of snack.actions"
+                    class="action"
+                    (click)="action.action()"
+                    >
+                    {{action.body}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

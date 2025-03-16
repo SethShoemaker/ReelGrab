@@ -2,8 +2,13 @@ import { Component, ElementRef, OnInit } from '@angular/core';
 import { FormSectionHeaderComponent } from '../form-section-header/form-section-header.component';
 import { FormSectionPartComponent } from '../form-section-part/form-section-part.component';
 import { ApiService } from '../../services/api/api.service';
-import { map, merge, Observable, Subject, switchMap } from 'rxjs';
+import { map, merge, Observable, Subject, switchMap, tap } from 'rxjs';
 import { AsyncPipe, JsonPipe, NgFor, NgIf } from '@angular/common';
+import { SnackbarService } from '../../services/snackbar/snackbar.service';
+import { Snack } from '../../services/snackbar/snack';
+import { SnackLevel } from '../../services/snackbar/snack-level';
+import { SnackAction } from '../../services/snackbar/snack-action';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-config',
@@ -13,7 +18,7 @@ import { AsyncPipe, JsonPipe, NgFor, NgIf } from '@angular/common';
 })
 export class ConfigComponent implements OnInit {
 
-  constructor(public api: ApiService, public eRef: ElementRef) { }
+  constructor(public api: ApiService, public eRef: ElementRef, public snackbarService: SnackbarService) { }
 
   ngOnInit(): void {
     this.setupMediaIndexConfig();
@@ -27,7 +32,8 @@ export class ConfigComponent implements OnInit {
   setupMediaIndexConfig() {
     this.mediaIndexConfig$ = merge(
       this.mediaIndexConfigSubmit$.pipe(
-        switchMap(() => this.api.setMediaIndexConfig(this.getMediaIndexConfig()))
+        switchMap(() => this.api.setMediaIndexConfig(this.getMediaIndexConfig())),
+        tap(() => this.snackbarService.snacks.next(new Snack(SnackLevel.SUCCESS, "Updated Media Config")))
       ),
       this.api.getMediaIndexConfig()
     ).pipe(
@@ -74,7 +80,8 @@ export class ConfigComponent implements OnInit {
   setupTorrentIndexConfig() {
     this.torrentIndexConfig$ = merge(
       this.torrentIndexConfigSubmit$.pipe(
-        switchMap(() => this.api.setTorrentIndexConfig(this.getTorrentIndexConfig()))
+        switchMap(() => this.api.setTorrentIndexConfig(this.getTorrentIndexConfig())),
+        tap(() => this.snackbarService.snacks.next(new Snack(SnackLevel.SUCCESS, "Updated Jackett Config")))
       ),
       this.api.getTorrentIndexConfig()
     ).pipe(
@@ -127,7 +134,8 @@ export class ConfigComponent implements OnInit {
   setupStorageGatewayConfig() {
     this.storageGatewayConfig$ = merge(
       this.storageGatewayConfigSubmit$.pipe(
-        switchMap(() => this.api.setStorageGatewayConfig(this.getStorageGatewayConfig()))
+        switchMap(() => this.api.setStorageGatewayConfig(this.getStorageGatewayConfig())),
+        tap(() => this.snackbarService.snacks.next(new Snack(SnackLevel.SUCCESS, "Updated Storage Config")))
       ),
       this.api.getStorageGatewayConfig()
     ).pipe(
