@@ -1,12 +1,19 @@
 using ReelGrab.Utils;
 
-namespace ReelGrab.Persistence.Configuration;
+namespace ReelGrab.Configuration;
 
 public class TorrentIndex
 {
     private TorrentIndex() { }
 
     public static readonly TorrentIndex instance = new();
+
+    public async Task Apply()
+    {
+        string? jacketApiUrl = await GetJackettApiUrl();
+        TorrentIndexes.TorrentIndex.instance.ApiUrl = jacketApiUrl == null ? null : new(jacketApiUrl);
+        TorrentIndexes.TorrentIndex.instance.ApiKey = await GetJackettApiKey();
+    }
 
     public readonly string TorrentIndexConfigFilePath = "/data/config/jackett.json";
 

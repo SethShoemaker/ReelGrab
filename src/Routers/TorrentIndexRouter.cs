@@ -11,8 +11,8 @@ public class TorrentIndexRouter : Router
 
         app.MapGet($"{baseUrl}/config", async context => {
             await context.Response.WriteAsJsonAsync(new {
-                api_url = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiUrl(),
-                api_key = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiKey(),
+                api_url = await Configuration.TorrentIndex.instance.GetJackettApiUrl(),
+                api_key = await Configuration.TorrentIndex.instance.GetJackettApiKey(),
             });
         });
 
@@ -32,15 +32,15 @@ public class TorrentIndexRouter : Router
             }
             if(configs.TryGetValue("api_url", out string? jackettApiUrl))
             {
-                await Persistence.Configuration.TorrentIndex.instance.SetJackettApiUrl(jackettApiUrl);
+                await Configuration.TorrentIndex.instance.SetJackettApiUrl(jackettApiUrl);
             }
             if(configs.TryGetValue("api_key", out string? jackettApiKey))
             {
-                await Persistence.Configuration.TorrentIndex.instance.SetJackettApiKey(jackettApiKey);
+                await Configuration.TorrentIndex.instance.SetJackettApiKey(jackettApiKey);
             }
             await context.Response.WriteAsJsonAsync(new {
-                api_url = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiUrl(),
-                api_key = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiKey(),
+                api_url = await Configuration.TorrentIndex.instance.GetJackettApiUrl(),
+                api_key = await Configuration.TorrentIndex.instance.GetJackettApiKey(),
             });
         });
 

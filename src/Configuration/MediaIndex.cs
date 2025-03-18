@@ -1,12 +1,25 @@
 using ReelGrab.Utils;
 
-namespace ReelGrab.Persistence.Configuration;
+namespace ReelGrab.Configuration;
 
 public class MediaIndex
 {
     private MediaIndex() { }
 
     public static readonly MediaIndex instance = new();
+
+    public async Task Apply()
+    {
+        string? omdbApiKey = await GetOmdbApiKey();
+        if(omdbApiKey == null)
+        {
+            MediaIndexes.MediaIndex.instance.RemoveOmdbDatabase();
+        }
+        else
+        {
+            MediaIndexes.MediaIndex.instance.AddOmdbDatabase(omdbApiKey);
+        }
+    }
 
     public readonly string MediaIndexConfigFilePath = "/data/config/media.json";
 

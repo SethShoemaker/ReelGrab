@@ -10,7 +10,7 @@ public class MediaIndexRouter : Router
 
         app.MapGet($"{baseUrl}/config", async context => {
             await context.Response.WriteAsJsonAsync(new {
-                omdb_api_key = await Persistence.Configuration.MediaIndex.instance.GetOmdbApiKey()
+                omdb_api_key = await Configuration.MediaIndex.instance.GetOmdbApiKey()
             });
         });
 
@@ -31,15 +31,15 @@ public class MediaIndexRouter : Router
             }
             if(configs.TryGetValue("omdb_api_key", out string? omdbApiKey))
             {
-                await Persistence.Configuration.MediaIndex.instance.SetOmdbApiKey(omdbApiKey);
+                await Configuration.MediaIndex.instance.SetOmdbApiKey(omdbApiKey);
             }
             await context.Response.WriteAsJsonAsync(new {
-                omdb_api_key = await Persistence.Configuration.MediaIndex.instance.GetOmdbApiKey()
+                omdb_api_key = await Configuration.MediaIndex.instance.GetOmdbApiKey()
             });
         });
 
         app.MapGet($"{baseUrl}/databases", async context => {
-            await context.Response.WriteAsJsonAsync(MediaIndexConfig.instance.mediaIndex.MediaDatabases);
+            await context.Response.WriteAsJsonAsync(MediaIndex.instance.MediaDatabases);
         });
 
         app.MapGet($"{baseUrl}/search", async context => {

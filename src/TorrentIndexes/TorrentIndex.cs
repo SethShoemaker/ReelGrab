@@ -1,5 +1,4 @@
 using System.Xml;
-using ReelGrab.Database;
 using ReelGrab.TorrentIndexes.Exceptions;
 using SqlKata.Execution;
 
@@ -75,66 +74,6 @@ public class TorrentIndex : ITorrentIndex
             ));
         }
         return new(searchResults);
-    }
-
-    private record TorrentIndexConfigRow(string Key, string Value);
-
-    public async Task InitializeConfigurationAsync()
-    {
-        using var db = Db.CreateConnection();
-        var configs = await db.Query("TorrentIndexConfig").Select("Key", "Value").GetAsync<TorrentIndexConfigRow>();
-        var apiUrl = configs.FirstOrDefault(c => c.Key == TorrentIndexConfigurationKey.API_URL.ToString())?.Value;
-        ApiUrl = apiUrl != null ? new(apiUrl) : null;
-        ApiKey = configs.FirstOrDefault(c => c.Key == TorrentIndexConfigurationKey.API_KEY.ToString())?.Value;
-    }
-
-    public async Task SetConfigurationAsync(Dictionary<TorrentIndexConfigurationKey, string?> configs)
-    {
-        // ensure no empty strings
-        foreach (var key in configs.Keys)
-        {
-            if (configs[key] != null && configs[key]!.Length == 0)
-            {
-                configs[key] = null;
-            }
-        }
-        using var db = Db.CreateConnection();
-        foreach (TorrentIndexConfigurationKey key in configs.Keys)
-        {
-            int count = (await db.Query("TorrentIndexConfig").Where("Key", key.ToString()).AsCount().GetAsync<int>()).First();
-            if (count > 0)
-            {
-                await db.Query("TorrentIndexConfig").Where("Key", key.ToString()).UpdateAsync(new
-                {
-                    Value = configs[key]
-                });
-            }
-            else
-            {
-                await db.Query("TorrentIndexConfig").InsertAsync(new
-                {
-                    Key = key.ToString(),
-                    Value = configs[key]
-                });
-            }
-        }
-        if (configs.TryGetValue(TorrentIndexConfigurationKey.API_URL, out string? newApiUrl))
-        {
-            ApiUrl = newApiUrl != null ? new(newApiUrl!) : null;
-        }
-        if (configs.TryGetValue(TorrentIndexConfigurationKey.API_KEY, out string? newApiKey))
-        {
-            ApiKey = newApiKey;
-        }
-    }
-
-    public Task<Dictionary<TorrentIndexConfigurationKey, string?>> GetConfigurationAsync()
-    {
-        return Task.FromResult<Dictionary<TorrentIndexConfigurationKey, string?>>(new()
-        {
-            [TorrentIndexConfigurationKey.API_URL] = ApiUrl?.ToString(),
-            [TorrentIndexConfigurationKey.API_KEY] = ApiKey
-        });
     }
 
     private void EnsureTorrentIndexConfigured()

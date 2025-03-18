@@ -10,7 +10,7 @@ public class StorageGatewayRouter : Router
 
         app.MapGet($"{baseUrl}/config", async context => {
             await context.Response.WriteAsJsonAsync(new {
-                local_directories = string.Join(',', await Persistence.Configuration.StorageGateway.instance.GetLocalDirectories())
+                local_directories = string.Join(',', await Configuration.StorageGateway.instance.GetLocalDirectories())
             });
         });
 
@@ -30,15 +30,15 @@ public class StorageGatewayRouter : Router
             }
             if(configs.TryGetValue("local_directories", out string? localDirectories))
             {
-                await Persistence.Configuration.StorageGateway.instance.SetLocalDirectories(localDirectories?.Split(',').ToList() ?? []);
+                await Configuration.StorageGateway.instance.SetLocalDirectories(localDirectories?.Split(',').ToList() ?? []);
             }
             await context.Response.WriteAsJsonAsync(new {
-                local_directories = string.Join(',', await Persistence.Configuration.StorageGateway.instance.GetLocalDirectories())
+                local_directories = string.Join(',', await Configuration.StorageGateway.instance.GetLocalDirectories())
             });
         });
 
         app.MapGet($"{baseUrl}/storage_locations", async context => {
-            await context.Response.WriteAsJsonAsync(StorageGatewayConfig.instance.storageGateway.StorageLocations);
+            await context.Response.WriteAsJsonAsync(StorageGateway.instance.StorageLocations);
         });
     }
 }

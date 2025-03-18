@@ -1,10 +1,6 @@
 using System.Text.Json.Serialization;
 using ReelGrab.Core;
 using ReelGrab.Core.Processing;
-using ReelGrab.Database;
-using ReelGrab.MediaIndexes;
-using ReelGrab.Storage;
-using ReelGrab.TorrentIndexes;
 using ReelGrab.Web.Routers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,15 +9,15 @@ Console.WriteLine("Applying migrations");
 Console.WriteLine("Migrations complete");
 
 Console.WriteLine("Applying MediaIndex configuration");
-await MediaIndexConfig.instance.ApplyMediaIndexConfigAsync();
+await ReelGrab.Configuration.MediaIndex.instance.Apply();
 Console.WriteLine("MediaIndex configuration completed");
 
 Console.WriteLine("Applying StorageGateway configuration");
-await StorageGatewayConfig.instance.ApplyStorageGatewayConfigAsync();
+await ReelGrab.Configuration.StorageGateway.instance.Apply();
 Console.WriteLine("StorageGateway configuration completed");
 
 Console.WriteLine("Initializing TorrentIndex");
-await TorrentIndex.instance.InitializeConfigurationAsync();
+await ReelGrab.Configuration.TorrentIndex.instance.Apply();
 Console.WriteLine("Initialized TorrentIndex");
 
 var syncTorrentFiles = new SyncTorrentFiles();
