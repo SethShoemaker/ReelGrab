@@ -9,26 +9,33 @@ public class MediaIndexRouter : Router
         string baseUrl = "/media_index";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await MediaIndexConfig.instance.GetMediaIndexConfigAsync();
-            await context.Response.WriteAsJsonAsync(config);
+            await context.Response.WriteAsJsonAsync(new {
+                omdb_api_key = await Persistence.Configuration.MediaIndex.instance.GetOmdbApiKey()
+            });
         });
 
         app.MapPost($"{baseUrl}/config", async context => {
-            Dictionary<MediaIndexConfigKey, string?>? configs;
+            Dictionary<string, string?>? configs;
             try {
-                configs = await context.Request.ReadFromJsonAsync<Dictionary<MediaIndexConfigKey, string?>>();
+                configs = await context.Request.ReadFromJsonAsync<Dictionary<string, string?>>();
             }
             catch (System.Text.Json.JsonException)
             {
-                await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
+                await context.Response.WriteAsJsonAsync(new {message = "error while decoding config"});
                 return;
             }
-            if(configs == null){
-                await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
+            if(configs == null)
+            {
+                await context.Response.WriteAsJsonAsync(new {message = "error while decoding config"});
                 return;
             }
-            await MediaIndexConfig.instance.SetMediaIndexConfigAsync(configs);
-            await context.Response.WriteAsJsonAsync(await MediaIndexConfig.instance.GetMediaIndexConfigAsync());
+            if(configs.TryGetValue("omdb_api_key", out string? omdbApiKey))
+            {
+                await Persistence.Configuration.MediaIndex.instance.SetOmdbApiKey(omdbApiKey);
+            }
+            await context.Response.WriteAsJsonAsync(new {
+                omdb_api_key = await Persistence.Configuration.MediaIndex.instance.GetOmdbApiKey()
+            });
         });
 
         app.MapGet($"{baseUrl}/databases", async context => {
@@ -42,7 +49,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide query"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await MediaIndex.instance.SearchAsync(query));
+            await context.Response.WriteAsJsonAsync(await MediaIndexes.MediaIndex.instance.SearchAsync(query));
         });
 
         app.MapGet($"{baseUrl}/type", async context => {
@@ -52,7 +59,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
                 return;
             }
-            MediaType mediaType = await MediaIndex.instance.GetMediaTypeByImdbIdAsync(imdbId);
+            MediaType mediaType = await MediaIndexes.MediaIndex.instance.GetMediaTypeByImdbIdAsync(imdbId);
             await context.Response.WriteAsJsonAsync(new {type = mediaType});
         });
 
@@ -63,7 +70,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await MediaIndex.instance.GetMovieDetailsByImdbIdAsync(imdbId));
+            await context.Response.WriteAsJsonAsync(await MediaIndexes.MediaIndex.instance.GetMovieDetailsByImdbIdAsync(imdbId));
         });
 
         app.MapGet($"{baseUrl}/series/details", async context => {
@@ -73,7 +80,7 @@ public class MediaIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "did not provide imdbId"});
                 return;
             }
-            await context.Response.WriteAsJsonAsync(await MediaIndex.instance.GetSeriesDetailsByImdbIdAsync(imdbId));
+            await context.Response.WriteAsJsonAsync(await MediaIndexes.MediaIndex.instance.GetSeriesDetailsByImdbIdAsync(imdbId));
         });
     }
 }

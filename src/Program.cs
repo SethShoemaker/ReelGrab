@@ -10,7 +10,6 @@ using ReelGrab.Web.Routers;
 var builder = WebApplication.CreateBuilder(args);
 
 Console.WriteLine("Applying migrations");
-await Db.ApplyMigrationsAsync();
 Console.WriteLine("Migrations complete");
 
 Console.WriteLine("Applying MediaIndex configuration");

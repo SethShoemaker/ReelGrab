@@ -9,14 +9,15 @@ public class StorageGatewayRouter : Router
         string baseUrl = "/storage_gateway";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await StorageGatewayConfig.instance.GetStorageGatewayConfigAsync();
-            await context.Response.WriteAsJsonAsync(config);
+            await context.Response.WriteAsJsonAsync(new {
+                local_directories = string.Join(',', await Persistence.Configuration.StorageGateway.instance.GetLocalDirectories())
+            });
         });
 
         app.MapPost($"{baseUrl}/config", async context => {
-            Dictionary<StorageGatewayConfigKey, string?>? configs;
+            Dictionary<string, string?>? configs;
             try {
-                configs = await context.Request.ReadFromJsonAsync<Dictionary<StorageGatewayConfigKey, string?>>();
+                configs = await context.Request.ReadFromJsonAsync<Dictionary<string, string?>>();
             }
             catch (System.Text.Json.JsonException)
             {
@@ -27,8 +28,13 @@ public class StorageGatewayRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
                 return;
             }
-            await StorageGatewayConfig.instance.SetStorageGatewayConfigAsync(configs);
-            await context.Response.WriteAsJsonAsync(await StorageGatewayConfig.instance.GetStorageGatewayConfigAsync());
+            if(configs.TryGetValue("local_directories", out string? localDirectories))
+            {
+                await Persistence.Configuration.StorageGateway.instance.SetLocalDirectories(localDirectories?.Split(',').ToList() ?? []);
+            }
+            await context.Response.WriteAsJsonAsync(new {
+                local_directories = string.Join(',', await Persistence.Configuration.StorageGateway.instance.GetLocalDirectories())
+            });
         });
 
         app.MapGet($"{baseUrl}/storage_locations", async context => {

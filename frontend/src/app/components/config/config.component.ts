@@ -62,7 +62,7 @@ export class ConfigComponent implements OnInit {
   }
 
   convertMediaIndexConfigKeyToFormInfo(configKey: string): { label: string, placeholder: string } {
-    if (configKey == "OMDb_API_Key") {
+    if (configKey == "omdb_api_key") {
       return {
         label: "OMDb API Key",
         placeholder: "API key"
@@ -110,13 +110,13 @@ export class ConfigComponent implements OnInit {
   }
 
   convertTorrentIndexConfigKeyToFormInfo(configKey: string): { label: string, placeholder: string } {
-    if (configKey == "API_URL") {
+    if (configKey == "api_url") {
       return {
         label: "Jackett URL",
         placeholder: "URL"
       }
     }
-    if(configKey == "API_KEY") {
+    if(configKey == "api_key") {
       return {
         label: "Jackett API key",
         placeholder: "API key"
@@ -164,10 +164,10 @@ export class ConfigComponent implements OnInit {
   }
 
   convertStorageGatewayConfigKeyToFormInfo(configKey: string): { label: string, placeholder: string } {
-    if (configKey == "LOCAL_DISK_LOCATIONS") {
+    if (configKey == "local_directories") {
       return {
-        label: "Local Disk Locations",
-        placeholder: "Locations (comma seperated)"
+        label: "Local Directories",
+        placeholder: "Local Directories (comma seperated)"
       }
     }
     return {

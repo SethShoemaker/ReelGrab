@@ -10,14 +10,16 @@ public class TorrentIndexRouter : Router
         string baseUrl = "/torrent_index";
 
         app.MapGet($"{baseUrl}/config", async context => {
-            var config = await TorrentIndex.instance.GetConfigurationAsync();
-            await context.Response.WriteAsJsonAsync(config);
+            await context.Response.WriteAsJsonAsync(new {
+                api_url = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiUrl(),
+                api_key = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiKey(),
+            });
         });
 
         app.MapPost($"{baseUrl}/config", async context => {
-            Dictionary<TorrentIndexConfigurationKey, string?>? configs;
+            Dictionary<string, string?>? configs;
             try {
-                configs = await context.Request.ReadFromJsonAsync<Dictionary<TorrentIndexConfigurationKey, string?>>();
+                configs = await context.Request.ReadFromJsonAsync<Dictionary<string, string?>>();
             }
             catch (System.Text.Json.JsonException)
             {
@@ -28,8 +30,18 @@ public class TorrentIndexRouter : Router
                 await context.Response.WriteAsJsonAsync(new {message = "Error while decoding config"});
                 return;
             }
-            await TorrentIndex.instance.SetConfigurationAsync(configs);
-            await context.Response.WriteAsJsonAsync(await TorrentIndex.instance.GetConfigurationAsync());
+            if(configs.TryGetValue("api_url", out string? jackettApiUrl))
+            {
+                await Persistence.Configuration.TorrentIndex.instance.SetJackettApiUrl(jackettApiUrl);
+            }
+            if(configs.TryGetValue("api_key", out string? jackettApiKey))
+            {
+                await Persistence.Configuration.TorrentIndex.instance.SetJackettApiKey(jackettApiKey);
+            }
+            await context.Response.WriteAsJsonAsync(new {
+                api_url = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiUrl(),
+                api_key = await Persistence.Configuration.TorrentIndex.instance.GetJackettApiKey(),
+            });
         });
 
         app.MapGet($"{baseUrl}/status", async context => {
