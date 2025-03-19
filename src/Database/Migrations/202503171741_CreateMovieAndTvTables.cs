@@ -1,2 +1,0 @@
-namespace ReelGrab.Database.Migrations;
-
