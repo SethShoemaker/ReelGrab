@@ -19,6 +19,11 @@ public static partial class Torrents
         return GetTorrentFilesFromShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
     }
 
+    public static async Task<List<TorrentFile>> GetTorrentFilesByFilePathAsync(string filePath)
+    {
+        return GetTorrentFilesFromShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
+    }
+
     private static List<TorrentFile> GetTorrentFilesFromShowOutput(string showOutput)
     {
         int beg = showOutput.IndexOf("FILES\n");
@@ -71,16 +76,21 @@ public static partial class Torrents
         return GetTorrentHashByShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
     }
 
+    public static async Task<string> GetTorrentHashByFilePathAsync(string filePath)
+    {
+        return GetTorrentHashByShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
+    }
+
     private static string GetTorrentHashByShowOutput(string showOutput)
     {
         int beg = showOutput.IndexOf("Hash: ");
-        if(beg == -1)
+        if (beg == -1)
         {
             throw new Exception($"error getting hash for torrent");
         }
         beg += 6;
         int end = showOutput.IndexOf('\n', beg);
-        if(end == -1)
+        if (end == -1)
         {
             throw new Exception($"error getting hash for torrent");
         }
@@ -93,10 +103,57 @@ public static partial class Torrents
     public static Task<string> GetTorrentHashByMagnetLinkAsync(string magnetLink)
     {
         var match = MagnetInfoHash().Match(magnetLink);
-        if(!match.Success)
+        if (!match.Success)
         {
             throw new Exception($"{magnetLink} is not a valid magnet link");
         }
         return Task.FromResult(match.Groups[1].Value);
+    }
+
+    public static async Task<string> GetTorrentNameByFilePathAsync(string filePath)
+    {
+        return GetTorrentNameByShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
+    }
+
+    private static string GetTorrentNameByShowOutput(string showOutput)
+    {
+        int beg = showOutput.IndexOf("Name: ");
+        if (beg == -1)
+        {
+            throw new Exception($"error getting name for torrent");
+        }
+        beg += 6;
+        int end = showOutput.IndexOf('\n', beg);
+        if (end == -1)
+        {
+            throw new Exception($"error getting name for torrent");
+        }
+        return showOutput[beg..end];
+    }
+
+    public static Task DownloadTorrentAsync(string torrent, string filePath)
+    {
+        return torrent.StartsWith("magnet:")
+            ? DownloadTorrentByMagnetAsync(torrent, filePath)
+            : DownloadTorrentByUrlAsync(torrent, filePath);
+    }
+
+    public static async Task DownloadTorrentByMagnetAsync(string magnet, string filePath)
+    {
+        string output = await Commands.RunAsync("/root/bin/imdl", $"torrent from-link \"{magnet}\" --output {filePath}");
+        if (output.Contains("Failed to fetch infodict from accessible peers"))
+        {
+            throw new Exception(output);
+        }
+    }
+
+    public static async Task DownloadTorrentByUrlAsync(string torrentUrl, string filePath)
+    {
+        byte[] bytes;
+        using (HttpClient http = new())
+        {
+            bytes = await http.GetByteArrayAsync(torrentUrl);
+        }
+        await File.WriteAllBytesAsync(filePath, bytes);
     }
 }

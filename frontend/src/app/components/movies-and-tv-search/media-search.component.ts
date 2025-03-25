@@ -31,7 +31,15 @@ export class MediaSearchComponent implements OnDestroy {
         }
         this.loading = true;
         this.searchingSub = this.api.mediaSearch(value).subscribe(results => {
-          this.searchResults = results;
+          this.searchResults = results.map((r: any) => {
+            if(r.mediaType == "MOVIE"){
+              r.link = `/movies/download/${r.imdbId}`
+            } else if(r.mediaType == "SERIES"){
+              r.link = `/tv/download/${r.imdbId}`
+            }
+            return r
+          });
+          console.log(this.searchResults);
           this.loading = false;
         })
       });

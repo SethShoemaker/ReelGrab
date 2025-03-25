@@ -24,8 +24,8 @@ Console.WriteLine("Initialized TorrentIndex");
 var syncTorrentFiles = new SyncTorrentFiles();
 var uploadCompleted = new UploadCompleted();
 using var cts = new CancellationTokenSource();
-syncTorrentFiles.StartAsync(cts.Token);
-uploadCompleted.StartAsync(cts.Token);
+// syncTorrentFiles.StartAsync(cts.Token);
+// uploadCompleted.StartAsync(cts.Token);
 Console.CancelKeyPress += (sender, eventArgs) =>
 {
     cts.Cancel();
@@ -55,12 +55,14 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
+builder.Services.AddControllers();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseCors("Everything");
 }
+app.MapControllers();
 var mediaIndexRouter = new MediaIndexRouter();
 mediaIndexRouter.Route(app);
 var storageGatewayRouter = new StorageGatewayRouter();

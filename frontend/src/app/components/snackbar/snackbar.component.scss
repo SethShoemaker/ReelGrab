@@ -9,6 +9,7 @@ div#container {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    display: none;
 
     div.snack {
         background-color: var(--color14);

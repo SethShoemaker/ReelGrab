@@ -16,7 +16,9 @@ public class Db
     private static readonly List<Type> Migrations = [
         typeof(CreateTorrentTables),
         typeof(CreateMovieTables),
-        typeof(CreateSeriesTables)
+        typeof(CreateSeriesTables),
+        typeof(AddWantedFlagsToMovieAndSeriesTables),
+        typeof(CreateMovieStorageLocationsTable)
     ];
 
     public static async Task ApplyMigrationsAsync()
