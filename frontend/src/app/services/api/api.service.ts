@@ -60,6 +60,62 @@ export class ApiService {
     return this.http.get(`http://localhost:5242/api/torrents/inspect?url=${encodeURIComponent(torrentUrl)}`);
   }
 
+  checkSeriesExists(imdbId: string) {
+    return this.http.get(`http://localhost:5242/api/series/${imdbId}/exists`)
+      .pipe(
+        map((res: any) => res.exists)
+      )
+  }
+
+  getSeriesStorageLocations(imdbId: string) {
+    return this.http.get(`http://localhost:5242/api/series/${imdbId}/storage_locations`)
+      .pipe(
+        map((res: any) => res.storageLocations)
+      )
+  }
+
+  getSeriesWantedInfo(imdbId: string): Observable<{seasons: Array<{number: number, episodes: Array<{number: number, name: string, imdbId: string, wanted: boolean}>}>}> {
+    return this.http.get<{seasons: Array<{number: number, episodes: Array<{number: number, name: string, imdbId: string, wanted: boolean}>}>}>(`http://localhost:5242/api/series/${imdbId}/wanted`);
+  }
+
+  addSeries(imdbId: string, name: string, description: string|null, poster: string|null, startYear: number, endYear: number|null, seasons: Array<{number: number, episodes: Array<{number: number, name: string, imdbId: string, wanted: boolean}>}>){
+    return this.http.post(`http://localhost:5242/api/series`, {
+      ImdbId: imdbId,
+      Name: name,
+      Description: description,
+      Poster: poster,
+      StartYear: startYear,
+      EndYear: endYear,
+      Seasons: seasons.map(s => ({
+        Number: s.number,
+        Episodes: s.episodes.map(e => ({
+          Number: e.number,
+          Name: e.name,
+          ImdbId: e.imdbId,
+          Wanted: e.wanted
+        }))
+      }))
+    })
+  }
+
+  setSeriesSeasons(imdbId: string, seasons: Array<{number: number, episodes: Array<{number: number, name: string, imdbId: string}>}>): Observable<any> {
+    return this.http.post(`http://localhost:5242/api/series/${imdbId}/seasons`, {
+      seasons: seasons
+    })
+  }
+
+  setSeriesTorrents(imdbId: string, torrents: Array<{url: string, mappings: Array<{path: string, imdbId: string}>}>): Observable<any> {
+    return this.http.post(`http://localhost:5242/api/series/${imdbId}/torrent_mappings`, { torrents: torrents })
+  }
+
+  getSeriesTorrents(imdbId: string): Observable<any> {
+    return this.http.get(`http://localhost:5242/api/series/${imdbId}/torrent_mappings`)
+  }
+
+  setSeriesStorageLocations(imdbId: string, storageLocations: Array<string>): Observable<any> {
+    return this.http.post(`http://localhost:5242/api/series/${imdbId}/storage_locations`, {StorageLocations: storageLocations})
+  }
+
   checkMovieExists(imdbId: string): Observable<boolean> {
     return this.http.get(`http://localhost:5242/api/movies/${imdbId}/exists`)
       .pipe(

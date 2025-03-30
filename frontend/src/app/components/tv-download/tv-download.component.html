@@ -1,1 +1,198 @@
-<p>tv-download works!</p>
+<div id="container">
+    <div id="page-loading" *ngIf="loading; else notLoading">
+        loading
+    </div>
+    <ng-template #notLoading>
+        <div id="form-errors-container" *ngIf="formErrors != null && formErrors.length > 0">
+            <ng-container *ngFor="let error of formErrors">
+                <span>
+                    {{error}}
+                </span>
+                <br>
+            </ng-container>
+        </div>
+        <h1>{{title}}</h1>
+        <app-form-section-header>Episodes</app-form-section-header>
+        <div id="episode-selection-container">
+            <app-form-section-part>
+                <div id="episode-selection">
+                    <div class="head">
+                        <div></div>
+                        <div>
+                            <span>
+                                Season/Episode
+                            </span>
+                        </div>
+                        <div>
+                            <span>
+                                Name
+                            </span>
+                        </div>
+                    </div>
+                    <div class="body">
+                        <div class="row" *ngFor="let episode of episodes">
+                            <div>
+                                <input type="checkbox"
+                                    [checked]="episode.wanted"
+                                    (change)="episode.wanted = !episode.wanted">
+                            </div>
+                            <div>
+                                <span>
+                                    S{{episode.season | seasonEpisodeFormat }}E{{episode.episode | seasonEpisodeFormat }}
+                                </span>
+                            </div>
+                            <div>
+                                <span>
+                                    {{episode.title}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </app-form-section-part>
+        </div>
+        <app-form-section-header>Storage Locations</app-form-section-header>
+        <div id="storage-location-selection-container">
+            <app-form-section-part>
+                <div id="storage-location-selection">
+                    <div class="storage-location" *ngFor="let storageLocation of storageLocationEntries"
+                        [ngClass]="{'selected' : storageLocation[1].selected}"
+                        (click)="storageLocation[1].selected = !storageLocation[1].selected">
+                        <div class="image-container">
+                            <img [src]="storageLocation[1].img" *ngIf="storageLocation[1].displayType == 'LocalDisk'">
+                        </div>
+                        <div class="text-container">
+                            <span>{{storageLocation[1].type}}</span>
+                            <span>{{storageLocation[1].name}}</span>
+                        </div>
+                    </div>
+                </div>
+            </app-form-section-part>
+        </div>
+        <app-form-section-header>Torrent File Mapping</app-form-section-header>
+        <div id="torrent-file-mapping-container">
+            <app-form-section-part>
+                <div id="torrent-file-mapping">
+                    <input type="search" [formControl]="torrentSearchControl" placeholder="Search Torrents">
+                    <div id="torrent-search-results-container" *ngIf="torrentSearchLoading != null">
+                        <div *ngIf="torrentSearchLoading; else torrentSearchNotLoading">
+                            Searching
+                        </div>
+                        <ng-template #torrentSearchNotLoading>
+                            <div id="torrent-search-results">
+                                <div class="head">
+                                    <div>
+                                        <span>
+                                            Usages
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            Name
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            Seeders
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            Leechers
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="body">
+                                    <ng-container *ngFor="let torrent of torrents">
+                                        <div class="row"
+                                            (click)="selectedTorrent$.next({url: torrent.url, source: torrent.source, title: torrent.title, seeders: torrent.seeders, peers: torrent.peers}); onDownload()"
+                                            [class]="{'selected': selectedTorrent$.value?.url == torrent.url}">
+                                            <div>
+                                                <span>
+                                                    {{torrent.usages}}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span>
+                                                    {{torrent.title | nonBreakingSpaces}}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span>
+                                                    {{torrent.seeders}}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span>
+                                                    {{torrent.peers}}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </ng-container>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </div>
+                    <div id="torrent-file-fetch-results-container" *ngIf="selectedTorrentFilesLoading != null">
+                        <div id="torrent-file-episode-mapping">
+                            <div *ngIf="selectedTorrentFilesLoading; else selectedTorrentFilesNotLoading">
+                                Fetching Files
+                            </div>
+                            <ng-template #selectedTorrentFilesNotLoading>
+                                <div class="head">
+                                    <div>
+                                        <span>
+                                            Name
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            Size
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            Episode
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="body">
+                                    <div class="row" *ngFor="let file of selectedTorrentFiles">
+                                        <div>
+                                            <span>
+                                                {{file.path}}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                {{file.bytes | filesize }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <select (change)="torrentFileToEpisodeMapping$.next({url: selectedTorrent$.value!.url, source: selectedTorrent$.value!.source, title: selectedTorrent$.value!.title, seeders: selectedTorrent$.value!.seeders, peers: selectedTorrent$.value!.peers, path: file.path, event: $event, episodeImdbId: '' })">
+                                                <option value="">None</option>
+                                                <ng-container *ngFor="let episode of episodes">
+                                                    <ng-container *ngIf="episode.wanted">
+                                                        <option
+                                                            value="{{episode.imdbId}}"
+                                                            [disabled]="episodeToTorrentMap.has(episode.imdbId) && episodeToTorrentMap.get(episode.imdbId) != undefined"
+                                                            [selected]="episodeToTorrentMap.get(episode.imdbId)?.url == selectedTorrent$.value!.url && episodeToTorrentMap.get(episode.imdbId)?.path == file.path">
+                                                            {{episode.title}}
+                                                        </option>
+                                                    </ng-container>
+                                                </ng-container>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </div>
+                    </div>
+                </div>
+            </app-form-section-part>
+        </div>
+        <div id="download-button-container">
+            <button (click)="onDownload()">Download</button>
+        </div>
+    </ng-template>
+</div>
