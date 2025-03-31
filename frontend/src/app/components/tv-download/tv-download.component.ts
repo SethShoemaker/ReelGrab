@@ -274,10 +274,6 @@ export class TvDownloadComponent implements OnInit, OnDestroy {
       .pipe(
         tap(exists => console.log(`${this.imdbId} exists: ${exists}`)),
         switchMap(exists => {
-          if (exists) {
-            // update seasons
-            return of([]);
-          }
           const seasons = new Array<{ number: number, episodes: Array<{ number: number, name: string, imdbId: string, wanted: boolean }> }>();
           for (let i = 0; i < this.episodes.length; i++) {
             const episode = this.episodes[i];
@@ -295,8 +291,9 @@ export class TvDownloadComponent implements OnInit, OnDestroy {
               wanted: episode.wanted
             })
           }
-          console.log(seasons)
-          return this.api.addSeries(this.imdbId, this.title, this.plot, this.posterUrl, this.startYear, this.endYear, seasons);
+          return exists
+            ? this.api.updateSeriesEpisodes(this.imdbId, seasons)
+            : this.api.addSeries(this.imdbId, this.title, this.plot, this.posterUrl, this.startYear, this.endYear, seasons);
         }),
         switchMap(() => {
           const apiTorrents = new Array<{ url: string, mappings: Array<{ path: string, imdbId: string }> }>();

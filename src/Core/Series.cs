@@ -75,6 +75,130 @@ public partial class Application
         }
     }
 
+    public record GetSeriesEpisodesAsyncResultEpisode(int Id, int Number, string ImdbId, string Name, bool Wanted);
+
+    public record GetSeriesEpisodesAsyncResultSeason(int Id, int Number, List<GetSeriesEpisodesAsyncResultEpisode> Episodes);
+
+    public record GetSeriesEpisodesAsyncResult(List<GetSeriesEpisodesAsyncResultSeason> Seasons);
+
+    private record GetSeriesEpisodesAsyncRow(long SeasonId, long SeasonNumber, long EpisodeId, long EpisodeNumber, string EpisodeImdbId, string EpisodeName, long Wanted);
+
+    public async Task<GetSeriesEpisodesAsyncResult> GetSeriesEpisodesAsync(string imdbId)
+    {
+        if (!await SeriesWithImdbIdExistsAsync(imdbId))
+        {
+            throw new Exception($"{imdbId} does not exist");
+        }
+        using var db = Db.CreateConnection();
+        var rows = await db
+            .Query("Series")
+            .Join("SeriesSeason", j => j.On("Series.Id", "SeriesSeason.SeriesId"))
+            .Join("SeriesEpisode", j => j.On("SeriesSeason.Id", "SeriesEpisode.SeasonId"))
+            .Where("Series.ImdbId", imdbId)
+            .Select(["SeriesSeason.Id", "SeriesSeason.Number", "SeriesEpisode.Id", "SeriesEpisode.Number", "SeriesEpisode.ImdbId", "SeriesEpisode.Name", "SeriesEpisode.Wanted"])
+            .GetAsync<GetSeriesEpisodesAsyncRow>();
+        List<GetSeriesEpisodesAsyncResultSeason> seasons = new();
+        foreach (var row in rows)
+        {
+            GetSeriesEpisodesAsyncResultSeason? season = seasons.FirstOrDefault(s => s.Id == row.SeasonId);
+            if (season == null)
+            {
+                seasons.Add(season = new((int)row.SeasonId, (int)row.SeasonNumber, []));
+            }
+            season.Episodes.Add(new((int)row.EpisodeId, (int)row.EpisodeNumber, row.EpisodeImdbId, row.EpisodeName, row.Wanted == 1));
+        }
+        return new(seasons);
+    }
+
+    public record UpdateSeriesEpisodesAsyncEpisode(int Number, string ImdbId, string Name);
+
+    public record UpdateSeriesEpisodesAsyncSeason(int Number, List<UpdateSeriesEpisodesAsyncEpisode> Episodes);
+
+    public async Task UpdateSeriesEpisodesAsync(string imdbId, List<UpdateSeriesEpisodesAsyncSeason> seasons)
+    {
+        if (!await SeriesWithImdbIdExistsAsync(imdbId))
+        {
+            throw new Exception($"{imdbId} does not exist");
+        }
+        using var db = Db.CreateConnection();
+        using var transaction = db.Connection.BeginTransaction();
+        try
+        {
+            int seriesId = await db
+                .Query("Series")
+                .Where("ImdbId", imdbId)
+                .Select("Id")
+                .FirstAsync<int>();
+            foreach (var season in seasons)
+            {
+                int? seasonId = await db
+                    .Query("SeriesSeason")
+                    .Where("Number", season.Number)
+                    .Where("SeriesId", seriesId)
+                    .Select("Id")
+                    .FirstOrDefaultAsync<int>();
+                bool seasonMissing = seasonId == null;
+                if (seasonMissing)
+                {
+                    seasonId = await db
+                        .Query("SeriesSeason")
+                        .InsertGetIdAsync<int>(new
+                        {
+                            SeriesId = seriesId,
+                            Number = season.Number
+                        });
+                }
+                foreach (var episode in season.Episodes)
+                {
+                    bool episodeMissing = seasonMissing || (await db
+                        .Query("SeriesEpisode")
+                        .Where("SeasonId", seasonId)
+                        .Where("Number", episode.Number)
+                        .CountAsync<int>()) == 0;
+                    if (episodeMissing)
+                    {
+                        await db
+                            .Query("SeriesEpisode")
+                            .InsertAsync(new
+                            {
+                                SeasonId = seasonId,
+                                Number = episode.Number,
+                                ImdbId = episode.ImdbId,
+                                Name = episode.Name,
+                                Wanted = 0
+                            });
+                        continue;
+                    }
+                    bool episodeUpdatable = (await db
+                        .Query("SeriesEpisode")
+                        .Where("SeasonId", seasonId)
+                        .Where("ImdbId", episode.ImdbId)
+                        .Where("Number", episode.Number)
+                        .Where("Name", episode.Name)
+                        .CountAsync<int>()) == 0;
+                    if (episodeUpdatable)
+                    {
+                        await db
+                            .Query("SeriesEpisode")
+                            .Where("SeasonId", seasonId)
+                            .Where("Number", episode.Number)
+                            .UpdateAsync(new
+                            {
+                                Name = episode.Name,
+                                ImdbId = episode.ImdbId
+                            });
+                    }
+                }
+            }
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
     public async Task SetSeriesEpisodesWantedAsync(List<string> episodeImdbIds, bool wanted = true)
     {
         using var db = Db.CreateConnection();

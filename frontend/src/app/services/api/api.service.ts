@@ -98,8 +98,8 @@ export class ApiService {
     })
   }
 
-  setSeriesSeasons(imdbId: string, seasons: Array<{number: number, episodes: Array<{number: number, name: string, imdbId: string}>}>): Observable<any> {
-    return this.http.post(`http://localhost:5242/api/series/${imdbId}/seasons`, {
+  updateSeriesEpisodes(imdbId: string, seasons: Array<{number: number, episodes: Array<{number: number, name: string, imdbId: string}>}>): Observable<any> {
+    return this.http.patch(`http://localhost:5242/api/series/${imdbId}/episodes`, {
       seasons: seasons
     })
   }
