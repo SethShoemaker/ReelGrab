@@ -235,5 +235,8 @@ export class MoviesDownloadComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.torrentSearchControlSub.unsubscribe();
+    this.selectedTorrentSub.unsubscribe();
+    this.torrentMovieMappingSub.unsubscribe();
   }
 }

@@ -318,6 +318,8 @@ export class TvDownloadComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    throw new Error('Method not implemented.');
+    this.torrentSearchControlSub.unsubscribe();
+    this.selectedTorrentSub.unsubscribe();
+    this.torrentFileToEpisodeMappingSub.unsubscribe();
   }
 }
