@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using ReelGrab.Core;
 using ReelGrab.Core.Processing;
-using ReelGrab.Web.Routers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,14 +62,6 @@ if (app.Environment.IsDevelopment())
     app.UseCors("Everything");
 }
 app.MapControllers();
-var mediaIndexRouter = new MediaIndexRouter();
-mediaIndexRouter.Route(app);
-var storageGatewayRouter = new StorageGatewayRouter();
-storageGatewayRouter.Route(app);
-var torrentIndexRouter = new TorrentIndexRouter();
-torrentIndexRouter.Route(app);
-var wantedMediaRouter = new MediaWantedRouter();
-wantedMediaRouter.Route(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
