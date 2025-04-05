@@ -19,7 +19,7 @@ export class ApiService {
   }
 
   getMovieDetails(movieId: string): Observable<any> {
-    return this.http.get(`http://localhost:5242/media/movie/${movieId}/details`);
+    return this.http.get(`http://localhost:5242/media/movies/${movieId}/details`);
   }
 
   getSeriesDetails(seriesId: string): Observable<any> {

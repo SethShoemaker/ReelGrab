@@ -67,7 +67,7 @@ public class TorrentIndexController : ControllerBase
             await Response.WriteAsJsonAsync(new { message = "Must provide query" });
             return;
         }
-        await Response.WriteAsJsonAsync(await TorrentIndexes.TorrentIndex.instance.SearchMovie(query));
+        await Response.WriteAsJsonAsync(await TorrentIndexes.TorrentIndex.instance.SearchSeries(query));
     }
 
     [HttpGet("search/movie")]
@@ -78,6 +78,6 @@ public class TorrentIndexController : ControllerBase
             await Response.WriteAsJsonAsync(new { message = "Must provide query" });
             return;
         }
-        await Response.WriteAsJsonAsync(await TorrentIndexes.TorrentIndex.instance.SearchSeries(query));
+        await Response.WriteAsJsonAsync(await TorrentIndexes.TorrentIndex.instance.SearchMovie(query));
     }
 }
