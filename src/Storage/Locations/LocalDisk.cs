@@ -18,20 +18,27 @@ public class LocalDiskStorageLocation : IStorageLocation
         BasePath = basePath;
     }
 
-    public async Task SaveAsync(string downloadableId, string fileExtension, Stream contents)
+    private async Task<string> GetFileNameForMovieAsync(int movieId)
     {
-        string path = Path.Join(BasePath, await GetFilePathForDownloadable(downloadableId, fileExtension));
+        Application.MovieDetails movieDetails = await Application.instance.GetMovieDetailsAsync(movieId);
+        SlugHelperConfiguration config = new();
+        config.ForceLowerCase = true;
+        config.CollapseWhiteSpace = true;
+        config.CollapseDashes = true;
+        SlugHelper slug = new();
+        return $"{slug.GenerateSlug(movieDetails.Name).Replace('-', '_')}_____{movieDetails.ImdbId}_____{movieId}";
+    }
+
+    public async Task SaveMovieAsync(int movieId, string type, string fileExtension, Stream contents)
+    {
+        string path = Path.Join(BasePath, $"{await GetFileNameForMovieAsync(movieId)}{fileExtension}");
         await Filesystem.WriteStreamToFileAsync(contents, path);
     }
 
-    public async Task<bool> HasSavedAsync(string downloadableId, string fileExtension)
+    public Task<bool> HasMovieSavedAsync(int movieId, string type)
     {
-        string path = Path.Join(BasePath, await GetFilePathForDownloadable(downloadableId, fileExtension));
-        return File.Exists(path);
-    }
-
-    private async Task<string> GetFilePathForDownloadable(string downloadableId, string fileExtension)
-    {
-        throw new NotImplementedException();
+        FileInfo[] files = new DirectoryInfo(BasePath).GetFiles("*", SearchOption.TopDirectoryOnly);
+        bool exists = files.Any(f => Path.GetFileNameWithoutExtension(f.Name).EndsWith(movieId.ToString()));
+        return Task.FromResult(exists);
     }
 }

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ReelGrab.Core.Background.Movies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 builder.Services.AddControllers();
+
+builder.Services.AddHostedService<AddMovieTorrents>();
+builder.Services.AddHostedService<ProcessCompletedMovies>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

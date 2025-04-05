@@ -22,6 +22,15 @@ public class LocalTransmission : ITorrentClientImplementation
         return output.Contains("Done") && output.Contains("ETA");
     }
 
+    public async Task ProvisionTorrentByLocalPathAsync(string torrentLocalPath)
+    {
+        string output = await RunTransmissionCommandAsync($"{Host}:{Port} --start-paused -a {torrentLocalPath}");
+        if (!output.ContainsMoreThanOnce("responded: \"success\""))
+        {
+            throw new TorrentException(output);
+        }
+    }
+
     public async Task ProvisionTorrentByUrlAsync(string torrentFileUrl)
     {
         string filePath = await TorrentDownloader.GetTorrentFilePathByUrlAsync(torrentFileUrl);
@@ -40,6 +49,11 @@ public class LocalTransmission : ITorrentClientImplementation
         {
             throw new TorrentException(output);
         }
+    }
+
+    public async Task RemoveTorrentByHashAsync(string torrentHash)
+    {
+        await RunTransmissionCommandAsync($"{Host}:{Port} -t {torrentHash} --remove-and-delete");
     }
 
     public async Task<List<ITorrentClient.TorrentFileInfo>> GetTorrentFilesByHashAsync(string torrentHash)
@@ -118,10 +132,9 @@ public class LocalTransmission : ITorrentClientImplementation
         }
     }
 
-    public async Task<Stream> GetCompletedTorrentFileContentsByHashAndFileNumberAsync(string torrentHash, string torrentFilePath)
+    public Task<Stream> GetCompletedTorrentFileContentsByHashAndFileNumberAsync(string torrentHash, string torrentFilePath)
     {
-        string name = await GetTorrentNameByHashAsync(torrentHash);
-        return File.OpenRead(Path.Join(baseDownloadPath, torrentFilePath));
+        return Task.FromResult((Stream)File.OpenRead(Path.Join(baseDownloadPath, torrentFilePath)));
     }
 
     public async Task<string> GetTorrentNameByHashAsync(string torrentHash)

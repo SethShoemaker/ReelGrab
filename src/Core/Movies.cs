@@ -223,6 +223,18 @@ public partial class Application
         transaction.Commit();
     }
 
+    public async Task<List<string>> GetMovieStorageLocationsAsync(int movieId)
+    {
+        using var db = Db.CreateConnection();
+        return (await db
+            .Query("Movie")
+            .Join("MovieStorageLocation", j => j.On("Movie.Id", "MovieStorageLocation.MovieId"))
+            .Where("Movie.Id", movieId)
+            .Select("MovieStorageLocation.StorageLocation")
+            .GetAsync<string>())
+            .ToList();
+    }
+
     public async Task<List<string>> GetMovieStorageLocationsAsync(string imdbId)
     {
         using var db = Db.CreateConnection();
@@ -233,5 +245,17 @@ public partial class Application
             .Select("MovieStorageLocation.StorageLocation")
             .GetAsync<string>())
             .ToList();
+    }
+
+    public record MovieDetails(string ImdbId, string Name);
+
+    public async Task<MovieDetails> GetMovieDetailsAsync(int movieId)
+    {
+        using var db = Db.CreateConnection();
+        return await db
+            .Query("Movie")
+            .Where("Id", movieId)
+            .Select(["ImdbId", "Name"])
+            .FirstAsync<MovieDetails>();
     }
 }
