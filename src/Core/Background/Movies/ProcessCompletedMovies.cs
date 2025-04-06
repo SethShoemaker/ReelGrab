@@ -78,7 +78,7 @@ public class ProcessCompletedMovies : Job
             {
                 continue;
             }
-            Stream contents = await torrentClient.GetCompletedTorrentFileContentsByHashAndFileNumberAsync(movieTorrent.Hash, movieTorrent.Path);
+            Stream contents = await torrentClient.GetCompletedTorrentFileContentsByHashAndFilePathAsync(movieTorrent.Hash, movieTorrent.Path);
             List<string> storageLocations = await Application.instance.GetMovieStorageLocationsAsync(movieTorrent.MovieId);
             foreach (var storageLocation in storageLocations)
             {

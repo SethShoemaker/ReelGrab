@@ -26,5 +26,5 @@ public interface ITorrentClient
 
     public Task StartTorrentByHashAsync(string torrentHash);
 
-    public Task<Stream> GetCompletedTorrentFileContentsByHashAndFileNumberAsync(string torrentHash, string torrentFilePath);
+    public Task<Stream> GetCompletedTorrentFileContentsByHashAndFilePathAsync(string torrentHash, string torrentFilePath);
 }

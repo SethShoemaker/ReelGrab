@@ -132,7 +132,7 @@ public class LocalTransmission : ITorrentClientImplementation
         }
     }
 
-    public Task<Stream> GetCompletedTorrentFileContentsByHashAndFileNumberAsync(string torrentHash, string torrentFilePath)
+    public Task<Stream> GetCompletedTorrentFileContentsByHashAndFilePathAsync(string torrentHash, string torrentFilePath)
     {
         return Task.FromResult((Stream)File.OpenRead(Path.Join(baseDownloadPath, torrentFilePath)));
     }

@@ -19,10 +19,10 @@ public class TorrentClient : ITorrentClient
         return Implementation!.ConnectionGoodAsync();
     }
 
-    public Task<Stream> GetCompletedTorrentFileContentsByHashAndFileNumberAsync(string torrentHash, string torrentFilePath)
+    public Task<Stream> GetCompletedTorrentFileContentsByHashAndFilePathAsync(string torrentHash, string torrentFilePath)
     {
         EnsureTorrentClientExists();
-        return Implementation!.GetCompletedTorrentFileContentsByHashAndFileNumberAsync(torrentHash, torrentFilePath);
+        return Implementation!.GetCompletedTorrentFileContentsByHashAndFilePathAsync(torrentHash, torrentFilePath);
     }
 
     public Task<List<ITorrentClient.TorrentFileInfo>> GetTorrentFilesByHashAsync(string torrentHash)
