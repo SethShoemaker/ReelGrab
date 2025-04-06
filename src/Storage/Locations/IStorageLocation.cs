@@ -11,4 +11,8 @@ public interface IStorageLocation
     public Task SaveMovieAsync(int movieId, string type, string fileExtenstion, Stream contents);
 
     public Task<bool> HasMovieSavedAsync(int movieId, string type);
+
+    public Task SaveSeriesEpisodeAsync(int episodeId, string type, string fileExtension, Stream contents);
+
+    public Task<bool> HasSeriesEpisodeAsync(int episodeId, string type);
 }

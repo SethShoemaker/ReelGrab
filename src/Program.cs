@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using ReelGrab.Core.Background.Movies;
+using ReelGrab.Core.Background.Series;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +45,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddHostedService<AddMovieTorrents>();
 builder.Services.AddHostedService<ProcessCompletedMovies>();
+builder.Services.AddHostedService<AddSeriesTorrents>();
+builder.Services.AddHostedService<ProcessCompletedSeriesEpisodes>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

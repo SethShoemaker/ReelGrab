@@ -41,4 +41,40 @@ public class LocalDiskStorageLocation : IStorageLocation
         bool exists = files.Any(f => Path.GetFileNameWithoutExtension(f.Name).EndsWith(movieId.ToString()));
         return Task.FromResult(exists);
     }
+
+    private async Task<string> GetFileNameForSeriesEpisodeAsync(int episodeId)
+    {
+        Application.SeriesEpisodeDetails details = await Application.instance.GetSeriesEpisodeDetailsAsync(episodeId);
+        SlugHelperConfiguration config = new();
+        config.ForceLowerCase = true;
+        config.CollapseWhiteSpace = true;
+        config.CollapseDashes = true;
+        SlugHelper slug = new();
+        string seriesPortion = $"{slug.GenerateSlug(details.SeriesName).Replace('-', '_')}_____{details.SeriesImdbId}";
+        return $"{seriesPortion}/{seriesPortion}_____S{SeriesFormatting.FormatSeason(details.SeasonNumber)}E{SeriesFormatting.FormatEpisode(details.EpisodeNumber)}_____{slug.GenerateSlug(details.EpisodeName).Replace('-', '_')}_____{details.EpisodeImdbId}_____{details.SeasonNumber}_{details.EpisodeNumber}";
+    }
+
+    public async Task SaveSeriesEpisodeAsync(int episodeId, string type, string fileExtension, Stream contents)
+    {
+        string path = Path.Join(BasePath, $"{await GetFileNameForSeriesEpisodeAsync(episodeId)}{fileExtension}");
+        await Filesystem.WriteStreamToFileAsync(contents, path);
+    }
+
+    public async Task<bool> HasSeriesEpisodeAsync(int episodeId, string type)
+    {
+        Application.SeriesEpisodeDetails details = await Application.instance.GetSeriesEpisodeDetailsAsync(episodeId);
+        SlugHelperConfiguration config = new();
+        config.ForceLowerCase = true;
+        config.CollapseWhiteSpace = true;
+        config.CollapseDashes = true;
+        SlugHelper slug = new();
+        string seriesPortion = $"{slug.GenerateSlug(details.SeriesName).Replace('-', '_')}_____{details.SeriesImdbId}";
+        if(!Directory.Exists(Path.Join(BasePath, seriesPortion)))
+        {
+            return false;
+        }
+        FileInfo[] files = new DirectoryInfo(Path.Join(BasePath, seriesPortion)).GetFiles("*", SearchOption.TopDirectoryOnly);
+        bool exists = files.Any(f => Path.GetFileNameWithoutExtension(f.Name).EndsWith($"{details.SeasonNumber}_{details.EpisodeNumber}"));
+        return exists;
+    }
 }

@@ -366,6 +366,18 @@ public partial class Application
         transaction.Commit();
     }
 
+    public async Task<List<string>> GetSeriesStorageLocationsAsync(int id)
+    {
+        using var db = Db.CreateConnection();
+        return (await db
+            .Query("Series")
+            .Join("SeriesStorageLocation", j => j.On("Series.Id", "SeriesStorageLocation.SeriesId"))
+            .Where("Series.Id", id)
+            .Select("SeriesStorageLocation.StorageLocation")
+            .GetAsync<string>())
+            .ToList();
+    }
+
     public async Task<List<string>> GetSeriesStorageLocationsAsync(string imdbId)
     {
         using var db = Db.CreateConnection();
@@ -386,5 +398,22 @@ public partial class Application
             .Where("ImdbId", episodeImdbId)
             .Select("Id")
             .FirstAsync<int>();
+    }
+
+    public record SeriesEpisodeDetails(string SeriesName, string SeriesImdbId, int SeasonId, int SeasonNumber, int EpisodeNumber, string EpisodeName, string EpisodeImdbId);
+
+    private record GetSeriesEpisodeDetailsAsyncRow(string SeriesName, string SeriesImdbId, long SeasonId, long SeasonNumber, long EpisodeNumber, string EpisodeName, string EpisodeImdbId);
+
+    public async Task<SeriesEpisodeDetails> GetSeriesEpisodeDetailsAsync(int episodeId)
+    {
+        using var db = Db.CreateConnection();
+        var row = await db
+            .Query("SeriesEpisode")
+            .Join("SeriesSeason", j => j.On("SeriesEpisode.SeasonId", "SeriesSeason.Id"))
+            .Join("Series", j => j.On("SeriesSeason.SeriesId", "Series.Id"))
+            .Select(["Series.Name AS SeriesName", "Series.ImdbId AS SeriesImdbId", "SeriesSeason.Id AS SeasonId", "SeriesSeason.Number AS SeasonNumber", "SeriesEpisode.Number AS EpisodeNumber", "SeriesEpisode.Name AS EpisodeName", "SeriesEpisode.ImdbId AS EpisodeImdbId"])
+            .Where("SeriesEpisode.Id", episodeId)
+            .FirstAsync<GetSeriesEpisodeDetailsAsyncRow>();
+        return new(row.SeriesName, row.SeriesImdbId, (int)row.SeasonId, (int)row.SeasonNumber, (int)row.EpisodeNumber, row.EpisodeName, row.EpisodeImdbId);
     }
 }
