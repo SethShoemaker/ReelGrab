@@ -25,7 +25,6 @@ public class AddMovieTorrents : Job
             .Join("Torrent", j => j.On("MovieTorrent.TorrentId", "Torrent.Id"))
             .Join("MovieTorrentFile", j => j.On("MovieTorrent.Id", "MovieTorrentFile.MovieTorrentId"))
             .Join("TorrentFile", j => j.On("MovieTorrentFile.TorrentFileId", "TorrentFile.Id"))
-            .Join("MovieStorageLocation", j => j.On("Movie.Id", "MovieStorageLocation.MovieId"))
             .Where("MovieTorrentFile.Name", "Theatrical Release")
             .Select(["Movie.Id AS MovieId", "Movie.ImdbId AS MovieImdbId", "Torrent.Id AS TorrentId", "Torrent.Hash", "TorrentFile.Path"])
             .GetAsync<Row>(cancellationToken: stoppingToken);
