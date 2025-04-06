@@ -6,6 +6,10 @@ public abstract class Job : BackgroundService
     {
         while (true)
         {
+            if(stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
             try
             {
                 await RunAsync(stoppingToken);
