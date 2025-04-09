@@ -322,6 +322,7 @@ public partial class Application
             .LeftJoin("SeriesTorrentMapping", j => j.On("TorrentFile.Id", "SeriesTorrentMapping.TorrentFileId"))
             .LeftJoin("SeriesEpisode", j => j.On("SeriesTorrentMapping.EpisodeId", "SeriesEpisode.Id"))
             .Select(["Torrent.Url AS TorrentUrl", "Torrent.Name AS TorrentName", "Torrent.Source AS TorrentSource", "TorrentFile.Path AS TorrentFilePath", "SeriesEpisode.ImdbId AS EpisodeImdbId"])
+            .Where("Series.ImdbId", imdbId)
             .GetAsync<GetSeriesTorrentMappingsAsyncRow>();
         GetSeriesTorrentMappingsAsyncResult result = new([]);
         foreach(var row in rows)
