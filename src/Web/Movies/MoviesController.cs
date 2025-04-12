@@ -65,4 +65,10 @@ public class MoviesController : ControllerBase
     {
         await Response.WriteAsJsonAsync(new { StorageLocations = await Application.instance.GetMovieStorageLocationsAsync(imdbId)});
     }
+
+    [HttpGet("in_progress")]
+    public async Task GetInProgress()
+    {
+        await Response.WriteAsJsonAsync(await Application.instance.GetMoviesInProgressAsync());
+    }
 }

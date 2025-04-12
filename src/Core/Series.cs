@@ -1,5 +1,9 @@
 using ReelGrab.Database;
 using ReelGrab.MediaIndexes;
+using ReelGrab.Storage;
+using ReelGrab.Storage.Locations;
+using ReelGrab.TorrentClients;
+using ReelGrab.TorrentClients.Exceptions;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -416,5 +420,65 @@ public partial class Application
             .Where("SeriesEpisode.Id", episodeId)
             .FirstAsync<GetSeriesEpisodeDetailsAsyncRow>();
         return new(row.SeriesName, row.SeriesImdbId, (int)row.SeasonId, (int)row.SeasonNumber, (int)row.EpisodeNumber, row.EpisodeName, row.EpisodeImdbId);
+    }
+
+    public async Task<bool> SeriesEpisodeIsSavedSomewhereAsync(int episodeId, List<string> storageLocations)
+    {
+        foreach (var storageLocation in storageLocations)
+        {
+            IStorageLocation? storage = StorageGateway.instance.StorageLocations.FirstOrDefault(sl => sl.Id == storageLocation);
+            if (storage != null && await storage.HasSeriesEpisodeAsync(episodeId, "Original Broadcast"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public record GetSeriesInProgressSeries(int Id, string ImdbId, string Name, List<GetSeriesInProgressSeriesEpisode> Episodes, List<string> StorageLocations);
+
+    public record GetSeriesInProgressSeriesEpisode(int Season, int Episode, int Id, string ImdbId, string Name, int Progress);
+
+    private record GetSeriesInProgressSeriesRow(long SeriesId, string SeriesImdbId, string Name, string Hash, string Path, long EpisodeNumber, long SeasonNumber, long EpisodeId, string EpisodeImdbId, string EpisodeName);
+
+    public async Task<List<GetSeriesInProgressSeries>> GetSeriesInProgressAsync()
+    {
+        using var db = Db.CreateConnection();
+        var rows = await db
+            .Query("Series")
+            .Join("SeriesTorrent", j => j.On("Series.Id", "SeriesTorrent.SeriesId"))
+            .Join("Torrent", j => j.On("SeriesTorrent.TorrentId", "Torrent.Id"))
+            .Join("SeriesTorrentMapping", j => j.On("SeriesTorrent.Id", "SeriesTorrentMapping.SeriesTorrentId"))
+            .Join("TorrentFile", j => j.On("SeriesTorrentMapping.TorrentFileId", "TorrentFile.Id"))
+            .Join("SeriesEpisode", j => j.On("SeriesTorrentMapping.EpisodeId", "SeriesEpisode.Id"))
+            .Join("SeriesSeason", j => j.On("SeriesEpisode.SeasonId", "SeriesSeason.Id"))
+            .Where("SeriesTorrentMapping.Name", "Original Broadcast")
+            .Select(["Series.Id AS SeriesId", "Series.ImdbId AS SeriesImdbId", "Series.Name", "Torrent.Hash", "TorrentFile.Path", "SeriesEpisode.Number AS EpisodeNumber", "SeriesSeason.Number AS SeasonNumber", "SeriesEpisode.Id AS EpisodeId", "SeriesEpisode.ImdbId AS EpisodeImdbId", "SeriesEpisode.Name AS EpisodeName"])
+            .GetAsync<GetSeriesInProgressSeriesRow>();
+        List<GetSeriesInProgressSeries> serieses = [];
+        Dictionary<int, List<string>> storageLocationsMaps = new();
+        foreach(var row in rows)
+        {
+            if(!storageLocationsMaps.TryGetValue((int)row.SeriesId, out List<string>? storageLocations))
+            {
+                storageLocationsMaps[(int)row.SeriesId] = storageLocations = await GetSeriesStorageLocationsAsync((int)row.SeriesId);
+            }
+            GetSeriesInProgressSeries? series = serieses.FirstOrDefault(s => s.Id == (int)row.SeriesId);
+            if(series == null)
+            {
+                serieses.Add(series = new((int)row.SeriesId, row.SeriesImdbId, row.Name, [], storageLocations));
+            }
+            int progress;
+            try{
+                List<ITorrentClient.TorrentFileInfo> torrentFiles = await TorrentClient.instance.GetTorrentFilesByHashAsync(row.Hash);
+                progress = torrentFiles.First(tf => tf.Path == row.Path).Progress;
+            } catch(TorrentDoesNotExistException){
+                progress = await SeriesEpisodeIsSavedSomewhereAsync((int)row.EpisodeId, storageLocations)
+                    ? 100
+                    : 0;
+            }
+            series.Episodes.Add(new((int)row.SeasonNumber, (int)row.EpisodeNumber, (int)row.EpisodeId, row.EpisodeImdbId, row.EpisodeName, progress));
+        }
+        return serieses;
     }
 }

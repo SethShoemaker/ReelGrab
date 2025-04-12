@@ -117,6 +117,14 @@ export class ApiService {
       )
   }
 
+  getMoviesInProgress(): Observable<Array<{id: number, imdbId: string, name: string, storageLocations: Array<string>, progress: number}>> {
+    return this.http.get<Array<{id: number, imdbId: string, name: string, storageLocations: Array<string>, progress: number}>>(`http://localhost:5242/api/movies/in_progress`);
+  }
+
+  getSeriesInProgress(): Observable<Array<{id: number, imdbId: string, name: string, episodes: Array<{season: number, episode: number, imdbId: string, name: string, progress: number}>, storageLocations: Array<string>}>> {
+    return this.http.get<Array<{id: number, imdbId: string, name: string, episodes: Array<{season: number, episode: number, imdbId: string, name: string, progress: number}>, storageLocations: Array<string>}>>(`http://localhost:5242/api/series/in_progress`)
+  }
+
   getMovieStorageLocations(imdbId: string): Observable<Array<string>> {
     return this.http.get(`http://localhost:5242/api/movies/${imdbId}/storage_locations`)
       .pipe(

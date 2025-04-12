@@ -60,6 +60,14 @@ div#container{
                         span {
                             font-size: var(--table-row-font-size);
                             font-weight: var(--table-row-font-weight);
+
+                            a{
+                                color: inherit;
+                                text-decoration: none;
+                                &:hover{
+                                    text-decoration: underline;
+                                }
+                            }
                         }
                     }
                 }

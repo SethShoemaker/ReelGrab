@@ -100,4 +100,10 @@ public class SeriesController : ControllerBase
     {
         await Response.WriteAsJsonAsync(new { StorageLocations = await Application.instance.GetSeriesStorageLocationsAsync(imdbId)});
     }
+
+    [HttpGet("in_progress")]
+    public async Task GetInProgress()
+    {
+        await Response.WriteAsJsonAsync(await Application.instance.GetSeriesInProgressAsync());
+    }
 }

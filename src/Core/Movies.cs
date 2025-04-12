@@ -1,5 +1,9 @@
 using ReelGrab.Database;
 using ReelGrab.MediaIndexes;
+using ReelGrab.Storage;
+using ReelGrab.Storage.Locations;
+using ReelGrab.TorrentClients;
+using ReelGrab.TorrentClients.Exceptions;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -257,5 +261,57 @@ public partial class Application
             .Where("Id", movieId)
             .Select(["ImdbId", "Name"])
             .FirstAsync<MovieDetails>();
+    }
+
+    public async Task<bool> MovieIsSavedSomewhereAsync(int movieId)
+    {
+        foreach (var storageLocation in await GetMovieStorageLocationsAsync(movieId))
+        {
+            IStorageLocation? storage = StorageGateway.instance.StorageLocations.FirstOrDefault(sl => sl.Id == storageLocation);
+            if (storage != null && await storage.HasMovieSavedAsync(movieId, "Theatrical Release"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public record GetMoviesInProgressMovie(int Id, string ImdbId, string Name, List<string> StorageLocations, int Progress);
+
+    private record GetMoviesInProgressMovieRow(long Id, string ImdbId, string Name, string Hash, string Path);
+
+    public async Task<List<GetMoviesInProgressMovie>> GetMoviesInProgressAsync()
+    {
+        using var db = Db.CreateConnection();
+        var rows = await db
+            .Query("Movie")
+            .Join("MovieTorrent", j => j.On("Movie.Id", "MovieTorrent.MovieId"))
+            .Join("Torrent", j => j.On("MovieTorrent.TorrentId", "Torrent.Id"))
+            .Join("MovieTorrentFile", j => j.On("MovieTorrent.Id", "MovieTorrentFile.MovieTorrentId"))
+            .Join("TorrentFile", j => j.On("MovieTorrentFile.TorrentFileId", "TorrentFile.Id"))
+            .Where("MovieTorrentFile.Name", "Theatrical Release")
+            .Select(["Movie.Id", "Movie.ImdbId", "Movie.Name", "Torrent.Hash", "TorrentFile.Path"])
+            .GetAsync<GetMoviesInProgressMovieRow>();
+        List<GetMoviesInProgressMovie> movies = [];
+        foreach(var row in rows)
+        {
+            int progress;
+            try{
+                List<ITorrentClient.TorrentFileInfo> torrentFiles = await TorrentClient.instance.GetTorrentFilesByHashAsync(row.Hash);
+                progress = torrentFiles.First(tf => tf.Path == row.Path).Progress;
+            } catch(TorrentDoesNotExistException){
+                progress = await MovieIsSavedSomewhereAsync((int)row.Id)
+                    ? 100
+                    : 0;
+            }
+                movies.Add(new(
+                    (int)row.Id,
+                    row.ImdbId,
+                    row.Name,
+                    await GetMovieStorageLocationsAsync((int)row.Id),
+                    progress
+                ));
+        }
+        return movies;
     }
 }

@@ -26,7 +26,7 @@
                         <div class="row" *ngFor="let media of inProgressMedia">
                             <div>
                                 <span>
-                                    {{media.name}}
+                                    <a routerLink="{{media.link}}">{{media.name}}</a>
                                 </span>
                             </div>
                             <div>
