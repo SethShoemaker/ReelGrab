@@ -114,7 +114,7 @@ public partial class Application
         return new(seasons);
     }
 
-    public record UpdateSeriesEpisodesAsyncEpisode(int Number, string ImdbId, string Name);
+    public record UpdateSeriesEpisodesAsyncEpisode(int Number, string ImdbId, string Name, bool Wanted);
 
     public record UpdateSeriesEpisodesAsyncSeason(int Number, List<UpdateSeriesEpisodesAsyncEpisode> Episodes);
 
@@ -169,7 +169,7 @@ public partial class Application
                                 Number = episode.Number,
                                 ImdbId = episode.ImdbId,
                                 Name = episode.Name,
-                                Wanted = 0
+                                Wanted = episode.Wanted ? 1 : 0
                             });
                         continue;
                     }
@@ -179,6 +179,7 @@ public partial class Application
                         .Where("ImdbId", episode.ImdbId)
                         .Where("Number", episode.Number)
                         .Where("Name", episode.Name)
+                        .Where("Wanted", episode.Wanted ? 1 : 0)
                         .CountAsync<int>()) == 0;
                     if (episodeUpdatable)
                     {
@@ -189,7 +190,8 @@ public partial class Application
                             .UpdateAsync(new
                             {
                                 Name = episode.Name,
-                                ImdbId = episode.ImdbId
+                                ImdbId = episode.ImdbId,
+                                Wanted = episode.Wanted ? 1 : 0
                             });
                     }
                 }

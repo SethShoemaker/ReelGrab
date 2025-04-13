@@ -53,7 +53,8 @@ public class SeriesController : ControllerBase
             Episodes: s.Episodes.Select(e => new Application.UpdateSeriesEpisodesAsyncEpisode(
                 Number: e.Number,
                 ImdbId: e.ImdbId,
-                Name: e.Name
+                Name: e.Name,
+                Wanted: e.Wanted
             )).ToList()
         )).ToList());
         await Response.WriteAsJsonAsync(new { message = $"episodes for {imdbId} have been updated" });

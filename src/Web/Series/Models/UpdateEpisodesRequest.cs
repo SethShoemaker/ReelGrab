@@ -27,4 +27,7 @@ public class UpdateEpisodesRequestEpisode
 
     [Required]
     public string ImdbId { get; set; } = null!;
+
+    [Required]
+    public bool Wanted { get; set; }
 }

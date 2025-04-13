@@ -105,7 +105,7 @@
                                 <div class="body">
                                     <ng-container *ngFor="let torrent of torrents">
                                         <div class="row"
-                                            (click)="selectedTorrent$.next({url: torrent.url, source: torrent.source, title: torrent.title, seeders: torrent.seeders, peers: torrent.peers}); onDownload()"
+                                            (click)="selectedTorrent$.next({url: torrent.url, source: torrent.source, title: torrent.title, seeders: torrent.seeders, peers: torrent.peers});"
                                             [class]="{'selected': selectedTorrent$.value?.url == torrent.url}">
                                             <div>
                                                 <span>

@@ -270,6 +270,7 @@ export class TvDownloadComponent implements OnInit, OnDestroy {
       console.log('no storage locations selected');
       return;
     }
+    this.loading = true;
     this.api.checkSeriesExists(this.imdbId)
       .pipe(
         tap(exists => console.log(`${this.imdbId} exists: ${exists}`)),
@@ -312,7 +313,9 @@ export class TvDownloadComponent implements OnInit, OnDestroy {
           }
           return this.api.setSeriesTorrents(this.imdbId, apiTorrents)
         }),
-        switchMap(() => this.api.setSeriesStorageLocations(this.imdbId, Array.from(this.storageLocationsMap.entries()).filter(sl => sl[1].selected).map(sl => sl[0])))
+        switchMap(() => this.api.setSeriesStorageLocations(this.imdbId, Array.from(this.storageLocationsMap.entries()).filter(sl => sl[1].selected).map(sl => sl[0]))),
+        tap(() => this.loading = false),
+        tap(() => this.router.navigate(['/']))
       )
       .subscribe()
   }
