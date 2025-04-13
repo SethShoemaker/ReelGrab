@@ -53,6 +53,20 @@ if (app.Environment.IsDevelopment())
 {
     app.UseCors("Everything");
 }
+
+app.MapWhen(
+    context => !context.Request.Path.StartsWithSegments("/api") && !Path.HasExtension(context.Request.Path),
+    appBuilder =>
+    {
+        appBuilder.Use(async (context, next) =>
+        {
+            context.Request.Path = "/index.html";
+            await next();
+        });
+        appBuilder.UseStaticFiles();
+    }
+);
+
 app.MapControllers();
 
 // Configure the HTTP request pipeline.
@@ -64,5 +78,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.Run();
