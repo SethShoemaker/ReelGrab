@@ -8,10 +8,6 @@ public interface ITorrentClient
 
     public Task ProvisionTorrentByLocalPathAsync(string torrentLocalPath);
 
-    public Task ProvisionTorrentByUrlAsync(string torrentFileUrl);
-
-    public Task ProvisionTorrentByMagnetAsync(string torrentMagnet);
-
     public Task RemoveTorrentByHashAsync(string torrentHash);
 
     public record TorrentFileInfo(int Number, string Path, int Progress, bool Wanted);

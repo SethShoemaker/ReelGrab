@@ -1,23 +1,8 @@
-using System.Text.RegularExpressions;
-using ReelGrab.TorrentDownloaders;
-
 namespace ReelGrab.Utils;
 
 public static partial class Torrents
 {
     public record TorrentFile(string Path, long Bytes);
-
-    public static async Task<List<TorrentFile>> GetTorrentFilesByMagnetAsync(string magnet)
-    {
-        string filePath = await TorrentDownloader.GetTorrentFilePathByMagnetAsync(magnet);
-        return GetTorrentFilesFromShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
-    }
-
-    public static async Task<List<TorrentFile>> GetTorrentFilesByUrlAsync(string torrentUrl)
-    {
-        string filePath = await TorrentDownloader.GetTorrentFilePathByUrlAsync(torrentUrl);
-        return GetTorrentFilesFromShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
-    }
 
     public static async Task<List<TorrentFile>> GetTorrentFilesByFilePathAsync(string filePath)
     {
@@ -70,12 +55,6 @@ public static partial class Torrents
         return (long)size * multiplier;
     }
 
-    public static async Task<string> GetTorrentHashByUrlAsync(string torrentUrl)
-    {
-        string filePath = await TorrentDownloader.GetTorrentFilePathByUrlAsync(torrentUrl);
-        return GetTorrentHashByShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
-    }
-
     public static async Task<string> GetTorrentHashByFilePathAsync(string filePath)
     {
         return GetTorrentHashByShowOutput(await Commands.RunAsync("transmission-show", $"\"{filePath}\""));
@@ -95,19 +74,6 @@ public static partial class Torrents
             throw new Exception($"error getting hash for torrent");
         }
         return showOutput[beg..end];
-    }
-
-    [GeneratedRegex(@"xt=urn:btih:([a-fA-F0-9]{40}|[A-Z2-7]{32})")]
-    private static partial Regex MagnetInfoHash();
-
-    public static Task<string> GetTorrentHashByMagnetLinkAsync(string magnetLink)
-    {
-        var match = MagnetInfoHash().Match(magnetLink);
-        if (!match.Success)
-        {
-            throw new Exception($"{magnetLink} is not a valid magnet link");
-        }
-        return Task.FromResult(match.Groups[1].Value);
     }
 
     public static async Task<string> GetTorrentNameByFilePathAsync(string filePath)

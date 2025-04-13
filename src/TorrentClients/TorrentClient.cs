@@ -43,18 +43,6 @@ public class TorrentClient : ITorrentClient
         return Implementation!.ProvisionTorrentByLocalPathAsync(torrentLocalPath);
     }
 
-    public Task ProvisionTorrentByUrlAsync(string torrentFileUrl)
-    {
-        EnsureTorrentClientExists();
-        return Implementation!.ProvisionTorrentByUrlAsync(torrentFileUrl);
-    }
-
-    public Task ProvisionTorrentByMagnetAsync(string torrentMagnet)
-    {
-        EnsureTorrentClientExists();
-        return Implementation!.ProvisionTorrentByMagnetAsync(torrentMagnet);
-    }
-
     public Task RemoveTorrentByHashAsync(string torrentHash)
     {
         EnsureTorrentClientExists();
