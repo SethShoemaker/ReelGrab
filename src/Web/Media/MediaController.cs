@@ -4,7 +4,7 @@ using ReelGrab.MediaIndexes;
 namespace ReelGrab.Web.Media;
 
 [ApiController]
-[Route("media")]
+[Route("api/media")]
 public class MediaController : ControllerBase
 {
     [HttpGet("config")]

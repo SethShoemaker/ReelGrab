@@ -4,7 +4,7 @@ using ReelGrab.Storage;
 namespace ReelGrab.Web.Storage;
 
 [ApiController]
-[Route("storage")]
+[Route("api/storage")]
 public class StorageController : ControllerBase
 {
     [HttpGet("config")]

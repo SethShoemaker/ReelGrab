@@ -11,29 +11,29 @@ export class ApiService {
   constructor(private http: HttpClient) { }
 
   mediaSearch(query: string): Observable<any> {
-    return this.http.get(`http://localhost:5242/media/search/movies_and_series?query=${query}`)
+    return this.http.get(`http://localhost:5242/api/media/search/movies_and_series?query=${query}`)
   }
 
   getStorageLocations(): Observable<any> {
-    return this.http.get(`http://localhost:5242/storage/locations`);
+    return this.http.get(`http://localhost:5242/api/storage/locations`);
   }
 
   getMovieDetails(movieId: string): Observable<any> {
-    return this.http.get(`http://localhost:5242/media/movies/${movieId}/details`);
+    return this.http.get(`http://localhost:5242/api/media/movies/${movieId}/details`);
   }
 
   getSeriesDetails(seriesId: string): Observable<any> {
-    return this.http.get(`http://localhost:5242/media/series/${seriesId}/details`);
+    return this.http.get(`http://localhost:5242/api/media/series/${seriesId}/details`);
   }
 
   searchMovieTorrents(query: string): Observable<any> {
-    console.log(`http://localhost:5242/torrent_index/search/movie?query=${query}`)
-    return this.http.get(`http://localhost:5242/torrent_index/search/movie?query=${query}`);
+    console.log(`http://localhost:5242/api/torrent_index/search/movie?query=${query}`)
+    return this.http.get(`http://localhost:5242/api/torrent_index/search/movie?query=${query}`);
   }
 
   searchSeriesTorrents(query: string): Observable<any> {
-    console.log(`http://localhost:5242/torrent_index/search/series?query=${query}`)
-    return this.http.get(`http://localhost:5242/torrent_index/search/series?query=${query}`);
+    console.log(`http://localhost:5242/api/torrent_index/search/series?query=${query}`)
+    return this.http.get(`http://localhost:5242/api/torrent_index/search/series?query=${query}`);
   }
 
   checkTorrentExists(torrentUrl: string): Observable<any> {
@@ -180,42 +180,38 @@ export class ApiService {
       )
   }
 
-  getInProgressMedia(): Observable<getInProgressMediaResponse> {
-    return this.http.get<any>(`http://localhost:5242/wanted_media/in_progress`)
-  }
-
   getMediaIndexConfig(): Observable<object> {
-    return this.http.get<object>(`http://localhost:5242/media/config`).pipe(
+    return this.http.get<object>(`http://localhost:5242/api/media/config`).pipe(
       tap(val => console.log(val))
     );
   }
 
   setMediaIndexConfig(config: object): Observable<object> {
-    return this.http.put(`http://localhost:5242/media/config`, config).pipe(
+    return this.http.put(`http://localhost:5242/api/media/config`, config).pipe(
       tap(val => console.log(val))
     );
   }
 
   getTorrentIndexConfig(): Observable<object> {
-    return this.http.get<object>(`http://localhost:5242/torrent_index/config`).pipe(
+    return this.http.get<object>(`http://localhost:5242/api/torrent_index/config`).pipe(
       tap(val => console.log(val))
     );
   }
 
   setTorrentIndexConfig(config: object): Observable<object> {
-    return this.http.put(`http://localhost:5242/torrent_index/config`, config).pipe(
+    return this.http.put(`http://localhost:5242/api/torrent_index/config`, config).pipe(
       tap(val => console.log(val))
     );
   }
 
   getStorageGatewayConfig(): Observable<object> {
-    return this.http.get<object>(`http://localhost:5242/storage/config`).pipe(
+    return this.http.get<object>(`http://localhost:5242/api/storage/config`).pipe(
       tap(val => console.log(val))
     );
   }
 
   setStorageGatewayConfig(config: object): Observable<object> {
-    return this.http.put(`http://localhost:5242/storage/config`, config).pipe(
+    return this.http.put(`http://localhost:5242/api/storage/config`, config).pipe(
       tap(val => console.log(val))
     );
   }

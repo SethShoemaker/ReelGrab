@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ReelGrab.Web.TorrentIndex;
 
 [ApiController]
-[Route("torrent_index")]
+[Route("api/torrent_index")]
 public class TorrentIndexController : ControllerBase
 {
     [HttpGet("config")]
