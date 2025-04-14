@@ -8,9 +8,9 @@ namespace ReelGrab.Core.Background.Series;
 
 public class AddSeriesTorrents : Job
 {
-    private static string TorrentFileDir = "/app/torrents";
+    private static string TorrentFileDir = "/data/torrents";
 
-    public override TimeSpan Interval => TimeSpan.FromSeconds(15);
+    public override TimeSpan Interval => TimeSpan.FromSeconds(60);
 
     public record SeriesTorrentMapping(string TorrentPath, int SeasonId, int EpisodeId);
 

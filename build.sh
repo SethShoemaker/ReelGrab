@@ -1,0 +1,1 @@
+docker build -t reelgrab:1.0.0 -f Dockerfile . --no-cache

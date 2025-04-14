@@ -8,7 +8,7 @@ namespace ReelGrab.Core.Background.Movies;
 
 public class ProcessCompletedMovies : Job
 {
-    public override TimeSpan Interval => TimeSpan.FromSeconds(10);
+    public override TimeSpan Interval => TimeSpan.FromSeconds(60);
 
     public record MovieTorrent(int MovieId, string MovieImdbId, string TorrentName, string Hash, string Path);
 

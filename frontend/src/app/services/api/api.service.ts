@@ -192,18 +192,6 @@ export class ApiService {
     );
   }
 
-  getTorrentIndexConfig(): Observable<object> {
-    return this.http.get<object>(`/api/torrent_index/config`).pipe(
-      tap(val => console.log(val))
-    );
-  }
-
-  setTorrentIndexConfig(config: object): Observable<object> {
-    return this.http.put(`/api/torrent_index/config`, config).pipe(
-      tap(val => console.log(val))
-    );
-  }
-
   getStorageGatewayConfig(): Observable<object> {
     return this.http.get<object>(`/api/storage/config`).pipe(
       tap(val => console.log(val))

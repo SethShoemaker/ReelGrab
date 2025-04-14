@@ -6,7 +6,7 @@ namespace ReelGrab.Core;
 
 public partial class Application
 {
-    private static string TorrentFileDir = "/app/torrents";
+    private static string TorrentFileDir = "/data/torrents";
 
     public async Task<bool> TorrentWithUrlExistsAsync(string torrentUrl)
     {

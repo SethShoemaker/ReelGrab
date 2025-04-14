@@ -8,9 +8,9 @@ namespace ReelGrab.Core.Background.Movies;
 
 public class AddMovieTorrents : Job
 {
-    private static string TorrentFileDir = "/app/torrents";
+    private static string TorrentFileDir = "/data/torrents";
 
-    public override TimeSpan Interval => TimeSpan.FromSeconds(15);
+    public override TimeSpan Interval => TimeSpan.FromSeconds(60);
 
     public record MovieTorrent(int MovieId, string MovieImdbId, string LocalPath, string Hash, string Path);
 

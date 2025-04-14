@@ -14,9 +14,9 @@ public class TorrentIndex : ITorrentIndex
         Http.Timeout = TimeSpan.FromSeconds(60);
     }
 
-    public Uri? ApiUrl;
+    public Uri? ApiUrl = new("http://localhost:9117");
 
-    public string? ApiKey;
+    public string? ApiKey = "ReelGrab";
 
     private readonly HttpClient Http;
 

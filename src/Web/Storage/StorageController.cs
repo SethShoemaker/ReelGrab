@@ -38,6 +38,7 @@ public class StorageController : ControllerBase
         {
             await Configuration.StorageGateway.instance.SetLocalDirectories(localDirectories?.Split(',').ToList() ?? []);
         }
+        await Configuration.StorageGateway.instance.Apply();
         await Response.WriteAsJsonAsync(new
         {
             local_directories = string.Join(',', await Configuration.StorageGateway.instance.GetLocalDirectories())

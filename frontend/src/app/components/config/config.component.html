@@ -14,20 +14,6 @@
             </ng-container>
         </app-form-section-part>
     </div>
-    <app-form-section-header>Jackett</app-form-section-header>
-    <div id="torrent-index-config-container">
-        <app-form-section-part>
-            <ng-container *ngIf="torrentIndexConfig$ | async as configs">
-                <ng-container *ngFor="let config of configs">
-                    <label for="{{config.key}}" class="label">{{config.label}}</label>
-                    <input type="text" name="{{config.key}}" id="{{config.key}}"
-                        placeholder="Enter {{config.placeholder}}" class="torrent-index-config-input config-input"
-                        value="{{config.value}}">
-                </ng-container>
-                <button type="submit" (click)="torrentIndexConfigSubmit$.next()" class="save-button">Save Changes</button>
-            </ng-container>
-        </app-form-section-part>
-    </div>
     <app-form-section-header>Storage</app-form-section-header>
     <div id="storage-gateway-config-container">
         <app-form-section-part>

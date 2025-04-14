@@ -22,7 +22,6 @@ export class ConfigComponent implements OnInit {
 
   ngOnInit(): void {
     this.setupMediaIndexConfig();
-    this.setupTorrentIndexConfig();
     this.setupStorageGatewayConfig();
   }
 
@@ -65,60 +64,6 @@ export class ConfigComponent implements OnInit {
     if (configKey == "omdb_api_key") {
       return {
         label: "OMDb API Key",
-        placeholder: "API key"
-      }
-    }
-    return {
-      label: configKey,
-      placeholder: configKey
-    }
-  }
-
-  torrentIndexConfigSubmit$ = new Subject<void>();
-  torrentIndexConfig$!: Observable<Array<{ key: string, value: string, label: string, placeholder: string }>>;
-
-  setupTorrentIndexConfig() {
-    this.torrentIndexConfig$ = merge(
-      this.torrentIndexConfigSubmit$.pipe(
-        switchMap(() => this.api.setTorrentIndexConfig(this.getTorrentIndexConfig())),
-        tap(() => this.snackbarService.snacks.next(new Snack(SnackLevel.SUCCESS, "Updated Jackett Config")))
-      ),
-      this.api.getTorrentIndexConfig()
-    ).pipe(
-      map(val => Object.entries(val)
-        .map(([key, value]) => {
-          const formInfo = this.convertTorrentIndexConfigKeyToFormInfo(key)
-          return {
-            key: key,
-            value: value,
-            label: formInfo.label,
-            placeholder: formInfo.placeholder
-          }
-        })
-      )
-    )
-  }
-
-  getTorrentIndexConfig(): object {
-    const config: any = {};
-    const entries = Array.from(this.eRef.nativeElement.querySelectorAll('input.torrent-index-config-input')).map((input: any) => ({ key: input.name, value: input.value }))
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      config[entry.key] = entry.value;
-    }
-    return config
-  }
-
-  convertTorrentIndexConfigKeyToFormInfo(configKey: string): { label: string, placeholder: string } {
-    if (configKey == "api_url") {
-      return {
-        label: "Jackett URL",
-        placeholder: "URL"
-      }
-    }
-    if(configKey == "api_key") {
-      return {
-        label: "Jackett API key",
         placeholder: "API key"
       }
     }

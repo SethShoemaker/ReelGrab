@@ -38,6 +38,7 @@ public class MediaController : ControllerBase
         {
             await Configuration.MediaIndex.instance.SetOmdbApiKey(omdbApiKey);
         }
+        await Configuration.MediaIndex.instance.Apply();
         await Response.WriteAsJsonAsync(new
         {
             omdb_api_key = await Configuration.MediaIndex.instance.GetOmdbApiKey()

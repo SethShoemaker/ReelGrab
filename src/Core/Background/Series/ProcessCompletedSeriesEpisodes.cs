@@ -8,7 +8,7 @@ namespace ReelGrab.Core.Background.Series;
 
 public class ProcessCompletedSeriesEpisodes : Job
 {
-    public override TimeSpan Interval => TimeSpan.FromSeconds(15);
+    public override TimeSpan Interval => TimeSpan.FromSeconds(60);
 
     public record SeriesTorrentMapping(int EpisodeId, string Path);
 
