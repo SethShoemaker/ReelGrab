@@ -106,7 +106,7 @@ public static partial class Torrents
 
     public static async Task DownloadTorrentByMagnetAsync(string magnet, string filePath)
     {
-        string output = await Commands.RunAsync("/root/bin/imdl", $"torrent from-link \"{magnet}\" --output {filePath}");
+        string output = await Commands.RunAsync("/bin/imdl", $"torrent from-link \"{magnet}\" --output {filePath}");
         if (output.Contains("Failed to fetch infodict from accessible peers"))
         {
             throw new Exception(output);

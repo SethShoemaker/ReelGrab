@@ -36,12 +36,11 @@ COPY ./files/transmission-daemon/settings.json /root/.config/transmission-daemon
 # install imdl
 RUN apt-get update && \
     apt-get install -y wget curl && \
-    wget https://imdl.io/install.sh -O imdl-install.sh && \
-    chmod u+x imdl-install.sh && \
-    ./imdl-install.sh && \
-    rm imdl-install.sh && \
+    wget https://github.com/casey/intermodal/releases/download/v0.1.14/imdl-v0.1.14-aarch64-unknown-linux-musl.tar.gz -O imdl.tar.gz && \
+    tar -xvf imdl.tar.gz imdl && \
+    mv ./imdl /bin/imdl && \
+    rm imdl.tar.gz && \
     rm -rf /var/lib/apt/lists/*
-ENV PATH=/root/bin:$PATH
 
 # install dotnet
 RUN apt-get update && \
