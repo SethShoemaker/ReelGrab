@@ -7,7 +7,7 @@
     "AdminPassword": null,
     "InstanceId": "e24y3doj4wew2pw03n1h5mzw347mwoei0egydjvw3kdmr2r6ceg6f3r3n8unwykp",
     "BlackholeDir": null,
-    "UpdateDisabled": false,
+    "UpdateDisabled": true,
     "UpdatePrerelease": false,
     "BasePathOverride": null,
     "BaseUrlOverride": null,
