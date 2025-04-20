@@ -10,13 +10,9 @@ services:
       - "5242:5242"
       - "4200:4200"
       - "9091:9091"
+      - "9117:9117"
     volumes:
       - "./:/app:rw"
       - "./data:/data:rw"
       - "./media1:/media1:rw"
       - "./media2:/media2:rw"
-  jackett:
-    image: linuxserver/jackett
-    container_name: jackett
-    ports:
-      - "9117:9117"

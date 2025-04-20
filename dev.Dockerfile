@@ -24,3 +24,10 @@ EXPOSE 9091 51413 51413/udp
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://imdl.io/install.sh | bash
 ENV PATH=/root/bin:$PATH
+
+WORKDIR /Jackett
+RUN wget https://github.com/Jackett/Jackett/releases/download/v0.22.1775/Jackett.Binaries.LinuxARM64.tar.gz && \
+    tar -xvzf Jackett.Binaries.LinuxARM64.tar.gz && \
+    rm Jackett.Binaries.LinuxARM64.tar.gz
+COPY ./files/Jackett/ServerConfig.json /root/.config/Jackett/ServerConfig.json
+EXPOSE 9117
