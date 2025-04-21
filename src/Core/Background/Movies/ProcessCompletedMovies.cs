@@ -24,7 +24,7 @@ public class ProcessCompletedMovies : Job
             .Join("MovieTorrentFile", j => j.On("MovieTorrent.Id", "MovieTorrentFile.MovieTorrentId"))
             .Join("TorrentFile", j => j.On("MovieTorrentFile.TorrentFileId", "TorrentFile.Id"))
             .Join("MovieStorageLocation", j => j.On("Movie.Id", "MovieStorageLocation.MovieId"))
-            .Where("MovieTorrentFile.Name", "Theatrical Release")
+            .Where("MovieTorrentFile.Name", "Cinematic Cut")
             .Select(["Movie.Id AS MovieId", "Movie.ImdbId AS MovieImdbId", "Torrent.Name AS TorrentName", "Torrent.Hash", "TorrentFile.Path"])
             .GetAsync<Row>(cancellationToken: stoppingToken);
         return rows
@@ -43,7 +43,7 @@ public class ProcessCompletedMovies : Job
         foreach (var storageLocation in await Application.instance.GetMovieStorageLocationsAsync(movieId))
         {
             IStorageLocation? storage = StorageGateway.instance.StorageLocations.FirstOrDefault(sl => sl.Id == storageLocation);
-            if (storage != null && await storage.HasMovieSavedAsync(movieId, "Theatrical Release"))
+            if (storage != null && await storage.HasMovieSavedAsync(movieId, "Cinematic Cut"))
             {
                 return true;
             }
@@ -83,12 +83,12 @@ public class ProcessCompletedMovies : Job
             foreach (var storageLocation in storageLocations)
             {
                 IStorageLocation? storage = StorageGateway.instance.StorageLocations.FirstOrDefault(sl => sl.Id == storageLocation);
-                if (storage == null || await storage.HasMovieSavedAsync(movieTorrent.MovieId, "Theatrical Release"))
+                if (storage == null || await storage.HasMovieSavedAsync(movieTorrent.MovieId, "Cinematic Cut"))
                 {
                     continue;
                 }
                 contents.Seek(0, SeekOrigin.Begin);
-                await storage.SaveMovieAsync(movieTorrent.MovieId, "Theatrical Release", Path.GetExtension(movieTorrent.Path), contents);
+                await storage.SaveMovieAsync(movieTorrent.MovieId, "Cinematic Cut", Path.GetExtension(movieTorrent.Path), contents);
             }
             await torrentClient.RemoveTorrentByHashAsync(movieTorrent.Hash);
         }

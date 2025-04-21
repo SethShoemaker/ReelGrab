@@ -28,8 +28,8 @@ public class MoviesController : ControllerBase
         await Response.WriteAsJsonAsync(new { Message = $"{imdbId} is now {(request.Wanted!.Value ? "" : "not ")}wanted" });
     }
 
-    [HttpPost("{imdbId}/theatrical_release_torrent")]
-    public async Task SetTheatricalCutTorrent([FromRoute] string imdbId, [FromBody] SetTheatricalReleaseTorrentRequest request)
+    [HttpPost("{imdbId}/cinematic_cut_torrent")]
+    public async Task SetCinematicCutTorrent([FromRoute] string imdbId, [FromBody] SetCinematicCutTorrentRequest request)
     {
         int torrentId = await Application.instance.TorrentWithUrlExistsAsync(request.TorrentUrl)
             ? await Application.instance.GetTorrentIdByUrlAsync(request.TorrentUrl)
@@ -37,12 +37,12 @@ public class MoviesController : ControllerBase
 
         int torrentFileId = await Application.instance.GetTorrentFileIdByTorrentIdAndPathAsync(torrentId, request.TorrentFilePath);
 
-        await Application.instance.SetMovieTheatricalReleaseTorrentAsync(imdbId, torrentId, torrentFileId);
-        await Response.WriteAsJsonAsync(new { message = $"movie with imdbId {imdbId} has its theatrical cut torrent set" });
+        await Application.instance.SetMovieCinematicCutTorrentAsync(imdbId, torrentId, torrentFileId);
+        await Response.WriteAsJsonAsync(new { message = $"movie with imdbId {imdbId} has its cinematic cut torrent set" });
     }
 
-    [HttpGet("{imdbId}/theatrical_release_torrent")]
-    public async Task GetTheatricalCutTorrent([FromRoute] string imdbId)
+    [HttpGet("{imdbId}/cinematic_cut_torrent")]
+    public async Task GetCinematicCutTorrent([FromRoute] string imdbId)
     {
         if(! await Application.instance.MovieWithImdbIdExistsAsync(imdbId))
         {
@@ -50,7 +50,7 @@ public class MoviesController : ControllerBase
             await Response.WriteAsJsonAsync(new { message = $"movie with imdbid {imdbId} does not exist"});
             return;
         }
-        await Response.WriteAsJsonAsync(await Application.instance.GetMovieTheatricalReleaseTorrentAsync(imdbId));
+        await Response.WriteAsJsonAsync(await Application.instance.GetMovieCinematicCutTorrentAsync(imdbId));
     }
 
     [HttpPost("{imdbId}/storage_locations")]

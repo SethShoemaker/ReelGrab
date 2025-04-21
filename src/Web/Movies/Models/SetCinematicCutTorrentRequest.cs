@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ReelGrab.Web.Movies;
 
-public class SetTheatricalReleaseTorrentRequest
+public class SetCinematicCutTorrentRequest
 {
 
     [Required]

@@ -139,12 +139,12 @@ export class ApiService {
     })
   }
 
-  getMovieTheatricalReleaseTorrent(imdbId: string): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/api/movies/${imdbId}/theatrical_release_torrent`)
+  getMovieCinematicCutTorrent(imdbId: string): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/api/movies/${imdbId}/cinematic_cut_torrent`)
   }
 
-  setMovieTheatricalReleaseTorrent(imdbId: string, torrentUrl: string, torrentSource: string, torrentFilePath: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/movies/${imdbId}/theatrical_release_torrent`, {
+  setMovieCinematicCutTorrent(imdbId: string, torrentUrl: string, torrentSource: string, torrentFilePath: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/movies/${imdbId}/cinematic_cut_torrent`, {
       TorrentUrl: torrentUrl,
       TorrentSource: torrentSource,
       TorrentFilePath: torrentFilePath

@@ -76,9 +76,9 @@ public partial class Application
             });
     }
 
-    private record SetMovieTheatricalCutTorrentAsyncExistingTheatricalReleaseTorrentRow(long? MovieTorrentId, long? MediaTorrentFileId, long Count);
+    private record SetMovieCinematicCutTorrentAsyncExistingCinematicCutTorrentRow(long? MovieTorrentId, long? MediaTorrentFileId, long Count);
 
-    public async Task SetMovieTheatricalReleaseTorrentAsync(string imdbId, int torrentId, int torrentFileId)
+    public async Task SetMovieCinematicCutTorrentAsync(string imdbId, int torrentId, int torrentFileId)
     {
         if (!await MovieWithImdbIdExistsAsync(imdbId))
         {
@@ -86,30 +86,30 @@ public partial class Application
         }
         using var db = Db.CreateConnection();
         using var transaction = db.Connection.BeginTransaction();
-        var existingTheatricalReleaseTorrent = await db
+        var existingCinematicCutTorrent = await db
             .Query("Movie AS m")
             .LeftJoin("MovieTorrent AS mt", j => j.On("m.Id", "mt.MovieId"))
-            .LeftJoin("MovieTorrentFile AS mtf1", j => j.On("mt.Id", "mtf1.MovieTorrentId").On("mtf1.Name", "Theatrical Release"))
+            .LeftJoin("MovieTorrentFile AS mtf1", j => j.On("mt.Id", "mtf1.MovieTorrentId").On("mtf1.Name", "Cinematic Cut"))
             .LeftJoin("MovieTorrentFile AS mtf2", j => j.On("mt.Id", "mtf2.MovieTorrentId"))
             .Where("m.ImdbId", imdbId)
             .GroupBy(["mt.Id", "mtf1.Id"])
             .SelectRaw("mt.Id AS MovieTorrentId, mtf1.Id AS MediaTorrentFileId, COALESCE(CAST(COUNT(mtf2.Id) AS INTEGER), 0) AS Count")
-            .FirstOrDefaultAsync<SetMovieTheatricalCutTorrentAsyncExistingTheatricalReleaseTorrentRow>();
-        if (existingTheatricalReleaseTorrent.MovieTorrentId != null)
+            .FirstOrDefaultAsync<SetMovieCinematicCutTorrentAsyncExistingCinematicCutTorrentRow>();
+        if (existingCinematicCutTorrent.MovieTorrentId != null)
         {
             await db
                 .Query("MovieTorrentFile")
-                .Where("Id", existingTheatricalReleaseTorrent.MediaTorrentFileId)
+                .Where("Id", existingCinematicCutTorrent.MediaTorrentFileId)
                 .DeleteAsync();
-            if (existingTheatricalReleaseTorrent.Count == 1)
+            if (existingCinematicCutTorrent.Count == 1)
             {
                 await db
                     .Query("MovieTorrent")
-                    .Where("Id", existingTheatricalReleaseTorrent.MovieTorrentId)
+                    .Where("Id", existingCinematicCutTorrent.MovieTorrentId)
                     .DeleteAsync();
             }
         }
-        if (existingTheatricalReleaseTorrent.MovieTorrentId == null || (existingTheatricalReleaseTorrent != null && existingTheatricalReleaseTorrent.Count == 1))
+        if (existingCinematicCutTorrent.MovieTorrentId == null || (existingCinematicCutTorrent != null && existingCinematicCutTorrent.Count == 1))
         {
             int movieId = await db
                 .Query("Movie")
@@ -128,7 +128,7 @@ public partial class Application
                 {
                     MovieTorrentId = movieTorrentId,
                     TorrentFileId = torrentFileId,
-                    Name = "Theatrical Release"
+                    Name = "Cinematic Cut"
                 });
         }
         else
@@ -137,25 +137,25 @@ public partial class Application
                 .Query("MovieTorrentFile")
                 .InsertAsync(new
                 {
-                    existingTheatricalReleaseTorrent!.MovieTorrentId,
+                    existingCinematicCutTorrent!.MovieTorrentId,
                     TorrentFileId = torrentFileId,
-                    Name = "Theatrical Release"
+                    Name = "Cinematic Cut"
                 });
         }
         transaction.Commit();
     }
 
-    public record GetMovieTheatricalReleaseTorrentAsyncTorrentFile(int Id, string Path, int Bytes, bool Mapped);
+    public record GetMovieCinematicCutTorrentAsyncTorrentFile(int Id, string Path, int Bytes, bool Mapped);
 
-    public record GetMovieTheatricalReleaseTorrentAsyncTorrent(int Id, string Url, string Hash, string Name, string Source, List<GetMovieTheatricalReleaseTorrentAsyncTorrentFile> Files);
+    public record GetMovieCinematicCutTorrentAsyncTorrent(int Id, string Url, string Hash, string Name, string Source, List<GetMovieCinematicCutTorrentAsyncTorrentFile> Files);
 
-    public record GetMovieTheatricalReleaseTorrentAsyncResult(GetMovieTheatricalReleaseTorrentAsyncTorrent? Torrent);
+    public record GetMovieCinematicCutTorrentAsyncResult(GetMovieCinematicCutTorrentAsyncTorrent? Torrent);
 
-    private record GetMovieTheatricalReleaseTorrentAsyncTorrentRow(long TorrentId, string TorrentUrl, string TorrentHash, string TorrentName, string TorrentSource, long MovieTorrentId);
+    private record GetMovieCinematicCutTorrentAsyncTorrentRow(long TorrentId, string TorrentUrl, string TorrentHash, string TorrentName, string TorrentSource, long MovieTorrentId);
 
-    private record GetMovieTheatricalReleaseTorrentAsyncTorrentFileRow(long TorrentFileId, string TorrentFilePath, long TorrentFileBytes, string? MovieTorrentFileName);
+    private record GetMovieCinematicCutTorrentAsyncTorrentFileRow(long TorrentFileId, string TorrentFilePath, long TorrentFileBytes, string? MovieTorrentFileName);
 
-    public async Task<GetMovieTheatricalReleaseTorrentAsyncResult> GetMovieTheatricalReleaseTorrentAsync(string imdbId)
+    public async Task<GetMovieCinematicCutTorrentAsyncResult> GetMovieCinematicCutTorrentAsync(string imdbId)
     {
         using var db = Db.CreateConnection();
         var torrent = await db
@@ -165,9 +165,9 @@ public partial class Application
             .Join("TorrentFile", j => j.On("Torrent.Id", "TorrentFile.TorrentId"))
             .Join("MovieTorrentFile", j => j.On("MovieTorrent.Id", "MovieTorrentFile.MovieTorrentId").On("TorrentFile.Id", "MovieTorrentFile.TorrentFileId"))
             .Where("Movie.ImdbId", imdbId)
-            .Where("MovieTorrentFile.Name", "Theatrical Release")
+            .Where("MovieTorrentFile.Name", "Cinematic Cut")
             .Select(["Torrent.Id AS TorrentId", "Torrent.Url AS TorrentUrl", "Torrent.Hash AS TorrentHash", "Torrent.Name AS TorrentName", "Torrent.Source AS TorrentSource", "MovieTorrent.Id AS MovieTorrentId"])
-            .FirstOrDefaultAsync<GetMovieTheatricalReleaseTorrentAsyncTorrentRow>();
+            .FirstOrDefaultAsync<GetMovieCinematicCutTorrentAsyncTorrentRow>();
         if (torrent == null)
         {
             return new(null);
@@ -180,18 +180,18 @@ public partial class Application
             .Where("Torrent.Id", torrent.TorrentId)
             .Where("MovieTorrent.Id", torrent.MovieTorrentId)
             .Select(["TorrentFile.Id AS TorrentFileId", "TorrentFile.Path AS TorrentFilePath", "TorrentFile.Bytes AS TorrentFileBytes", "MovieTorrentFile.Name AS MovieTorrentFileName"])
-            .GetAsync<GetMovieTheatricalReleaseTorrentAsyncTorrentFileRow>();
+            .GetAsync<GetMovieCinematicCutTorrentAsyncTorrentFileRow>();
         return new(new(
             Id: (int)torrent.TorrentId,
             Url: torrent.TorrentUrl,
             Hash: torrent.TorrentHash,
             Name: torrent.TorrentName,
             Source: torrent.TorrentSource,
-            files.Select(f => new GetMovieTheatricalReleaseTorrentAsyncTorrentFile(
+            files.Select(f => new GetMovieCinematicCutTorrentAsyncTorrentFile(
                 Id: (int)f.TorrentFileId,
                 Path: f.TorrentFilePath,
                 Bytes: (int)f.TorrentFileBytes,
-                Mapped: f.MovieTorrentFileName != null && f.MovieTorrentFileName == "Theatrical Release"
+                Mapped: f.MovieTorrentFileName != null && f.MovieTorrentFileName == "Cinematic Cut"
             )).ToList()
         ));
     }
@@ -268,7 +268,7 @@ public partial class Application
         foreach (var storageLocation in await GetMovieStorageLocationsAsync(movieId))
         {
             IStorageLocation? storage = StorageGateway.instance.StorageLocations.FirstOrDefault(sl => sl.Id == storageLocation);
-            if (storage != null && await storage.HasMovieSavedAsync(movieId, "Theatrical Release"))
+            if (storage != null && await storage.HasMovieSavedAsync(movieId, "Cinematic Cut"))
             {
                 return true;
             }
@@ -289,7 +289,7 @@ public partial class Application
             .Join("Torrent", j => j.On("MovieTorrent.TorrentId", "Torrent.Id"))
             .Join("MovieTorrentFile", j => j.On("MovieTorrent.Id", "MovieTorrentFile.MovieTorrentId"))
             .Join("TorrentFile", j => j.On("MovieTorrentFile.TorrentFileId", "TorrentFile.Id"))
-            .Where("MovieTorrentFile.Name", "Theatrical Release")
+            .Where("MovieTorrentFile.Name", "Cinematic Cut")
             .Select(["Movie.Id", "Movie.ImdbId", "Movie.Name", "Torrent.Hash", "TorrentFile.Path"])
             .GetAsync<GetMoviesInProgressMovieRow>();
         List<GetMoviesInProgressMovie> movies = [];
