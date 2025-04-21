@@ -22,8 +22,10 @@ RUN apt-get install -y transmission-cli transmission-daemon
 COPY ./files/transmission-daemon/settings.json /root/.config/transmission-daemon/settings.json
 EXPOSE 9091 51413 51413/udp
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://imdl.io/install.sh | bash
-ENV PATH=/root/bin:$PATH
+RUN wget https://github.com/casey/intermodal/releases/download/v0.1.14/imdl-v0.1.14-aarch64-unknown-linux-musl.tar.gz -O imdl.tar.gz && \
+    tar -xvf imdl.tar.gz imdl && \
+    mv ./imdl /bin/imdl && \
+    rm imdl.tar.gz
 
 WORKDIR /Jackett
 RUN wget https://github.com/Jackett/Jackett/releases/download/v0.22.1775/Jackett.Binaries.LinuxARM64.tar.gz && \
