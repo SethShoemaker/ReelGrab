@@ -102,7 +102,7 @@ public partial class Application
             .Query("Movie")
             .Where("ImdbId", imdbId)
             .Select("Id")
-            .FirstOrDefaultAsync<int>();
+            .FirstAsync<int>();
         int movieTorrentId = await db
             .Query("MovieTorrent")
             .Where("MovieId", movieId)
