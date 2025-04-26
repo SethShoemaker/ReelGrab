@@ -20,7 +20,8 @@ public class Db
         typeof(AddWantedFlagsToMovieAndSeriesTables),
         typeof(CreateMovieStorageLocationsTable),
         typeof(CreateSeriesStorageLocationsTable),
-        typeof(RenameTheatricalReleaseMovieTorrentFilesToCinematicCutMovieTorrentFiles)
+        typeof(RenameTheatricalReleaseMovieTorrentFilesToCinematicCutMovieTorrentFiles),
+        typeof(CreateMovieOutputFileTable)
     ];
 
     public static async Task ApplyMigrationsAsync()

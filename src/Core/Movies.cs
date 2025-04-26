@@ -76,7 +76,7 @@ public partial class Application
             });
     }
 
-    private record SetMovieCinematicCutTorrentAsyncExistingCinematicCutTorrentRow(long? MovieTorrentId, long? MediaTorrentFileId, long Count);
+    private record SetMovieCinematicCutTorrentAsyncExistingCinematicCutTorrentRow(long MovieTorrentId, long TorrentId, long MovieTorrentFileId, long TorrentFileId);
 
     public async Task SetMovieCinematicCutTorrentAsync(string imdbId, int torrentId, int torrentFileId)
     {
@@ -87,60 +87,93 @@ public partial class Application
         using var db = Db.CreateConnection();
         using var transaction = db.Connection.BeginTransaction();
         var existingCinematicCutTorrent = await db
-            .Query("Movie AS m")
-            .LeftJoin("MovieTorrent AS mt", j => j.On("m.Id", "mt.MovieId"))
-            .LeftJoin("MovieTorrentFile AS mtf1", j => j.On("mt.Id", "mtf1.MovieTorrentId").On("mtf1.Name", "Cinematic Cut"))
-            .LeftJoin("MovieTorrentFile AS mtf2", j => j.On("mt.Id", "mtf2.MovieTorrentId"))
-            .Where("m.ImdbId", imdbId)
-            .GroupBy(["mt.Id", "mtf1.Id"])
-            .SelectRaw("mt.Id AS MovieTorrentId, mtf1.Id AS MediaTorrentFileId, COALESCE(CAST(COUNT(mtf2.Id) AS INTEGER), 0) AS Count")
+            .Query("Movie")
+            .Join("MovieTorrent", j => j.On("Movie.Id", "MovieTorrent.MovieId"))
+            .Join("MovieTorrentFile", j => j.On("MovieTorrent.Id", "MovieTorrentFile.MovieTorrentId"))
+            .Where("Movie.ImdbId", imdbId)
+            .Where("MovieTorrentFile.Name", "Cinematic Cut")
+            .Select(["MovieTorrent.Id AS MovieTorrentId", "MovieTorrent.TorrentId", "MovieTorrentFile.Id AS MovieTorrentFileId", "MovieTorrentFile.TorrentFileId"])
             .FirstOrDefaultAsync<SetMovieCinematicCutTorrentAsyncExistingCinematicCutTorrentRow>();
-        if (existingCinematicCutTorrent.MovieTorrentId != null)
+        if(existingCinematicCutTorrent != null && existingCinematicCutTorrent.TorrentId == torrentId && existingCinematicCutTorrent.TorrentFileId == torrentFileId)
+        {
+            return;
+        }
+        int movieId = await db
+            .Query("Movie")
+            .Where("ImdbId", imdbId)
+            .Select("Id")
+            .FirstOrDefaultAsync<int>();
+        int movieTorrentId = await db
+            .Query("MovieTorrent")
+            .Where("MovieId", movieId)
+            .Where("TorrentId", torrentId)
+            .Select("Id")
+            .FirstOrDefaultAsync<int?>()
+            ?? await db
+                .Query("MovieTorrent")
+                .InsertGetIdAsync<int>(new {
+                    MovieId = movieId,
+                    TorrentId = torrentId
+                });
+        int movieTorrentFileId = await db
+            .Query("MovieTorrentFile")
+            .InsertGetIdAsync<int>(new {
+                MovieTorrentId = movieTorrentId,
+                TorrentFileId = torrentFileId,
+                Name = "Cinematic Cut"
+            });
+        string outputFilePath = await CreateMovieFilePathByImdbIdAndTorrentFileIdAsync(imdbId, "Cinematic Cut", torrentFileId);
+        foreach(var storageLocationRecord in await GetMovieStorageLocationRecordsAsync(movieId))
+        {
+            int? staleOutputFileRecordId = await db
+                .Query("MovieOutputFile")
+                .Where("MovieId", movieId)
+                .Where("MovieStorageLocationId", storageLocationRecord.Id)
+                .Where("Name", "Cinematic Cut")
+                .Select("Id")
+                .FirstOrDefaultAsync<int?>();
+            if(staleOutputFileRecordId != null)
+            {
+                await db
+                    .Query("MovieOutputFile")
+                    .Where("Id", staleOutputFileRecordId)
+                    .UpdateAsync(new {
+                        MovieTorrentFileId = movieTorrentFileId,
+                        Status = "StalePendingUpdate"
+                    });
+            }
+            else
+            {
+                await db
+                    .Query("MovieOutputFile")
+                    .InsertAsync(new {
+                        MovieId = movieId,
+                        MovieTorrentFileId = movieTorrentFileId,
+                        MovieStorageLocationId = storageLocationRecord.Id,
+                        StorageLocation = storageLocationRecord.StorageLocation,
+                        Name = "Cinematic Cut",
+                        FilePath = outputFilePath,
+                        Status = "InitializedPendingCreation"
+                    });
+            }
+        }
+        if(existingCinematicCutTorrent != null)
         {
             await db
                 .Query("MovieTorrentFile")
-                .Where("Id", existingCinematicCutTorrent.MediaTorrentFileId)
+                .Where("Id", existingCinematicCutTorrent.MovieTorrentFileId)
                 .DeleteAsync();
-            if (existingCinematicCutTorrent.Count == 1)
+            int remainingMovieTorrentFileCount = await db
+                .Query("MovieTorrentFile")
+                .Where("MovieTorrentId", existingCinematicCutTorrent.MovieTorrentId)
+                .CountAsync<int>();
+            if(remainingMovieTorrentFileCount == 0)
             {
                 await db
                     .Query("MovieTorrent")
                     .Where("Id", existingCinematicCutTorrent.MovieTorrentId)
                     .DeleteAsync();
             }
-        }
-        if (existingCinematicCutTorrent.MovieTorrentId == null || (existingCinematicCutTorrent != null && existingCinematicCutTorrent.Count == 1))
-        {
-            int movieId = await db
-                .Query("Movie")
-                .Where("Imdbid", imdbId)
-                .Select("Id")
-                .FirstOrDefaultAsync<int>();
-            int movieTorrentId = await db.Query("MovieTorrent")
-                .InsertGetIdAsync<int>(new
-                {
-                    MovieId = movieId,
-                    TorrentId = torrentId
-                });
-            await db
-                .Query("MovieTorrentFile")
-                .InsertAsync(new
-                {
-                    MovieTorrentId = movieTorrentId,
-                    TorrentFileId = torrentFileId,
-                    Name = "Cinematic Cut"
-                });
-        }
-        else
-        {
-            await db
-                .Query("MovieTorrentFile")
-                .InsertAsync(new
-                {
-                    existingCinematicCutTorrent!.MovieTorrentId,
-                    TorrentFileId = torrentFileId,
-                    Name = "Cinematic Cut"
-                });
         }
         transaction.Commit();
     }
@@ -196,6 +229,8 @@ public partial class Application
         ));
     }
 
+    private record SetMovieStorageLocationsAsyncMovieTorrentFileRow(long Id, string Name, string Path);
+
     public async Task SetMovieStorageLocationsAsync(string imdbId, List<string> storageLocations)
     {
         if (!await MovieWithImdbIdExistsAsync(imdbId))
@@ -204,26 +239,92 @@ public partial class Application
         }
         using var db = Db.CreateConnection();
         using var transaction = db.Connection.BeginTransaction();
-        await db
-            .Query("MovieStorageLocation")
-            .WhereIn("MovieStorageLocation.Id", db
-                .Query("Movie")
-                .Join("MovieStorageLocation", j => j.On("Movie.Id", "MovieStorageLocation.MovieId"))
-                .Where("Movie.ImdbId", imdbId)
-                .Select("MovieStorageLocation.Id")
-            )
-            .DeleteAsync();
         int movieId = await db
             .Query("Movie")
             .Where("ImdbId", imdbId)
             .Select("Id")
             .FirstOrDefaultAsync<int>();
-        await db
-            .Query("MovieStorageLocation")
-            .InsertAsync(["MovieId", "StorageLocation"], storageLocations.Select(sl => new object[]{
-                movieId,
-                sl
-            }));
+        var movieTorrentFiles = await db
+            .Query("MovieTorrentFile")
+            .Join("MovieTorrent", j => j.On("MovieTorrentFile.MovieTorrentId", "MovieTorrent.Id"))
+            .Join("TorrentFile", j => j.On("MovieTorrentFile.TorrentFileId", "TorrentFile.Id"))
+            .Where("MovieTorrent.MovieId", movieId)
+            .Select(["MovieTorrentFile.Id", "MovieTorrentFile.Name", "TorrentFile.Path"])
+            .GetAsync<SetMovieStorageLocationsAsyncMovieTorrentFileRow>();
+        var storageLocationRecords = await GetMovieStorageLocationRecordsAsync(movieId);
+        foreach(var newStorageLocation in storageLocations)
+        {
+            if(storageLocationRecords.Any(slr => slr.StorageLocation == newStorageLocation))
+            {
+                continue;
+            }
+            int newStorageLocationRecordId = await db
+                .Query("MovieStorageLocation")
+                .InsertGetIdAsync<int>(new {
+                    MovieId = movieId,
+                    StorageLocation = newStorageLocation
+                });
+            if(movieTorrentFiles.Any())
+            {
+                List<object[]> newMovieOutputFileRecords = [];
+                foreach(var movieTorrentFile in movieTorrentFiles){
+                    int? existingMovieOutputFileId = await db
+                        .Query("MovieOutputFile")
+                        .Where("MovieId", movieId)
+                        .Where("StorageLocation", newStorageLocation)
+                        .Where("MovieTorrentFileId", movieTorrentFile.Id)
+                        .Select("Id")
+                        .FirstOrDefaultAsync<int>();
+                    if(existingMovieOutputFileId != 0)
+                    {
+                        await db
+                            .Query("MovieOutputFile")
+                            .Where("Id", existingMovieOutputFileId)
+                            .UpdateAsync(new {
+                                MovieStorageLocationId = newStorageLocationRecordId,
+                                Status = "InitializedPendingCreation"
+                            });
+                    }
+                    else
+                    {
+                        newMovieOutputFileRecords.Add([
+                            movieId,
+                            movieTorrentFile.Id,
+                            newStorageLocationRecordId,
+                            newStorageLocation,
+                            movieTorrentFile.Name,
+                            await CreateMovieFilePathByImdbIdAsync(imdbId, movieTorrentFile.Name, Path.GetExtension(movieTorrentFile.Path).Replace(".", "")),
+                            "InitializedPendingCreation"
+                        ]);
+                    }
+                }
+                if(newMovieOutputFileRecords.Count != 0)
+                {
+                    await db
+                        .Query("MovieOutputFile")
+                        .InsertAsync(["MovieId", "MovieTorrentFileId", "MovieStorageLocationId", "StorageLocation", "Name", "FilePath", "Status"],newMovieOutputFileRecords);
+                }
+            }
+        }
+        foreach(var storageLocationRecord in storageLocationRecords)
+        {
+            if(storageLocations.Any(sl => sl == storageLocationRecord.StorageLocation))
+            {
+                continue;
+            }
+            await db
+                .Query("MovieOutputFile")
+                .Where("MovieId", movieId)
+                .Where("MovieStorageLocationId", storageLocationRecord.Id)
+                .UpdateAsync(new Dictionary<string, object> {
+                    { "MovieStorageLocationId", null },
+                    { "Status", "MisplacedPendingDeletion" }
+                });
+            await db
+                .Query("MovieStorageLocation")
+                .Where("Id", storageLocationRecord.Id)
+                .DeleteAsync();
+        }
         transaction.Commit();
     }
 
@@ -251,6 +352,25 @@ public partial class Application
             .ToList();
     }
 
+    public record MovieStorageLocationRecord(int Id, string StorageLocation);
+
+    private record GetMovieStorageLocationRecordsAsyncRow(long Id, string StorageLocation);
+
+    public async Task<List<MovieStorageLocationRecord>> GetMovieStorageLocationRecordsAsync(int movieId)
+    {
+        using var db = Db.CreateConnection();
+        return (await db
+            .Query("MovieStorageLocation")
+            .Where("MovieId", movieId)
+            .Select(["Id", "StorageLocation"])
+            .GetAsync<GetMovieStorageLocationRecordsAsyncRow>())
+            .Select(r => new MovieStorageLocationRecord(
+                Id: (int)r.Id,
+                StorageLocation: r.StorageLocation
+            ))
+            .ToList();
+    }
+
     public record MovieDetails(string ImdbId, string Name);
 
     public async Task<MovieDetails> GetMovieDetailsAsync(int movieId)
@@ -265,15 +385,15 @@ public partial class Application
 
     public async Task<bool> MovieIsSavedSomewhereAsync(int movieId)
     {
-        foreach (var storageLocation in await GetMovieStorageLocationsAsync(movieId))
-        {
-            IStorageLocation? storage = StorageGateway.instance.StorageLocations.FirstOrDefault(sl => sl.Id == storageLocation);
-            if (storage != null && await storage.HasMovieSavedAsync(movieId, "Cinematic Cut"))
-            {
-                return true;
-            }
-        }
-        return false;
+        using var db = Db.CreateConnection();
+        return (await db
+            .Query("MovieOutputFile")
+            .Join("MovieTorrentFile", j => j.On("MovieOutputFile.MovieTorrentFileId", "MovieTorrentFile.Id"))
+            .Join("MovieStorageLocation", j => j.On("MovieOutputFile.MovieStorageLocationId", "MovieStorageLocation.Id"))
+            .Where("MovieOutputFile.MovieId", movieId)
+            .Where("MovieTorrentFile.Name", "Cinematic Cut")
+            .Where("MovieOutputFile.Status", "Created")
+            .CountAsync<int>()) > 0;
     }
 
     public record GetMoviesInProgressMovie(int Id, string ImdbId, string Name, List<string> StorageLocations, int Progress);
@@ -313,5 +433,38 @@ public partial class Application
                 ));
         }
         return movies;
+    }
+
+    public async Task<string> CreateMovieFilePathByImdbIdAndTorrentFileIdAsync(string imdbId, string type, int torrentFileId)
+    {
+        using var db = Db.CreateConnection();
+        string torrentFilePath = await db
+            .Query("TorrentFile")
+            .Where("Id", torrentFileId)
+            .Select("Path")
+            .FirstAsync<string>();
+        return await CreateMovieFilePathByImdbIdAsync(imdbId, "Cinematic Cut", Path.GetExtension(torrentFilePath).Replace(".", ""));
+    }
+
+    private record CreateMovieFilePathByImdbIdAsyncRow(string Name, long Year);
+
+    public async Task<string> CreateMovieFilePathByImdbIdAsync(string imdbId, string type, string extension)
+    {
+        using var db = Db.CreateConnection();
+        var row = await db
+            .Query("Movie")
+            .Where("ImdbId", imdbId)
+            .Select(["Name", "Year"])
+            .FirstOrDefaultAsync<CreateMovieFilePathByImdbIdAsyncRow>();
+        if(row == null)
+        {
+            throw new Exception($"{imdbId} does not exists");
+        }
+        return CreateMovieFilePath(row.Name, (int)row.Year, imdbId, type, extension);
+    }
+
+    public string CreateMovieFilePath(string movieName, int movieYear, string movieImdbId, string type, string extension)
+    {
+        return $"{movieName} ({movieYear}) [imdbid-{movieImdbId}]/{movieName} ({movieYear}) [imdbid-{movieImdbId}] - {type}.{extension}";
     }
 }

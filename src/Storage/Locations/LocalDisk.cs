@@ -77,4 +77,14 @@ public class LocalDiskStorageLocation : IStorageLocation
         bool exists = files.Any(f => Path.GetFileNameWithoutExtension(f.Name).EndsWith($"{details.SeasonNumber}_{details.EpisodeNumber}"));
         return exists;
     }
+
+    public Task<bool> HasFileByPathAsync(string path)
+    {
+        return Task.FromResult(File.Exists(Path.Join(BasePath,path)));
+    }
+
+    public Task SaveFileByPathAsync(string path, Stream contents)
+    {
+        return Filesystem.WriteStreamToFileAsync(contents, Path.Join(BasePath,path));
+    }
 }

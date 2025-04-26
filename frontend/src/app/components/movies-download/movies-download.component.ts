@@ -226,8 +226,8 @@ export class MoviesDownloadComponent implements OnInit, OnDestroy {
         ? of([])
         : this.api.addMovie(this.imdbId, this.title, this.plot, this.posterUrl, this.year, true)
       ),
-      switchMap(() => this.api.setMovieCinematicCutTorrent(this.imdbId, this.torrentMovieMapping$.value!.url, this.torrentMovieMapping$.value!.source, this.torrentMovieMapping$.value!.path)),
       switchMap(() => this.api.setMovieStorageLocations(this.imdbId, Array.from(this.storageLocationsMap.values()).filter(sl => sl.selected).map(sl => sl.id))),
+      switchMap(() => this.api.setMovieCinematicCutTorrent(this.imdbId, this.torrentMovieMapping$.value!.url, this.torrentMovieMapping$.value!.source, this.torrentMovieMapping$.value!.path)),
       tap(() => this.snackbarService.snacks.next(new Snack(SnackLevel.SUCCESS, `${this.title} was added`, null, null))),
       tap(() => this.loading = false),
       tap(() => this.router.navigate(['/']))

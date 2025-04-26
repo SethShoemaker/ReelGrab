@@ -8,6 +8,10 @@ public interface IStorageLocation
 
     public string Id { get; }
 
+    public Task<bool> HasFileByPathAsync(string path);
+
+    public Task SaveFileByPathAsync(string path, Stream contents);
+
     public Task SaveMovieAsync(int movieId, string type, string fileExtenstion, Stream contents);
 
     public Task<bool> HasMovieSavedAsync(int movieId, string type);
