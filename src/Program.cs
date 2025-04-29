@@ -49,7 +49,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 });
 builder.Services.AddControllers();
 
-builder.Services.AddHostedService<AddMovieTorrents>();
+builder.Services.AddHostedService<AddNeededTorrentFiles>();
 builder.Services.AddHostedService<ProcessCompletedMovies>();
 builder.Services.AddHostedService<AddSeriesTorrents>();
 builder.Services.AddHostedService<ProcessCompletedSeriesEpisodes>();
