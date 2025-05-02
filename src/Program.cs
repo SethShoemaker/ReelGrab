@@ -1,6 +1,4 @@
 using System.Text.Json.Serialization;
-using ReelGrab.Core.Background.Movies;
-using ReelGrab.Core.Background.Series;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,10 +47,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 });
 builder.Services.AddControllers();
 
-builder.Services.AddHostedService<AddNeededTorrentFiles>();
-builder.Services.AddHostedService<ProcessCompletedMovies>();
-builder.Services.AddHostedService<AddSeriesTorrents>();
-builder.Services.AddHostedService<ProcessCompletedSeriesEpisodes>();
+builder.Services.AddHostedService<ReelGrab.Core.Background.Torrents.SyncRequestedTorrents>();
+builder.Services.AddHostedService<ReelGrab.Core.Background.Movies.SyncRequestedTorrentFiles>();
+builder.Services.AddHostedService<ReelGrab.Core.Background.Movies.DownloadCompletedTorrentFiles>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
