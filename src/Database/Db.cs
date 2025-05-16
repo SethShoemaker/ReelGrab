@@ -34,6 +34,37 @@ public class Db
         }
     }
 
+    public static async Task RollbackMigrationAsync()
+    {
+        using QueryFactory db = CreateConnection();
+        using var transaction = db.Connection.BeginTransaction();
+        var toRollback = await db
+            .Query("Migrations")
+            .OrderByDesc("Timestamp")
+            .Select("Name")
+            .FirstAsync<string>();
+        Type type = Migrations.First(t => t.FullName == toRollback);
+        Migration instance = (Migration)(Activator.CreateInstance(type) ?? throw new Exception($"could not instantiate {type.FullName}"));
+        Console.WriteLine($"About to Rollback {type.FullName}");
+        Console.Write("Are you sure you want to proceed? (y/n): ");
+        string? input = Console.ReadLine()?.Trim().ToLower();
+        if(input != "y" && input != "yes")
+        {
+            throw new Exception("Operation canceled");
+        }
+        Console.WriteLine($"Rolling back {type.FullName}");
+        await instance.Down(db);
+        Console.WriteLine($"Rolled back {type.FullName}");
+        Console.WriteLine($"Removing migration record");
+        await db
+            .Query("Migrations")
+            .Where("Name", type.FullName)
+            .DeleteAsync();
+        Console.WriteLine($"Removed migration record");
+        Console.WriteLine($"Committing rollback");
+        transaction.Commit();
+    }
+
     public static async Task ApplyMigration(Type migration)
     {
         if (!typeof(Migration).IsAssignableFrom(migration))
