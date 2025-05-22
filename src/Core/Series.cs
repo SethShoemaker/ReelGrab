@@ -4,6 +4,7 @@ using ReelGrab.Storage;
 using ReelGrab.Storage.Locations;
 using ReelGrab.TorrentClients;
 using ReelGrab.TorrentClients.Exceptions;
+using ReelGrab.Utils;
 using SqlKata.Execution;
 
 namespace ReelGrab.Core;
@@ -256,9 +257,11 @@ public partial class Application
 
     public record SetSeriesTorrentMappingsAsyncTorrent(int Id, List<SetSeriesTorrentMappingsAsyncMapping> Mappings);
 
-    public async Task SetSeriesTorrentMappingsAsync(string imdbId, List<SetSeriesTorrentMappingsAsyncTorrent> torrents)
+    private record SetSeriesTorrentMappingsAsyncOldMapping(long Id, long TorrentId, long TorrentFileId, long EpisodeId, long SeriesTorrentId);
+
+    public async Task SetSeriesTorrentMappingsAsync(string imdbId, List<SetSeriesTorrentMappingsAsyncTorrent> newTorrents)
     {
-        if(! await SeriesWithImdbIdExistsAsync(imdbId))
+        if (!await SeriesWithImdbIdExistsAsync(imdbId))
         {
             throw new Exception($"{imdbId} does not exist");
         }
@@ -267,40 +270,144 @@ public partial class Application
         int seriesId = await db
             .Query("Series")
             .Where("ImdbId", imdbId)
-            .Select("Id")
-            .FirstOrDefaultAsync<int>();
-        var seriesTorrentIds = await db
-            .Query("SeriesTorrent")
-            .Where("SeriesId", seriesId)
-            .Select("Id")
-            .GetAsync<int>();
-        await db
+            .Select(["Id"])
+            .FirstAsync<int>();
+        var storageLocationRecords = await GetSeriesStorageLocationRecordsAsync(seriesId);
+        var oldMappings = await db
             .Query("SeriesTorrentMapping")
-            .WhereIn("SeriesTorrentId", seriesTorrentIds)
-            .DeleteAsync();
-        await db
-            .Query("SeriesTorrent")
-            .Where("SeriesId", seriesId)
-            .DeleteAsync();
-        foreach(var torrent in torrents)
+            .Join("SeriesTorrent", j => j.On("SeriesTorrentMapping.SeriesTorrentId", "SeriesTorrent.Id"))
+            .Where("SeriesTorrent.SeriesId", seriesId)
+            .Where("SeriesTorrentMapping.Name", "Original Broadcast")
+            .Select(["SeriesTorrentMapping.Id", "SeriesTorrent.TorrentId", "SeriesTorrentMapping.TorrentFileId", "SeriesTorrentMapping.EpisodeId", "SeriesTorrent.Id as SeriesTorrentId"])
+            .GetAsync<SetSeriesTorrentMappingsAsyncOldMapping>();
+        foreach (var newTorrent in newTorrents)
         {
-            var seriesTorrentId = await db
+            int seriesTorrentId = await db
                 .Query("SeriesTorrent")
-                .InsertGetIdAsync<int>(new {
-                    SeriesId = seriesId,
-                    TorrentId = torrent.Id
+                .Where("SeriesId", seriesId)
+                .Where("TorrentId", newTorrent.Id)
+                .Select("Id")
+                .FirstOrDefaultAsync<int?>()
+                ?? await db
+                    .Query("SeriesTorrent")
+                    .InsertGetIdAsync<int>(new
+                    {
+                        SeriesId = seriesId,
+                        TorrentId = newTorrent.Id
+                    });
+            foreach (var newMapping in newTorrent.Mappings)
+            {
+                var oldMapping = oldMappings.FirstOrDefault(m => m.EpisodeId == newMapping.EpisodeId);
+                if (oldMapping != null)
+                {
+                    if (oldMapping.TorrentId == newTorrent.Id && oldMapping.TorrentFileId == newMapping.TorrentFileId)
+                    {
+                        continue;
+                    }
+                    await db
+                        .Query("SeriesOutputFile")
+                        .Where("SeriesId", seriesId)
+                        .Where("EpisodeId", newMapping.EpisodeId)
+                        .Where("Name", "Orignal Broadcast")
+                        .WhereIn("Status", ["InitializedPendingCreation", "StalePendingUpdate", "Okay"])
+                        .UpdateAsync(new Dictionary<string, object> {
+                            { "SeriesTorrentMappingId", null }
+                        });
+                    await db
+                        .Query("SeriesTorrentMapping")
+                        .Where("Id", oldMapping.Id)
+                        .DeleteAsync();
+                }
+                var id = await db
+                    .Query("SeriesTorrentMapping")
+                    .InsertGetIdAsync<int>(new
+                    {
+                        SeriesTorrentId = seriesTorrentId,
+                        EpisodeId = newMapping.EpisodeId,
+                        TorrentFileId = newMapping.TorrentFileId,
+                        Name = "Original Broadcast"
+                    });
+                string path = await CreateSeriesEpisodeFilePathByImdbIdAndEpisodeIdAndTorrentFileIdAsync(imdbId, newMapping.EpisodeId, newMapping.TorrentFileId);
+                foreach (var storageLocationRecord in storageLocationRecords)
+                {
+                    int? oldRecordId = await db
+                        .Query("SeriesOutputFile")
+                        .Where("SeriesId", seriesId)
+                        .Where("EpisodeId", newMapping.EpisodeId)
+                        .Where("SeriesStorageLocationId", storageLocationRecord.Id)
+                        .Where("Name", "Original Broadcast")
+                        .Where("FilePath", path)
+                        .Select("Id")
+                        .FirstOrDefaultAsync<int?>();
+                    if (oldRecordId != null)
+                    {
+                        await db
+                            .Query("SeriesOutputFile")
+                            .Where("Id", oldRecordId)
+                            .UpdateAsync(new
+                            {
+                                SeriesTorrentMappingId = id,
+                                Status = "StalePendingUpdate"
+                            });
+                    }
+                    else
+                    {
+                        await db
+                            .Query("SeriesOutputFile")
+                            .Where("SeriesId", seriesId)
+                            .Where("EpisodeId", newMapping.EpisodeId)
+                            .Where("SeriesStorageLocationId", storageLocationRecord.Id)
+                            .Where("Name", "Original Broadcast")
+                            .UpdateAsync(new
+                            {
+                                Status = "MisplacedPendingDeletion"
+                            });
+                        await db
+                            .Query("SeriesOutputFile")
+                            .InsertAsync(new
+                            {
+                                SeriesId = seriesId,
+                                EpisodeId = newMapping.EpisodeId,
+                                SeriesTorrentMappingId = id,
+                                SeriesStorageLocationId = storageLocationRecord.Id,
+                                StorageLocation = storageLocationRecord.StorageLocation,
+                                Name = "Original Broadcast",
+                                FilePath = path,
+                                Status = "InitializedPendingCreation"
+                            });
+                    }
+                }
+            }
+        }
+        foreach (var oldMapping in oldMappings)
+        {
+            if (newTorrents.Any(t => t.Id == oldMapping.TorrentId && t.Mappings.Any(m => m.TorrentFileId == oldMapping.TorrentFileId && m.EpisodeId == oldMapping.EpisodeId)))
+            {
+                continue;
+            }
+            await db
+                .Query("SeriesOutputFile")
+                .Where("SeriesId", seriesId)
+                .Where("EpisodeId", oldMapping.EpisodeId)
+                .UpdateAsync(new Dictionary<string, object> {
+                    { "SeriesTorrentMappingId", null },
+                    { "Status", "MisplacedPendingDeletion" }
                 });
             await db
                 .Query("SeriesTorrentMapping")
-                .InsertAsync(
-                    ["SeriesTorrentId", "EpisodeId", "TorrentFileId", "Name"],
-                    torrent.Mappings.Select(m => new object[]{
-                        seriesTorrentId,
-                        m.EpisodeId,
-                        m.TorrentFileId,
-                        "Original Broadcast"
-                    })
-                );
+                .Where("Id", oldMapping.Id)
+                .DeleteAsync();
+            int remainingSeriesTorrentMappingCount = await db
+                .Query("SeriesTorrentMapping")
+                .Where("SeriesTorrentId", oldMapping.SeriesTorrentId)
+                .CountAsync<int>();
+            if (remainingSeriesTorrentMappingCount == 0)
+            {
+                await db
+                    .Query("SeriesTorrent")
+                    .Where("Id", oldMapping.SeriesTorrentId)
+                    .DeleteAsync();
+            }
         }
         transaction.Commit();
     }
@@ -342,34 +449,78 @@ public partial class Application
         return result;
     }
 
+    private record SetSeriesStorageLocationsAsyncMappingRow(long Id, long EpisodeId, long TorrentFileId, string Name);
+
     public async Task SetSeriesStorageLocationsAsync(string imdbId, List<string> storageLocations)
     {
-        if(! await SeriesWithImdbIdExistsAsync(imdbId))
+        if (!await SeriesWithImdbIdExistsAsync(imdbId))
         {
             throw new Exception($"{imdbId} does not exist");
         }
         using var db = Db.CreateConnection();
         using var transaction = db.Connection.BeginTransaction();
-        await db
-            .Query("SeriesStorageLocation")
-            .WhereIn("SeriesStorageLocation.Id", db
-                .Query("Series")
-                .Join("SeriesStorageLocation", j => j.On("Series.Id", "SeriesStorageLocation.SeriesId"))
-                .Where("Series.ImdbId", imdbId)
-                .Select("SeriesStorageLocation.Id")
-            )
-            .DeleteAsync();
         int seriesId = await db
             .Query("Series")
             .Where("ImdbId", imdbId)
             .Select("Id")
             .FirstOrDefaultAsync<int>();
-        await db
-            .Query("SeriesStorageLocation")
-            .InsertAsync(["SeriesId", "StorageLocation"], storageLocations.Select(sl => new object[]{
-                seriesId,
-                sl
-            }));
+        var mappings = await db
+            .Query("SeriesTorrentMapping")
+            .Join("SeriesTorrent", j => j.On("SeriesTorrentMapping.SeriesTorrentId", "SeriesTorrent.Id"))
+            .Where("SeriesTorrent.SeriesId", seriesId)
+            .Select(["SeriesTorrentMapping.Id", "EpisodeId", "SeriesTorrentMapping.TorrentFileId", "SeriesTorrentMapping.Name"])
+            .GetAsync<SetSeriesStorageLocationsAsyncMappingRow>();
+        Dictionary<long, string> paths = new();
+        foreach (var mapping in mappings)
+        {
+            paths[mapping.Id] = await CreateSeriesEpisodeFilePathByImdbIdAndEpisodeIdAndTorrentFileIdAsync(imdbId, (int)mapping.EpisodeId, (int)mapping.TorrentFileId);
+        }
+        var storageLocationRecords = await GetSeriesStorageLocationRecordsAsync(seriesId);
+        foreach (var storageLocation in storageLocations)
+        {
+            if (storageLocationRecords.Any(slr => slr.StorageLocation == storageLocation))
+            {
+                continue;
+            }
+            int id = await db
+                .Query("SeriesStorageLocation")
+                .InsertGetIdAsync<int>(new
+                {
+                    SeriesId = seriesId,
+                    StorageLocation = storageLocation
+                });
+            await db
+                .Query("SeriesOutputFile")
+                .InsertAsync(["SeriesId", "EpisodeId", "SeriesTorrentMappingId", "SeriesStorageLocationId", "StorageLocation", "Name", "FilePath", "Status"],
+                    mappings.Select(m => new object[] {
+                        seriesId,
+                        m.EpisodeId,
+                        m.Id,
+                        id,
+                        storageLocation,
+                        m.Name,
+                        paths[m.Id],
+                        "InitializedPendingCreation"
+                    }));
+        }
+        foreach (var storageLocationRecord in storageLocationRecords)
+        {
+            if (storageLocations.Any(sl => sl == storageLocationRecord.StorageLocation))
+            {
+                continue;
+            }
+            await db
+                .Query("SeriesOuputFile")
+                .Where("SeriesStorageLocationId", storageLocationRecord.Id)
+                .UpdateAsync(new Dictionary<string, object> {
+                    { "SeriesStorageLocationId", null },
+                    { "Status", "MisplacedPendingDeletion" }
+                });
+            await db
+                .Query("SeriesStorageLocation")
+                .Where("SeriesStorageLocationId", storageLocationRecord.Id)
+                .DeleteAsync();
+        }
         transaction.Commit();
     }
 
@@ -394,6 +545,25 @@ public partial class Application
             .Where("Series.ImdbId", imdbId)
             .Select("SeriesStorageLocation.StorageLocation")
             .GetAsync<string>())
+            .ToList();
+    }
+
+    public record SeriesStorageLocationRecord(int Id, string StorageLocation);
+
+    private record GetSeriesStorageLocationRecordsAsyncRow(long Id, string StorageLocation);
+
+    public async Task<List<SeriesStorageLocationRecord>> GetSeriesStorageLocationRecordsAsync(int seriesId)
+    {
+        using var db = Db.CreateConnection();
+        return (await db
+            .Query("SeriesStorageLocation")
+            .Where("SeriesId", seriesId)
+            .Select(["Id", "StorageLocation"])
+            .GetAsync<GetSeriesStorageLocationRecordsAsyncRow>())
+            .Select(r => new SeriesStorageLocationRecord(
+                Id: (int)r.Id,
+                StorageLocation: r.StorageLocation
+            ))
             .ToList();
     }
 
@@ -424,17 +594,15 @@ public partial class Application
         return new(row.SeriesName, row.SeriesImdbId, (int)row.SeasonId, (int)row.SeasonNumber, (int)row.EpisodeNumber, row.EpisodeName, row.EpisodeImdbId);
     }
 
-    public async Task<bool> SeriesEpisodeIsSavedSomewhereAsync(int episodeId, List<string> storageLocations)
+    public async Task<bool> SeriesEpisodeIsSavedSomewhereAsync(int episodeId)
     {
-        foreach (var storageLocation in storageLocations)
-        {
-            IStorageLocation? storage = StorageGateway.instance.StorageLocations.FirstOrDefault(sl => sl.Id == storageLocation);
-            if (storage != null && await storage.HasSeriesEpisodeAsync(episodeId, "Original Broadcast"))
-            {
-                return true;
-            }
-        }
-        return false;
+        using var db = Db.CreateConnection();
+        return (await db
+            .Query("SeriesOutputFile")
+            .Join("SeriesTorrentMapping", j => j.On("SeriesOutputFile.SeriesTorrentMappingId", "SeriesTorrentMapping.Id"))
+            .Where("SeriesTorrentMapping.EpisodeId", episodeId)
+            .Where("Status", "Okay")
+            .CountAsync<int>()) > 0;
     }
 
     public record GetSeriesInProgressSeries(int Id, string ImdbId, string Name, List<GetSeriesInProgressSeriesEpisode> Episodes, List<string> StorageLocations);
@@ -475,12 +643,38 @@ public partial class Application
                 List<ITorrentClient.TorrentFileInfo> torrentFiles = await TorrentClient.instance.GetTorrentFilesByHashAsync(row.Hash);
                 progress = torrentFiles.First(tf => tf.Path == row.Path).Progress;
             } catch(TorrentDoesNotExistException){
-                progress = await SeriesEpisodeIsSavedSomewhereAsync((int)row.EpisodeId, storageLocations)
+                progress = await SeriesEpisodeIsSavedSomewhereAsync((int)row.EpisodeId)
                     ? 100
                     : 0;
             }
             series.Episodes.Add(new((int)row.SeasonNumber, (int)row.EpisodeNumber, (int)row.EpisodeId, row.EpisodeImdbId, row.EpisodeName, progress));
         }
         return serieses;
+    }
+
+    private record CreateSeriesEpisodeFilePathByImdbIdAndEpisodeIdAndTorrentFileIdAsyncSeries(string Name, long StartYear, long Season, long Episode);
+
+    public async Task<string> CreateSeriesEpisodeFilePathByImdbIdAndEpisodeIdAndTorrentFileIdAsync(string imdbId, int episodeId, int torrentFileId)
+    {
+        using var db = Db.CreateConnection();
+        var series = await db
+            .Query("SeriesEpisode")
+            .Join("SeriesSeason", j => j.On("SeriesEpisode.SeasonId", "SeriesSeason.Id"))
+            .Join("Series", j => j.On("SeriesSeason.SeriesId", "Series.Id"))
+            .Where("Series.ImdbId", imdbId)
+            .Where("SeriesEpisode.Id", episodeId)
+            .Select(["Series.Name", "StartYear", "SeriesSeason.Number AS Season", "SeriesEpisode.Number AS Episode"])
+            .FirstAsync<CreateSeriesEpisodeFilePathByImdbIdAndEpisodeIdAndTorrentFileIdAsyncSeries>();
+        var path = await db
+            .Query("TorrentFile")
+            .Where("Id", torrentFileId)
+            .Select("Path")
+            .FirstAsync<string>();
+        return CreateSeriesEpisodeFilePath(series.Name, (int)series.StartYear, (int)series.Season, (int)series.Episode, Path.GetExtension(path).Replace(".", ""));
+    }
+
+    public string CreateSeriesEpisodeFilePath(string seriesName, int seriesStartYear, int season, int episode, string extension)
+    {
+        return $"{seriesName} ({seriesStartYear})/S{SeriesFormatting.FormatSeason(season)}/{seriesName} S{SeriesFormatting.FormatSeason(season)}E{SeriesFormatting.FormatEpisode(episode)}.{extension}";
     }
 }

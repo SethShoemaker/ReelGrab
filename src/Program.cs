@@ -50,6 +50,8 @@ builder.Services.AddControllers();
 builder.Services.AddHostedService<ReelGrab.Core.Background.Torrents.SyncRequestedTorrents>();
 builder.Services.AddHostedService<ReelGrab.Core.Background.Movies.SyncRequestedTorrentFiles>();
 builder.Services.AddHostedService<ReelGrab.Core.Background.Movies.DownloadCompletedTorrentFiles>();
+builder.Services.AddHostedService<ReelGrab.Core.Background.Series.SyncRequestedTorrentFiles>();
+builder.Services.AddHostedService<ReelGrab.Core.Background.Series.DownloadCompletedTorrentFiles>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

@@ -22,7 +22,8 @@ public class Db
         typeof(CreateSeriesStorageLocationsTable),
         typeof(RenameTheatricalReleaseMovieTorrentFilesToCinematicCutMovieTorrentFiles),
         typeof(CreateMovieOutputFileTable),
-        typeof(CreateTorrentFileRequestTable)
+        typeof(CreateTorrentFileRequestTable),
+        typeof(CreateSeriesOutputFileTable)
     ];
 
     public static async Task ApplyMigrationsAsync()
