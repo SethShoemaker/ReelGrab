@@ -308,7 +308,7 @@ public partial class Application
                         .Query("SeriesOutputFile")
                         .Where("SeriesId", seriesId)
                         .Where("EpisodeId", newMapping.EpisodeId)
-                        .Where("Name", "Orignal Broadcast")
+                        .Where("Name", "Original Broadcast")
                         .WhereIn("Status", ["InitializedPendingCreation", "StalePendingUpdate", "Okay"])
                         .UpdateAsync(new Dictionary<string, object> {
                             #pragma warning disable CS8625
