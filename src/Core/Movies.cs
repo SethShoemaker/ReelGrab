@@ -317,8 +317,10 @@ public partial class Application
                 .Where("MovieId", movieId)
                 .Where("MovieStorageLocationId", storageLocationRecord.Id)
                 .UpdateAsync(new Dictionary<string, object> {
+                    #pragma warning disable CS8625
                     { "MovieStorageLocationId", null },
                     { "Status", "MisplacedPendingDeletion" }
+                    #pragma warning restore CS8625
                 });
             await db
                 .Query("MovieStorageLocation")

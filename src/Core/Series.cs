@@ -311,7 +311,9 @@ public partial class Application
                         .Where("Name", "Orignal Broadcast")
                         .WhereIn("Status", ["InitializedPendingCreation", "StalePendingUpdate", "Okay"])
                         .UpdateAsync(new Dictionary<string, object> {
+                            #pragma warning disable CS8625
                             { "SeriesTorrentMappingId", null }
+                            #pragma warning restore CS8625
                         });
                     await db
                         .Query("SeriesTorrentMapping")
@@ -390,8 +392,10 @@ public partial class Application
                 .Where("SeriesId", seriesId)
                 .Where("EpisodeId", oldMapping.EpisodeId)
                 .UpdateAsync(new Dictionary<string, object> {
+                    #pragma warning disable CS8625
                     { "SeriesTorrentMappingId", null },
                     { "Status", "MisplacedPendingDeletion" }
+                    #pragma warning restore CS8625
                 });
             await db
                 .Query("SeriesTorrentMapping")
@@ -513,8 +517,10 @@ public partial class Application
                 .Query("SeriesOuputFile")
                 .Where("SeriesStorageLocationId", storageLocationRecord.Id)
                 .UpdateAsync(new Dictionary<string, object> {
+                    #pragma warning disable CS8625
                     { "SeriesStorageLocationId", null },
                     { "Status", "MisplacedPendingDeletion" }
+                    #pragma warning restore CS8625
                 });
             await db
                 .Query("SeriesStorageLocation")
