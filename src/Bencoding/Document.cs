@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace ReelGrab.Bencoding;
 
 public class Document
@@ -28,6 +30,12 @@ public class Document
             return new(DictionaryNode.FromString(str));
         }
         throw new Exception("could not decode string");
+    }
+
+    public static async Task<Document> FromFileAsync(string filePath)
+    {
+        byte[] fileBytes = await File.ReadAllBytesAsync(filePath);
+        return FromString(Encoding.ASCII.GetString(fileBytes));
     }
 
     public string ToDebugString()
