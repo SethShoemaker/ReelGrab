@@ -8,6 +8,8 @@ public partial class IntegerNode : Node
 
     public override int RepresentationLength { get; init; }
 
+    public override string Representation { get; init; } = null!;
+
     public static IntegerNode FromString(string str)
     {
         if (!EnsureIsValidIntegerNode().Match(str).Success)
@@ -18,7 +20,8 @@ public partial class IntegerNode : Node
         return new IntegerNode()
         {
             Value = value,
-            RepresentationLength = value.ToString().Length + 2
+            RepresentationLength = value.ToString().Length + 2,
+            Representation = 'i' + value.ToString() + 'e'
         };
     }
 

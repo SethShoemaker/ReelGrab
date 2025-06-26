@@ -6,6 +6,8 @@ public class DictionaryNode : Node
 
     public override int RepresentationLength { get; init; }
 
+    public override string Representation { get; init; } = null!;
+
     public static DictionaryNode FromString(string str)
     {
         if (!str.StartsWith('d'))
@@ -55,7 +57,8 @@ public class DictionaryNode : Node
         return new DictionaryNode()
         {
             Elements = elements,
-            RepresentationLength = elements.Select(e => e.Key).Sum(e => e.RepresentationLength) + elements.Select(e => e.Value).Sum(e => e.RepresentationLength) + 2
+            RepresentationLength = elements.Select(e => e.Key).Sum(e => e.RepresentationLength) + elements.Select(e => e.Value).Sum(e => e.RepresentationLength) + 2,
+            Representation = 'd' + string.Concat(elements.Select(e => e.Key.Representation + e.Value.Representation)) + 'e'
         };
     }
 }

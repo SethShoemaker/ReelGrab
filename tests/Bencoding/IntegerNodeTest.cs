@@ -10,6 +10,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i4e");
         Assert.Equal(4, node.Value);
         Assert.Equal(3, node.RepresentationLength);
+        Assert.Equal("i4e", node.Representation);
     }
 
     [Fact]
@@ -18,6 +19,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i4e4:spam");
         Assert.Equal(4, node.Value);
         Assert.Equal(3, node.RepresentationLength);
+        Assert.Equal("i4e", node.Representation);
     }
 
     [Fact]
@@ -26,6 +28,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i69e");
         Assert.Equal(69, node.Value);
         Assert.Equal(4, node.RepresentationLength);
+        Assert.Equal("i69e", node.Representation);
     }
 
     [Fact]
@@ -34,6 +37,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i69e4:spam");
         Assert.Equal(69, node.Value);
         Assert.Equal(4, node.RepresentationLength);
+        Assert.Equal("i69e", node.Representation);
     }
 
     [Fact]
@@ -42,6 +46,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i0e4:spam");
         Assert.Equal(0, node.Value);
         Assert.Equal(3, node.RepresentationLength);
+        Assert.Equal("i0e", node.Representation);
     }
 
     [Fact]
@@ -50,6 +55,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i-1e");
         Assert.Equal(-1, node.Value);
         Assert.Equal(4, node.RepresentationLength);
+        Assert.Equal("i-1e", node.Representation);
     }
 
     [Fact]
@@ -58,6 +64,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i-1e4:spam");
         Assert.Equal(-1, node.Value);
         Assert.Equal(4, node.RepresentationLength);
+        Assert.Equal("i-1e", node.Representation);
     }
 
     [Fact]
@@ -66,6 +73,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i-12e");
         Assert.Equal(-12, node.Value);
         Assert.Equal(5, node.RepresentationLength);
+        Assert.Equal("i-12e", node.Representation);
     }
 
     [Fact]
@@ -74,6 +82,7 @@ public class IntegerNodeTest
         var node = IntegerNode.FromString("i-12e4:spam");
         Assert.Equal(-12, node.Value);
         Assert.Equal(5, node.RepresentationLength);
+        Assert.Equal("i-12e", node.Representation);
     }
 
     [Fact]

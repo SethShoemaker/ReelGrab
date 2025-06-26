@@ -8,6 +8,7 @@ public class DictionaryNodeTest
     public void TestSimpleDictionaryByItself()
     {
         var node = DictionaryNode.FromString("d5:hello5:worlde");
+        Assert.Equal("d5:hello5:worlde", node.Representation);
     }
 
     [Fact]
@@ -17,6 +18,7 @@ public class DictionaryNodeTest
 
         Assert.Empty(node.Elements);
         Assert.Equal(2, node.RepresentationLength);
+        Assert.Equal("de", node.Representation);
     }
 
     [Fact]
@@ -31,6 +33,7 @@ public class DictionaryNodeTest
         Assert.IsType<StringNode>(element.Value);
         Assert.Equal("bar", ((StringNode)element.Value).Value);
         Assert.Equal(12, node.RepresentationLength);
+        Assert.Equal("d3:foo3:bare", node.Representation);
     }
 
     [Fact]
@@ -45,6 +48,7 @@ public class DictionaryNodeTest
         Assert.IsType<IntegerNode>(element.Value);
         Assert.Equal(42, ((IntegerNode)element.Value).Value);
         Assert.Equal(11, node.RepresentationLength);
+        Assert.Equal("d3:fooi42ee", node.Representation);
     }
 
     [Fact]
@@ -58,6 +62,7 @@ public class DictionaryNodeTest
         Assert.Equal("b", node.Elements[1].Key.Value);
         Assert.Equal("two", ((StringNode)node.Elements[1].Value).Value);
         Assert.Equal(18, node.RepresentationLength);
+        Assert.Equal("d1:a3:one1:b3:twoe", node.Representation);
     }
 
     [Fact]
@@ -73,6 +78,7 @@ public class DictionaryNodeTest
         Assert.Equal(3, listNode.Elements.Count);
         Assert.All(listNode.Elements, n => Assert.IsType<IntegerNode>(n));
         Assert.Equal(19, node.RepresentationLength);
+        Assert.Equal("d4:listli1ei2ei3eee", node.Representation);
     }
 
     [Fact]
@@ -108,5 +114,6 @@ public class DictionaryNodeTest
         Assert.Equal("bob", nameValue.Value);
 
         Assert.Equal(22, node.RepresentationLength);
+        Assert.Equal("d5:hellod4:name3:bobee", node.Representation);
     }
 }

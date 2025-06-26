@@ -6,6 +6,8 @@ public partial class StringNode : Node
 {
     public string Value { get; init; } = null!;
 
+    public override string Representation { get; init; } = null!;
+
     public override int RepresentationLength { get; init; }
 
     public static StringNode FromString(string str)
@@ -16,14 +18,12 @@ public partial class StringNode : Node
         }
         int colonIndex = str.IndexOf(':');
         int charCount = int.Parse(str[..colonIndex]);
-        if (str[(colonIndex + 1)..].Length < charCount)
-        {
-            throw new Exception($"{str} is missing some characters");
-        }
+        string value = str[(colonIndex + 1)..(colonIndex + charCount + 1)];
         return new StringNode()
         {
             RepresentationLength = charCount.ToString().Length + 1 + charCount,
-            Value = str[(colonIndex + 1)..(colonIndex + charCount + 1)]
+            Value = value,
+            Representation = charCount.ToString() + ':' + value
         };
     }
 

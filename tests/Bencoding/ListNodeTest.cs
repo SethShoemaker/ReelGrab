@@ -10,6 +10,7 @@ public class ListNodeTest
         var node = ListNode.FromString("le");
         Assert.Empty(node.Elements);
         Assert.Equal(2, node.RepresentationLength);
+        Assert.Equal("le", node.Representation);
     }
 
     [Fact]
@@ -18,6 +19,7 @@ public class ListNodeTest
         var node = ListNode.FromString("le4:spam");
         Assert.Empty(node.Elements);
         Assert.Equal(2, node.RepresentationLength);
+        Assert.Equal("le", node.Representation);
     }
 
     [Fact]
@@ -29,6 +31,7 @@ public class ListNodeTest
         Assert.Equal("spam", stringNode.Value);
         Assert.Equal(6, stringNode.RepresentationLength);
         Assert.Equal(8, node.RepresentationLength);
+        Assert.Equal("l4:spame", node.Representation);
     }
 
     [Fact]
@@ -40,6 +43,7 @@ public class ListNodeTest
         Assert.Equal("spam", stringNode.Value);
         Assert.Equal(6, stringNode.RepresentationLength);
         Assert.Equal(8, node.RepresentationLength);
+        Assert.Equal("l4:spame", node.Representation);
     }
 
     [Fact]
@@ -51,6 +55,7 @@ public class ListNodeTest
         Assert.Equal(2, integerNode.Value);
         Assert.Equal(3, integerNode.RepresentationLength);
         Assert.Equal(5, node.RepresentationLength);
+        Assert.Equal("li2ee", node.Representation);
     }
 
     [Fact]
@@ -62,6 +67,7 @@ public class ListNodeTest
         Assert.Equal(2, integerNode.Value);
         Assert.Equal(3, integerNode.RepresentationLength);
         Assert.Equal(5, node.RepresentationLength);
+        Assert.Equal("li2ee", node.Representation);
     }
 
     [Fact]
@@ -76,6 +82,7 @@ public class ListNodeTest
         Assert.Equal("spam", stringNode.Value);
         Assert.Equal(6, stringNode.RepresentationLength);
         Assert.Equal(11, node.RepresentationLength);
+        Assert.Equal("li2e4:spame", node.Representation);
     }
 
     [Fact]
@@ -90,6 +97,7 @@ public class ListNodeTest
         Assert.Equal("spam", stringNode.Value);
         Assert.Equal(6, stringNode.RepresentationLength);
         Assert.Equal(11, node.RepresentationLength);
+        Assert.Equal("li2e4:spame", node.Representation);
     }
     [Fact]
     public void TestNestedListByItself()
@@ -111,5 +119,6 @@ public class ListNodeTest
         Assert.Equal(51, secondInnerListIntegerNode.Value);
         Assert.Equal(4, secondInnerListIntegerNode.RepresentationLength);
         Assert.Equal(12, secondInnerList.RepresentationLength);
+        Assert.Equal("lli2eel4:spami51eee", outerNode.Representation);
     }
 }

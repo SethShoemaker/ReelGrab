@@ -9,6 +9,7 @@ public class StringNodeTest
         var node = StringNode.FromString("4:spam");
         Assert.Equal("spam", node.Value);
         Assert.Equal(6, node.RepresentationLength);
+        Assert.Equal("4:spam", node.Representation);
     }
 
     [Fact]
@@ -17,14 +18,16 @@ public class StringNodeTest
         var node = StringNode.FromString("5:hello4:hello");
         Assert.Equal("hello", node.Value);
         Assert.Equal(7, node.RepresentationLength);
+        Assert.Equal("5:hello", node.Representation);
     }
 
     [Fact]
     public void TestDoubleDigitLengthByItself()
     {
-        var node = StringNode.FromString("13:greetingworld4:spam");
+        var node = StringNode.FromString("13:greetingworld");
         Assert.Equal("greetingworld", node.Value);
         Assert.Equal(16, node.RepresentationLength);
+        Assert.Equal("13:greetingworld", node.Representation);
     }
 
     [Fact]
@@ -33,6 +36,7 @@ public class StringNodeTest
         var node = StringNode.FromString("13:greetingworld4:spam");
         Assert.Equal("greetingworld", node.Value);
         Assert.Equal(16, node.RepresentationLength);
+        Assert.Equal("13:greetingworld", node.Representation);
     }
 
     [Fact]
@@ -59,7 +63,6 @@ public class StringNodeTest
     [Fact]
     public void TestFailsWhenMissingCharacters()
     {
-        var exception = Assert.Throws<Exception>(() => StringNode.FromString("12:helloworld"));
-        Assert.Equal("12:helloworld is missing some characters", exception.Message);
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => StringNode.FromString("12:helloworld"));
     }
 }

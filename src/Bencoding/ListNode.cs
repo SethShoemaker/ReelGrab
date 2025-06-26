@@ -6,6 +6,8 @@ public class ListNode : Node
 
     public override int RepresentationLength { get; init; }
 
+    public override string Representation { get; init; } = null!;
+
     public static ListNode FromString(string str)
     {
         if (!str.StartsWith('l'))
@@ -52,7 +54,8 @@ public class ListNode : Node
         return new ListNode()
         {
             Elements = elements,
-            RepresentationLength = elements.Sum(n => n.RepresentationLength) + 2
+            RepresentationLength = elements.Sum(n => n.RepresentationLength) + 2,
+            Representation = 'l' + string.Concat(elements.Select(e => e.Representation)) + 'e'
         };
     }
 }
