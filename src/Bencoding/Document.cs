@@ -9,6 +9,27 @@ public class Document
         Root = root;
     }
 
+    public static Document FromString(string str)
+    {
+        if (char.IsDigit(str[0]))
+        {
+            return new(StringNode.FromString(str));
+        }
+        if (str[0] == 'i')
+        {
+            return new(IntegerNode.FromString(str));
+        }
+        if (str[0] == 'l')
+        {
+            return new(ListNode.FromString(str));
+        }
+        if (str[0] == 'd')
+        {
+            return new(DictionaryNode.FromString(str));
+        }
+        throw new Exception("could not decode string");
+    }
+
     public string ToDebugString()
     {
         return ToDebugString(Root, 0);
