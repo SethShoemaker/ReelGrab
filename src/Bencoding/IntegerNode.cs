@@ -4,7 +4,7 @@ namespace ReelGrab.Bencoding;
 
 public partial class IntegerNode : Node
 {
-    public int Value { get; init; }
+    public long Value { get; init; }
 
     public override int RepresentationLength { get; init; }
 
@@ -14,7 +14,7 @@ public partial class IntegerNode : Node
         {
             throw new Exception($"{str} does not start with an integer node");
         }
-        int value = int.Parse(str[1..str.IndexOf('e')]);
+        long value = long.Parse(str[1..str.IndexOf('e')]);
         return new IntegerNode()
         {
             Value = value,
