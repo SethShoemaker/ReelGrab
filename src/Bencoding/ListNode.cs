@@ -4,58 +4,56 @@ public class ListNode : Node
 {
     public List<Node> Elements { get; init; } = null!;
 
-    public override int RepresentationLength { get; init; }
+    public override byte[] Representation { get; init; } = null!;
 
-    public override string Representation { get; init; } = null!;
-
-    public static ListNode FromString(string str)
+    public static ListNode Parse(byte[] bytes)
     {
-        if (!str.StartsWith('l'))
+        if (bytes[0] != 'l')
         {
-            throw new Exception($"{str} does not start with a list node");
+            throw new Exception("could not parse list node");
         }
         List<Node> elements = [];
-        for (int i = 1; true;)
+        int i = 1;
+        while (true)
         {
-            if (str[i] == 'e')
+            if (bytes[i] == 'e')
             {
                 break;
             }
-            if (char.IsDigit(str[i]))
+            if (bytes[i] >= '0' && bytes[i] <= '9')
             {
-                var node = StringNode.FromString(str[i..]);
-                i += node.RepresentationLength;
+                var node = StringNode.Parse(bytes[i..]);
+                i += node.Representation.Length;
                 elements.Add(node);
                 continue;
             }
-            if (str[i] == 'i')
+            if (bytes[i] == 'i')
             {
-                var node = IntegerNode.FromString(str[i..]);
-                i += node.RepresentationLength;
+                var node = IntegerNode.Parse(bytes[i..]);
+                i += node.Representation.Length;
                 elements.Add(node);
                 continue;
             }
-            if (str[i] == 'l')
+            if (bytes[i] == 'l')
             {
-                var node = ListNode.FromString(str[i..]);
-                i += node.RepresentationLength;
+                var node = ListNode.Parse(bytes[i..]);
+                i += node.Representation.Length;
                 elements.Add(node);
                 continue;
             }
-            if (str[i] == 'd')
+            if (bytes[i] == 'd')
             {
-                var node = DictionaryNode.FromString(str[i..]);
-                i += node.RepresentationLength;
+                var node = DictionaryNode.Parse(bytes[i..]);
+                i += node.Representation.Length;
                 elements.Add(node);
                 continue;
             }
-            throw new Exception("error while parsing list");
+            throw new Exception("could not parse list node");
         }
         return new ListNode()
         {
             Elements = elements,
-            RepresentationLength = elements.Sum(n => n.RepresentationLength) + 2,
-            Representation = 'l' + string.Concat(elements.Select(e => e.Representation)) + 'e'
+            Representation = bytes[0..(i + 1)]
         };
     }
 }

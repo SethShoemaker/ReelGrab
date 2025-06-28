@@ -1,30 +1,30 @@
-using System.Text.RegularExpressions;
-
 namespace ReelGrab.Bencoding;
 
-public partial class IntegerNode : Node
+public class IntegerNode : Node
 {
     public long Value { get; init; }
 
-    public override int RepresentationLength { get; init; }
+    public override byte[] Representation { get; init; } = null!;
 
-    public override string Representation { get; init; } = null!;
-
-    public static IntegerNode FromString(string str)
+    public static IntegerNode Parse(byte[] bytes)
     {
-        if (!EnsureIsValidIntegerNode().Match(str).Success)
+        if (bytes[0] != 'i')
         {
-            throw new Exception($"{str} does not start with an integer node");
+            throw new Exception("could not parse integer node");
         }
-        long value = long.Parse(str[1..str.IndexOf('e')]);
+        int eIndex = bytes[1] == '-' ? 2 : 1;
+        while (bytes[eIndex] != 'e')
+        {
+            if (bytes[eIndex] < '0' || bytes[eIndex] > '9')
+            {
+                throw new Exception("could not parse integer node");
+            }
+            eIndex++;
+        }
         return new IntegerNode()
         {
-            Value = value,
-            RepresentationLength = value.ToString().Length + 2,
-            Representation = 'i' + value.ToString() + 'e'
+            Value = long.Parse(bytes.AsSpan()[1..eIndex]),
+            Representation = bytes[0..(eIndex + 1)]
         };
     }
-
-    [GeneratedRegex(@"^i(0|-[1-9][0-9]*|[1-9][0-9]*)e", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex EnsureIsValidIntegerNode();
 }

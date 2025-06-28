@@ -1,32 +1,43 @@
-using System.Text.RegularExpressions;
+using System.Text;
 
 namespace ReelGrab.Bencoding;
 
-public partial class StringNode : Node
+public class StringNode : Node
 {
-    public string Value { get; init; } = null!;
+    public byte[] Value { get; init; } = null!;
 
-    public override string Representation { get; init; } = null!;
+    public string ValueString { get; init; } = null!;
 
-    public override int RepresentationLength { get; init; }
+    public override byte[] Representation { get; init; } = null!;
 
-    public static StringNode FromString(string str)
+    public static StringNode Parse(byte[] bytes)
     {
-        if (!EnsureBeginsWithStringNode().Match(str).Success)
+        if (bytes[0] < '0' || bytes[0] > '9')
         {
-            throw new Exception($"{str} does not start with a string node");
+            throw new Exception("could not parse string node");
         }
-        int colonIndex = str.IndexOf(':');
-        int charCount = int.Parse(str[..colonIndex]);
-        string value = str[(colonIndex + 1)..(colonIndex + charCount + 1)];
+        int colonIndex;
+        for (int i = 1; true; i++)
+        {
+            if (bytes[i] >= '0' && bytes[i] <= '9')
+            {
+                continue;
+            }
+            if (bytes[i] == ':')
+            {
+                colonIndex = i;
+                break;
+            }
+            throw new Exception("could not parse string node");
+        }
+        int charCount = int.Parse(bytes.AsSpan()[..colonIndex]);
+        byte[] representation = bytes[0..(colonIndex + charCount + 1)];
+        byte[] value = bytes[(colonIndex + 1)..(colonIndex + charCount + 1)];
         return new StringNode()
         {
-            RepresentationLength = charCount.ToString().Length + 1 + charCount,
             Value = value,
-            Representation = charCount.ToString() + ':' + value
+            ValueString = Encoding.UTF8.GetString(value),
+            Representation = representation,
         };
     }
-
-    [GeneratedRegex(@"^\d+:", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex EnsureBeginsWithStringNode();
 }
