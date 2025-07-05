@@ -1,8 +1,10 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReelGrab", "src\ReelGrab.csproj", "{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reelgrab.Tests", "tests\Reelgrab.Tests.csproj", "{E2715F08-B9CC-454F-BFEF-A5293294C84E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,6 +16,10 @@ Global
 		{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A75BE58-0926-C8DD-CB8D-C3336AF93CE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2715F08-B9CC-454F-BFEF-A5293294C84E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2715F08-B9CC-454F-BFEF-A5293294C84E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2715F08-B9CC-454F-BFEF-A5293294C84E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2715F08-B9CC-454F-BFEF-A5293294C84E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
